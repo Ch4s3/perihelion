@@ -33,7 +33,10 @@ mod Perihelion do
     actx : Audio.Ctx,
     muted : Bool,
     gl : Option(WebGL.Context),
-    player_sprite : Option(Node)
+    player_sprite : Option(Node),
+    enemy_tops : List(Node),
+    enemy_mids : List(Node),
+    enemy_bots : List(Node)
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -199,6 +202,54 @@ mod Perihelion do
     draw_sprite_rows(ctx, player_sprite_grid(), 0, 64, 96, 32.0, 48.0)
   end
 
+  doc "Pre-renders enemy top-tile idx..7 into offscreen canvases (13x18 each), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
+  pfn build_enemy_top_sprites(idx : Int) : List(Node) do
+    if idx >= 8 do
+      Nil
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "13")
+      Dom.set_attr(node, "height", "18")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 13.0, 18.0)
+      end
+      Cons(node, build_enemy_top_sprites(idx + 1))
+    end
+  end
+
+  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (13x22 each) -- see build_enemy_top_sprites."
+  pfn build_enemy_mid_sprites(idx : Int) : List(Node) do
+    if idx >= 8 do
+      Nil
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "13")
+      Dom.set_attr(node, "height", "22")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 13.0, 22.0)
+      end
+      Cons(node, build_enemy_mid_sprites(idx + 1))
+    end
+  end
+
+  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (13x14 each) -- see build_enemy_top_sprites."
+  pfn build_enemy_bot_sprites(idx : Int) : List(Node) do
+    if idx >= 8 do
+      Nil
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "13")
+      Dom.set_attr(node, "height", "14")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 13.0, 14.0)
+      end
+      Cons(node, build_enemy_bot_sprites(idx + 1))
+    end
+  end
+
   pfn fx_init() : Fx do
     let gl_node = Dom.create("canvas")
     let sprite_node = Dom.create("canvas")
@@ -211,7 +262,10 @@ mod Perihelion do
     end
     { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
       gl: WebGL.get_context(gl_node),
-      player_sprite: Some(sprite_node) }
+      player_sprite: Some(sprite_node),
+      enemy_tops: build_enemy_top_sprites(0),
+      enemy_mids: build_enemy_mid_sprites(0),
+      enemy_bots: build_enemy_bot_sprites(0) }
   end
 
   pfn trail_max() : Int do 22 end
