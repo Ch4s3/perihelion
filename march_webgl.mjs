@@ -67,6 +67,14 @@ float smoothFalloff(float dist, float radius) {
 }
 
 float filaments(vec2 rel, float dist, float radius, float seed) {
+  // atan2's angle becomes numerically unstable as dist -> 0 (tiny position
+  // changes near the origin swing the computed angle wildly), producing a
+  // visible tight pinwheel/moire artifact right at a cloud's center. Fade
+  // filament contribution out smoothly over the innermost ~12% of the
+  // radius so the unstable region never contributes visible detail --
+  // filaments still look correct everywhere else in the cloud.
+  float centerFade = smoothstep(0.0, radius * 0.12, dist);
+  if (centerFade <= 0.0) return 0.0;
   float angle = atan(rel.y, rel.x);
   float total = 0.0;
   for (int i = 0; i < 3; i++) {
@@ -79,7 +87,7 @@ float filaments(vec2 rel, float dist, float radius, float seed) {
     float radialFalloff = smoothFalloff(dist, radius * 0.9);
     total += angularFalloff * radialFalloff * 0.5;
   }
-  return total;
+  return total * centerFade;
 }
 
 void main() {
