@@ -755,7 +755,7 @@ mod Perihelion do
       Some(sprite) ->
         Canvas.save(ctx)
         Canvas.translate(ctx, game.ball_x, game.ball_y)
-        Canvas.rotate(ctx, ball_heading(game) - 1.5707963)
+        Canvas.rotate(ctx, ball_heading(game) + 1.5707963)
         Canvas.draw_node(ctx, sprite, 0.0 - 16.0, 0.0 - 24.0)
         Canvas.restore(ctx)
     end

@@ -20109,7 +20109,7 @@ function draw_ball(ctx, game, fx) {
                 const $t29992 = (() => {
                   {
                     const $t29991 = ball_heading(game);
-                    return ($t29991 - 1.5707963);
+                    return ($t29991 + 1.5707963);
                   }
                 })();
                 return Canvas$rotate(ctx, $t29992);
