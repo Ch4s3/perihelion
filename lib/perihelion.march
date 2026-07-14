@@ -784,14 +784,10 @@ mod Perihelion do
     end
   end
 
-  pfn resize_gl(gl_opt : Option(WebGL.Context), game : Game, w : Float, h : Float) : Unit do
-    if w == game.view_w && h == game.view_h do
-      ()
-    else
-      match gl_opt do
-        None -> ()
-        Some(gl) -> WebGL.resize(gl, w, h)
-      end
+  pfn resize_gl(gl_opt : Option(WebGL.Context), w : Float, h : Float) : Unit do
+    match gl_opt do
+      None -> ()
+      Some(gl) -> WebGL.resize(gl, w, h)
     end
   end
 
@@ -901,7 +897,7 @@ mod Perihelion do
     let view_w = int_to_float(win_w)
     let view_h = int_to_float(win_h)
     resize_canvas(el, game, view_w, view_h)
-    resize_gl(fx.gl, game, view_w, view_h)
+    resize_gl(fx.gl, view_w, view_h)
     -- R hard-resets from ANY phase (see Core.update), but the Milestone
     -- branch below normally routes through pick_milestone instead of
     -- update -- which never looks at `keys` -- so without this check R
