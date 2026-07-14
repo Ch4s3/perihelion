@@ -100,8 +100,14 @@ export function march_string_contains(s, sub) { return s.includes(sub); }
 export function march_string_starts_with(s, pre) { return s.startsWith(pre); }
 export function march_string_ends_with(s, suf) { return s.endsWith(suf); }
 
-export function march_string_slice(s, start, end_) {
-  return s.slice(start, end_);
+// Contract is (s, start, len) -- matching march_runtime.c / march_runtime_wasm.c's
+// march_string_slice -- NOT JS's native String.slice(start, end) semantics. Clamp
+// like the C implementations do (negative/out-of-range start or len yields "").
+export function march_string_slice(s, start, len) {
+  if (start < 0) start = 0;
+  if (start > s.length) start = s.length;
+  if (len < 0) len = 0;
+  return s.slice(start, start + len);
 }
 
 export function march_string_split(s, sep) {
