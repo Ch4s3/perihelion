@@ -31,11 +31,14 @@ mod Perihelion do
     particles : List(Particle),
     flash : Option((Float, Float, Float)),
     actx : Audio.Ctx,
-    muted : Bool
+    muted : Bool,
+    gl : Option(WebGL.Context)
   }
 
   pfn fx_init() : Fx do
-    { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false }
+    let gl_node = Dom.create("canvas")
+    { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
+      gl: WebGL.get_context(gl_node) }
   end
 
   pfn trail_max() : Int do 22 end
