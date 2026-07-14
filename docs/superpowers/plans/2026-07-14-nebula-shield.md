@@ -500,7 +500,7 @@ git push
 - Consumes: `player_sprite_grid() : List(String)` (existing, from the pixel-art-ship feature), `Fx.player_sprite : Option(Node)` (existing), `ball_heading(game : Game) : Float` (existing).
 - Produces: `Fx.shield_hull : List((Float, Float))` — a new `Fx` field, consumed only by `draw_ball` in this same task.
 
-**Precondition:** the pixel-art-ship feature (`ball_heading`, `draw_ball`'s `Some(sprite)` branch using `Canvas.rotate(ctx, ball_heading(game) - 1.5707963)`) must already be on `main` before starting this task — confirm with `grep -n "pfn draw_ball" lib/perihelion.march` and check the match body uses `fx.player_sprite`. If it doesn't, stop and report back rather than proceeding (this task's Find/Replace blocks below assume that exact code is already in place).
+**Precondition:** the pixel-art-ship feature (`ball_heading`, `draw_ball`'s `Some(sprite)` branch using `Canvas.rotate(ctx, ball_heading(game) + 1.5707963)`) must already be on `main` before starting this task — confirm with `grep -n "pfn draw_ball" lib/perihelion.march` and check the match body uses `fx.player_sprite`. If it doesn't, stop and report back rather than proceeding (this task's Find/Replace blocks below assume that exact code is already in place). **Note:** the rotation sign was `-1.5707963` when this plan was originally written, then corrected to `+1.5707963` by two follow-up bug fixes (commits `fad57aa` and `5e099f6`) after rigorous browser-based verification — the Find/Replace blocks below already reflect the corrected `+` sign.
 
 - [ ] **Step 1: Add the `shield_hull` field to `Fx`**
 
@@ -670,7 +670,7 @@ Find:
       Some(sprite) ->
         Canvas.save(ctx)
         Canvas.translate(ctx, game.ball_x, game.ball_y)
-        Canvas.rotate(ctx, ball_heading(game) - 1.5707963)
+        Canvas.rotate(ctx, ball_heading(game) + 1.5707963)
         Canvas.draw_node(ctx, sprite, 0.0 - 16.0, 0.0 - 24.0)
         Canvas.restore(ctx)
     end
@@ -708,7 +708,7 @@ Replace with:
       Some(sprite) ->
         Canvas.save(ctx)
         Canvas.translate(ctx, game.ball_x, game.ball_y)
-        Canvas.rotate(ctx, ball_heading(game) - 1.5707963)
+        Canvas.rotate(ctx, ball_heading(game) + 1.5707963)
         Canvas.draw_node(ctx, sprite, 0.0 - 16.0, 0.0 - 24.0)
         if game.shield > 0 do
           Canvas.set_stroke_style(ctx, "#cccccc")
