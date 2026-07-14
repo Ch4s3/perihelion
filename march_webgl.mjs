@@ -217,8 +217,17 @@ export function march_webgl_get_context(node) {
 }
 
 export function march_webgl_resize(gl, w, h) {
-  gl.canvas.width = w;
-  gl.canvas.height = h;
+  // Assigning canvas.width/height reallocates and clears the WebGL
+  // drawing buffer even when the value is unchanged -- and this is now
+  // called every frame (see the March-side resize_gl comment for why a
+  // change-detection guard there caused a worse bug previously). Compare
+  // against the canvas's own actual current size instead of March-side
+  // game state, which can drift out of sync with the canvas; the canvas's
+  // own width/height can't.
+  if (gl.canvas.width !== w || gl.canvas.height !== h) {
+    gl.canvas.width = w;
+    gl.canvas.height = h;
+  }
   gl.viewport(0, 0, w, h);
 }
 
