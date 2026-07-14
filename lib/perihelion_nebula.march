@@ -17,13 +17,21 @@
 mod Perihelion.Nebula do
 
   -- ── Tuning constants ─────────────────────────────────────────────────
-  fn cloud_chance() : Float do 0.55 end
+  fn cloud_chance() : Float do 0.30 end
   fn radius_min() : Float do 240.0 end
   fn radius_max() : Float do 700.0 end
   -- Kept well under radius_min so a spawned cloud always overlaps the star
   -- it's anchored to, no matter which radius it rolls.
   fn anchor_jitter() : Float do 90.0 end
   fn in_nebula_threshold() : Float do 0.35 end
+
+  -- Free-floating clouds: a second, independent spawn mechanism, decoupled
+  -- from any star -- world Y is divided into bands, each independently
+  -- rolling a low chance for a cloud placed anywhere across (a widened)
+  -- viewport width, not just the star ladder's margin-bound corridor.
+  fn free_cloud_chance() : Float do 0.12 end
+  fn free_band_size() : Float do 500.0 end
+  fn free_x_margin() : Float do 100.0 end
 
   type Cloud = { x : Float, y : Float, radius : Float, strength : Float }
 
@@ -40,23 +48,51 @@ mod Perihelion.Nebula do
     lo + t * (hi - lo)
   end
 
-  -- The cloud (if any) anchored at a star's position. Jitter is small
-  -- relative to radius_min, so wherever this returns Some, the star always
-  -- falls well inside the cloud's body -- a spawned cloud always overlaps
-  -- the star it's rooted to.
-  pfn star_cloud(sx : Float, sy : Float, seed : Float) : Option(Cloud) do
-    if hash3(sx, sy, seed) > cloud_chance() do
-      None
+  -- How many lobes a triggered star-cloud gets: 2 or 3, chosen by an
+  -- independent hash roll so it varies per star/seed like everything else.
+  pfn lobe_count(sx : Float, sy : Float, seed : Float) : Int do
+    if hash3(sx + 3.0, sy, seed) < 0.5 do 2 else 3 end
+  end
+
+  -- One lobe of a star's cloud cluster. Lobe 0 uses the original tight
+  -- anchor_jitter() bound, so it always overlaps its star exactly as a
+  -- single-lobe cloud used to -- the "a spawned cloud always overlaps the
+  -- star it's rooted to" invariant is preserved via this lobe specifically.
+  -- Later lobes (1, 2) jitter further (up to half the base radius) so the
+  -- cluster reads as one bulging, irregular shape rather than a neat circle,
+  -- and may drift far enough that they don't individually overlap the star.
+  pfn make_lobe(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int) : Cloud do
+    let fi = int_to_float(i)
+    let spread = if i == 0 do anchor_jitter() else base_r * 0.5 end
+    let jx = (hash3(sx + 10.0 + fi, sy, seed) - 0.5) * 2.0 * spread
+    let jy = (hash3(sx, sy + 10.0 + fi, seed) - 0.5) * 2.0 * spread
+    let rf = 0.5 + 0.35 * hash3(sx + 20.0 + fi, sy, seed)
+    let strength = 0.35 + 0.65 * hash3(sx, sy + 20.0 + fi, seed)
+    { x: sx + jx, y: sy + jy, radius: base_r * rf, strength: strength }
+  end
+
+  pfn make_lobes(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, acc : List(Cloud)) : List(Cloud) do
+    if i >= n do
+      acc
     else
-      let jx = (hash3(sx + 1.0, sy, seed) - 0.5) * 2.0 * anchor_jitter()
-      let jy = (hash3(sx, sy + 1.0, seed) - 0.5) * 2.0 * anchor_jitter()
+      make_lobes(sx, sy, seed, base_r, i + 1, n, Cons(make_lobe(sx, sy, seed, base_r, i), acc))
+    end
+  end
+
+  -- The cloud lobes (if any) anchored at a star's position -- 0 if the
+  -- cloud_chance() roll misses, otherwise 2-3 lobes clustered near the star
+  -- (see make_lobe). Empty-list-vs-Option mirrors how visible_clouds already
+  -- returns a plain List(Cloud) -- callers never branched on Option here.
+  pfn star_cloud(sx : Float, sy : Float, seed : Float) : List(Cloud) do
+    if hash3(sx, sy, seed) > cloud_chance() do
+      Nil
+    else
       -- Square the raw hash before lerping so sizes skew toward the small
       -- end with a real tail of much bigger clouds, instead of a flat
       -- uniform spread -- most clouds modest, a few genuinely huge.
       let rt = hash3(sx + 2.0, sy, seed)
-      let r = lerp(radius_min(), radius_max(), rt * rt)
-      let strength = 0.35 + 0.65 * hash3(sx, sy + 2.0, seed)
-      Some({ x: sx + jx, y: sy + jy, radius: r, strength: strength })
+      let base_r = lerp(radius_min(), radius_max(), rt * rt)
+      make_lobes(sx, sy, seed, base_r, 0, lobe_count(sx, sy, seed), Nil)
     end
   end
 
@@ -80,14 +116,18 @@ mod Perihelion.Nebula do
 
   -- Sum contributions from every star's cloud (stars with no cloud, or too
   -- far to reach (x, y), contribute 0).
+  pfn sum_contributions(x : Float, y : Float, clouds : List(Cloud), acc : Float) : Float do
+    match clouds do
+      Nil -> acc
+      Cons(c, rest) -> sum_contributions(x, y, rest, acc + contribution(x, y, c))
+    end
+  end
+
   pfn density_over(x : Float, y : Float, seed : Float, stars : List(Star), acc : Float) : Float do
     match stars do
       Nil -> acc
       Cons(s, rest) ->
-        let acc2 = match star_cloud(s.x, s.y, seed) do
-          None -> acc
-          Some(c) -> acc + contribution(x, y, c)
-        end
+        let acc2 = sum_contributions(x, y, star_cloud(s.x, s.y, seed), acc)
         density_over(x, y, seed, rest, acc2)
     end
   end
@@ -107,11 +147,7 @@ mod Perihelion.Nebula do
     match stars do
       Nil -> acc
       Cons(s, rest) ->
-        let acc2 = match star_cloud(s.x, s.y, seed) do
-          None -> acc
-          Some(c) -> Cons(c, acc)
-        end
-        collect_star_clouds(rest, seed, acc2)
+        collect_star_clouds(rest, seed, List.append(star_cloud(s.x, s.y, seed), acc))
     end
   end
 
@@ -128,10 +164,55 @@ mod Perihelion.Nebula do
     end
   end
 
-  doc "Clouds anchored to stars whose position falls within the visible band (plus enough margin that a cloud rooted just off-screen but bulging into view is still included), for the shell to draw. Every spawned cloud overlaps the star it's anchored to."
-  fn visible_clouds(stars : List(Star), cam_y : Float, view_h : Float, seed : Float) : List(Cloud) do
+  pfn band_index_at(y : Float) : Int do
+    float_to_int(Math.floor(y / free_band_size()))
+  end
+
+  -- The free-floating cloud (if any) anchored to world-Y band `band`,
+  -- independent of any star -- x is drawn from a range wider than the star
+  -- ladder's margin-bound corridor (Level.margin()/view_w), so these can
+  -- land beside, between, or well outside the ladder's path. `seed + 1000.0`
+  -- keeps this roll's hash stream from correlating with star-cloud rolls
+  -- using the same run seed.
+  pfn free_cloud(band : Int, view_w : Float, seed : Float) : Option(Cloud) do
+    let bf = int_to_float(band)
+    let s2 = seed + 1000.0
+    if hash3(bf, 0.0 - 500.0, s2) > free_cloud_chance() do
+      None
+    else
+      let band_y0 = bf * free_band_size()
+      let jx = hash3(bf + 1.0, 0.0 - 500.0, s2)
+      let jy = hash3(bf, 0.0 - 501.0, s2)
+      let x = (0.0 - free_x_margin()) + jx * (view_w + 2.0 * free_x_margin())
+      let y = band_y0 + jy * free_band_size()
+      let rt = hash3(bf + 2.0, 0.0 - 500.0, s2)
+      let r = lerp(radius_min(), radius_max(), rt * rt)
+      let strength = 0.35 + 0.65 * hash3(bf, 0.0 - 502.0, s2)
+      Some({ x: x, y: y, radius: r, strength: strength })
+    end
+  end
+
+  pfn collect_free_clouds(b : Int, b_max : Int, view_w : Float, seed : Float, acc : List(Cloud)) : List(Cloud) do
+    if b > b_max do
+      acc
+    else
+      let acc2 = match free_cloud(b, view_w, seed) do
+        None -> acc
+        Some(c) -> Cons(c, acc)
+      end
+      collect_free_clouds(b + 1, b_max, view_w, seed, acc2)
+    end
+  end
+
+  doc "Clouds anchored to stars whose position falls within the visible band (plus enough margin that a cloud rooted just off-screen but bulging into view is still included), for the shell to draw -- combined with free-floating clouds anchored to no star at all, sampled across the same visible band. `view_w` is the current viewport width, used only to size the free-cloud x-range."
+  fn visible_clouds(stars : List(Star), cam_y : Float, view_h : Float, view_w : Float, seed : Float) : List(Cloud) do
     let margin = radius_max() + anchor_jitter()
-    collect_star_clouds(filter_visible(stars, cam_y, view_h, margin, Nil), seed, Nil)
+    let star_clouds = collect_star_clouds(filter_visible(stars, cam_y, view_h, margin, Nil), seed, Nil)
+    let band_margin = radius_max() + free_band_size()
+    let b0 = band_index_at(cam_y - band_margin)
+    let b1 = band_index_at(cam_y + view_h + band_margin)
+    let free_clouds = collect_free_clouds(b0, b1, view_w, seed, Nil)
+    List.append(star_clouds, free_clouds)
   end
 
 end

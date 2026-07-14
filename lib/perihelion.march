@@ -592,7 +592,7 @@ mod Perihelion do
     match gl_opt do
       None -> ()
       Some(gl) ->
-        let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, seed)
+        let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, game.view_w, seed)
         let screen_clouds = to_screen_clouds(clouds, game.camera_x, game.camera_y)
         WebGL.draw_nebula(gl, screen_clouds, game.view_w, game.view_h, seed)
         Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
