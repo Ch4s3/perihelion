@@ -678,11 +678,11 @@ mod Perihelion do
     end
   end
 
-  doc "The player ball's facing direction, mirroring ship_heading's shape: Flying uses the velocity vector, Orbiting uses the tangent direction (same -90 degree offset ship_heading's ShipOrbiting case uses, since orbit_dir is always 1.0 today)."
+  doc "The player ball's facing direction: Flying uses the velocity vector, Orbiting uses the tangent direction. Unlike ship_heading's ShipOrbiting case (angle - halfPi), this is angle + halfPi -- the ball's orbit angle increases over time (step_orbit uses +orbit_dir), the opposite rotational sense from enemy ships (which use -orbit_dir), so the tangent-direction sign flips too."
   pfn ball_heading(game : Game) : Float do
     match game.mode do
       Flying(vx, vy) -> Math.atan2(vy, vx)
-      Orbiting(_, _, angle) -> angle - 1.5707963
+      Orbiting(_, _, angle) -> angle + 1.5707963
     end
   end
 

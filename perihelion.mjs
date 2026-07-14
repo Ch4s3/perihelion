@@ -19778,7 +19778,7 @@ function ball_heading(game) {
           const angle = (() => {
             return $f29936;
           })();
-          return (angle - 1.5707963);
+          return (angle + 1.5707963);
         }
         break;
       }
