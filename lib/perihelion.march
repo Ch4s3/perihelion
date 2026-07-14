@@ -33,7 +33,8 @@ mod Perihelion do
     actx : Audio.Ctx,
     muted : Bool,
     gl : Option(WebGL.Context),
-    player_sprite : Option(Node)
+    player_sprite : Option(Node),
+    shield_hull : List((Float, Float))
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -211,7 +212,8 @@ mod Perihelion do
     end
     { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
       gl: WebGL.get_context(gl_node),
-      player_sprite: Some(sprite_node) }
+      player_sprite: Some(sprite_node),
+      shield_hull: shield_hull_points() }
   end
 
   pfn trail_max() : Int do 22 end
@@ -745,6 +747,113 @@ mod Perihelion do
     end
   end
 
+  type SpriteRowExtent = { row : Int, left : Int, right : Int }
+
+  -- The (leftmost, rightmost) non-background column in a sprite grid row,
+  -- or (-1, -1) if the row is entirely background ("0" in every column).
+  pfn row_extent_go(row : String, col : Int, len : Int, left : Int, right : Int) : (Int, Int) do
+    if col >= len do
+      (left, right)
+    else
+      let ch = String.slice(row, col, 1)
+      if ch == "0" do
+        row_extent_go(row, col + 1, len, left, right)
+      else
+        let new_left = if left < 0 do col else left end
+        row_extent_go(row, col + 1, len, new_left, col)
+      end
+    end
+  end
+
+  pfn row_extent(row : String) : (Int, Int) do
+    row_extent_go(row, 0, 64, 0 - 1, 0 - 1)
+  end
+
+  -- Walks player_sprite_grid()'s 96 rows top-to-bottom, but Cons-prepending
+  -- means the returned list comes out BOTTOM-to-TOP (last-processed row is
+  -- the head) -- used directly as the left edge's natural walk order in
+  -- shield_hull_points below. Rows that are entirely background are
+  -- skipped (no left/right to record).
+  pfn collect_row_extents(rows : List(String), row_idx : Int, acc : List(SpriteRowExtent)) : List(SpriteRowExtent) do
+    match rows do
+      Nil -> acc
+      Cons(row, rest) ->
+        let (l, r) = row_extent(row)
+        let acc2 = if l < 0 do acc else Cons({ row: row_idx, left: l, right: r }, acc) end
+        collect_row_extents(rest, row_idx + 1, acc2)
+    end
+  end
+
+  pfn sprite_row_extents() : List(SpriteRowExtent) do
+    collect_row_extents(player_sprite_grid(), 0, Nil)
+  end
+
+  -- How far the shield hull is scaled out from the sprite's own silhouette,
+  -- from its center -- so the shield visibly surrounds the ship rather than
+  -- tracing directly on top of it.
+  fn shield_scale() : Float do 1.15 end
+  -- Grid-space (64 cols x 96 rows) to the sprite's own local pixel-space
+  -- (32x48, matching draw_player_sprite_pixels's target size).
+  fn sprite_col_scale() : Float do 0.5 end
+  fn sprite_row_scale() : Float do 0.5 end
+  -- Half the sprite's local pixel-space size -- both its own center point
+  -- and, since Canvas.draw_node draws the sprite at (-16, -24), the offset
+  -- needed so hull points land in the same local frame as the sprite bitmap.
+  fn sprite_half_w() : Float do 16.0 end
+  fn sprite_half_h() : Float do 24.0 end
+
+  -- One hull point: a (grid col, grid row) pair, scaled to sprite-space,
+  -- expanded by shield_scale() from the sprite's center, then re-offset so
+  -- (0, 0) sprite-center maps to (0, 0) here -- the same local frame
+  -- draw_ball's Some(sprite) branch already draws the sprite bitmap in.
+  pfn hull_point(col : Int, row : Int) : (Float, Float) do
+    let sx = int_to_float(col) * sprite_col_scale()
+    let sy = int_to_float(row) * sprite_row_scale()
+    let ex = sprite_half_w() + (sx - sprite_half_w()) * shield_scale()
+    let ey = sprite_half_h() + (sy - sprite_half_h()) * shield_scale()
+    (ex - sprite_half_w(), ey - sprite_half_h())
+  end
+
+  -- Right-edge points use right + 1 (the outer edge of the rightmost filled
+  -- cell), matching draw_sprite_run's end_col+1 convention, so the hull
+  -- sits at the pixel boundary rather than one cell short.
+  pfn right_edge_points(extents : List(SpriteRowExtent)) : List((Float, Float)) do
+    match extents do
+      Nil -> Nil
+      Cons(e, rest) -> Cons(hull_point(e.right + 1, e.row), right_edge_points(rest))
+    end
+  end
+
+  pfn left_edge_points(extents : List(SpriteRowExtent)) : List((Float, Float)) do
+    match extents do
+      Nil -> Nil
+      Cons(e, rest) -> Cons(hull_point(e.left, e.row), left_edge_points(rest))
+    end
+  end
+
+  doc "The player-ship shield's outline: the right edge walked top-to-bottom, then the left edge walked bottom-to-top, closing into a hull polygon that traces the ship's actual silhouette (mast prongs, forked legs) rather than a generic bounding shape, scaled up slightly from the sprite itself. Computed once at boot (see fx_init) and reused every frame the shield is active -- pure, no Canvas calls."
+  pfn shield_hull_points() : List((Float, Float)) do
+    let bottom_to_top = sprite_row_extents()
+    let top_to_bottom = List.reverse(bottom_to_top)
+    List.append(right_edge_points(top_to_bottom), left_edge_points(bottom_to_top))
+  end
+
+  -- Walks a point list, calling Canvas.move_to for the first point and
+  -- Canvas.line_to for the rest -- must be called between a Canvas.begin_path
+  -- and a Canvas.close_path/Canvas.stroke, same pattern as draw_asteroid_edges.
+  pfn draw_hull_points(ctx, points : List((Float, Float)), first : Bool) : Unit do
+    match points do
+      Nil -> ()
+      Cons((px, py), rest) ->
+        if first do
+          Canvas.move_to(ctx, px, py)
+        else
+          Canvas.line_to(ctx, px, py)
+        end
+        draw_hull_points(ctx, rest, false)
+    end
+  end
+
   pfn draw_ball(ctx, game : Game, fx : Fx) : Unit do
     match fx.player_sprite do
       None ->
@@ -752,21 +861,31 @@ mod Perihelion do
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, game.ball_x, game.ball_y, 6.0, 0.0, two_pi())
         Canvas.fill(ctx)
+        if game.shield > 0 do
+          Canvas.set_stroke_style(ctx, "#cccccc")
+          Canvas.set_line_width(ctx, 2.0)
+          Canvas.begin_path(ctx)
+          Canvas.arc(ctx, game.ball_x, game.ball_y, 10.0, 0.0, two_pi())
+          Canvas.stroke(ctx)
+        else
+          ()
+        end
       Some(sprite) ->
         Canvas.save(ctx)
         Canvas.translate(ctx, game.ball_x, game.ball_y)
         Canvas.rotate(ctx, ball_heading(game) + 1.5707963)
         Canvas.draw_node(ctx, sprite, 0.0 - 16.0, 0.0 - 24.0)
+        if game.shield > 0 do
+          Canvas.set_stroke_style(ctx, "#cccccc")
+          Canvas.set_line_width(ctx, 2.0)
+          Canvas.begin_path(ctx)
+          draw_hull_points(ctx, fx.shield_hull, true)
+          Canvas.close_path(ctx)
+          Canvas.stroke(ctx)
+        else
+          ()
+        end
         Canvas.restore(ctx)
-    end
-    if game.shield > 0 do
-      Canvas.set_stroke_style(ctx, "#cccccc")
-      Canvas.set_line_width(ctx, 2.0)
-      Canvas.begin_path(ctx)
-      Canvas.arc(ctx, game.ball_x, game.ball_y, 10.0, 0.0, two_pi())
-      Canvas.stroke(ctx)
-    else
-      ()
     end
   end
 
