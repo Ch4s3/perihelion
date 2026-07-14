@@ -24,7 +24,7 @@ The player ball currently has no heading concept — `draw_ball` just draws a ci
 
 A new `ball_heading(game) : Float` mirrors `ship_heading`'s two cases:
 - `Flying(vx, vy)` → `Math.atan2(vy, vx)`
-- `Orbiting(idx, ring, angle)` → `angle - halfPi` (same `-orbit_dir(idx) * halfPi` shape `ship_heading`'s `ShipOrbiting` case uses — `orbit_dir` is always `1.0` today, so this simplifies to a flat `angle - halfPi`, but written the same way for consistency in case that ever changes)
+- `Orbiting(idx, ring, angle)` → `angle + halfPi` (**corrected post-implementation, commit `5e099f6`** — the ball orbits with *increasing* angle (`step_orbit` uses `+orbit_dir`), the opposite rotational sense from enemy ships (`-orbit_dir`), so `ship_heading`'s `ShipOrbiting` sign (`angle - halfPi`, correct for their decreasing-angle motion) doesn't carry over; the original version of this doc mistakenly copied that sign)
 
 `draw_ball` becomes: match `fx.player_sprite`; on `Some(node)`, `Canvas.save`/`translate(ball_x, ball_y)`/`rotate(ball_heading(game) + halfPi)`/`draw_node(node, -16.0, -24.0)` (centering: half of 32×48)/`restore`; on `None`, fall back to the existing circle draw (defensive — matches how the nebula degrades gracefully when `fx.gl` is `None`, and costs nothing extra since the circle-drawing code doesn't need to change, just gets moved into the `None` arm). The shield ring (drawn separately, already circle-based) is unaffected — it still draws around `(ball_x, ball_y)` regardless of ship rotation.
 
