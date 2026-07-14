@@ -10,9 +10,10 @@ X to activate your special · R to reset · M to mute.
 ## Building
 
 This repo doesn't yet depend on a published March toolchain — a few compiler
-fixes this game needs (JS-target `Audio` module support, self-recursive
-tail-call return values, `Int` division truncation) aren't in a released
-version yet. Until then, `build.sh`/`run-tests.sh` build the compiler from a
+fixes/additions this game needs (JS-target `Audio` module support,
+self-recursive tail-call return values, `Int` division truncation,
+JS-target `WebGL` module support) aren't in a released version yet.
+Until then, `build.sh`/`run-tests.sh` build the compiler from a
 local checkout of the [march monorepo](https://github.com/march-language/march):
 
 ```bash

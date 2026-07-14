@@ -1,8 +1,9 @@
 import { march_float_round, march_float_to_string, march_int_and, march_int_div, march_int_div_euclid, march_int_mod, march_int_mod_euclid, march_int_not, march_int_or, march_int_popcount, march_int_shl, march_int_shr, march_int_xor, march_print, march_string_byte_length, march_string_join, march_string_split, march_string_to_int, march_unix_time } from "./march_runtime.mjs";
 
-import { march_dom_request_animation_frame as dom_request_animation_frame, march_dom_window_size as dom_window_size, march_dom_pointer_pos as dom_pointer_pos, march_dom_store_set as dom_store_set, march_dom_store_get as dom_store_get, march_dom_key_presses as dom_key_presses, march_dom_taps as dom_taps, march_dom_set_attribute as dom_set_attribute, march_dom_get_element_by_id as dom_get_element_by_id } from "./march_dom.mjs";
+import { march_dom_request_animation_frame as dom_request_animation_frame, march_dom_window_size as dom_window_size, march_dom_pointer_pos as dom_pointer_pos, march_dom_store_set as dom_store_set, march_dom_store_get as dom_store_get, march_dom_key_presses as dom_key_presses, march_dom_taps as dom_taps, march_dom_set_attribute as dom_set_attribute, march_dom_create_element as dom_create_element, march_dom_get_element_by_id as dom_get_element_by_id } from "./march_dom.mjs";
+import { march_webgl_canvas_node as webgl_canvas_node, march_webgl_draw_nebula as webgl_draw_nebula, march_webgl_resize as webgl_resize, march_webgl_get_context as webgl_get_context } from "./march_webgl.mjs";
 import { march_audio_noise_burst as audio_noise_burst, march_audio_sweep as audio_sweep, march_audio_beep as audio_beep, march_audio_resume as audio_resume, march_audio_create as audio_create } from "./march_audio.mjs";
-import { march_canvas_set_text_align as canvas_set_text_align, march_canvas_fill_text as canvas_fill_text, march_canvas_fill_noise_circle as canvas_fill_noise_circle, march_canvas_stroke as canvas_stroke, march_canvas_fill as canvas_fill, march_canvas_arc as canvas_arc, march_canvas_line_to as canvas_line_to, march_canvas_move_to as canvas_move_to, march_canvas_close_path as canvas_close_path, march_canvas_begin_path as canvas_begin_path, march_canvas_stroke_rect as canvas_stroke_rect, march_canvas_fill_rect as canvas_fill_rect, march_canvas_set_font as canvas_set_font, march_canvas_set_global_alpha as canvas_set_global_alpha, march_canvas_set_line_width as canvas_set_line_width, march_canvas_set_stroke_style as canvas_set_stroke_style, march_canvas_set_fill_style as canvas_set_fill_style, march_canvas_rotate as canvas_rotate, march_canvas_translate as canvas_translate, march_canvas_restore as canvas_restore, march_canvas_save as canvas_save, march_canvas_get_context as canvas_get_context } from "./march_canvas.mjs";
+import { march_canvas_draw_image as canvas_draw_node, march_canvas_set_text_align as canvas_set_text_align, march_canvas_fill_text as canvas_fill_text, march_canvas_stroke as canvas_stroke, march_canvas_fill as canvas_fill, march_canvas_arc as canvas_arc, march_canvas_line_to as canvas_line_to, march_canvas_move_to as canvas_move_to, march_canvas_close_path as canvas_close_path, march_canvas_begin_path as canvas_begin_path, march_canvas_stroke_rect as canvas_stroke_rect, march_canvas_fill_rect as canvas_fill_rect, march_canvas_set_font as canvas_set_font, march_canvas_set_global_alpha as canvas_set_global_alpha, march_canvas_set_line_width as canvas_set_line_width, march_canvas_set_stroke_style as canvas_set_stroke_style, march_canvas_set_fill_style as canvas_set_fill_style, march_canvas_rotate as canvas_rotate, march_canvas_translate as canvas_translate, march_canvas_restore as canvas_restore, march_canvas_save as canvas_save, march_canvas_get_context as canvas_get_context } from "./march_canvas.mjs";
 
 
 const int_to_string   = { _0: ($_, x) => String(x) };
@@ -35,6 +36,7 @@ const int_abs     = { _0: ($_, a) => Math.abs(a) };
 const unix_time   = { _0: ($_) => march_unix_time() };
 const float_round = { _0: ($_, a) => march_float_round(a) };
 const dom_get_element_by_id$clo = { _0: ($_, p0) => dom_get_element_by_id(p0) };
+const dom_create_element$clo = { _0: ($_, p0) => dom_create_element(p0) };
 const dom_set_attribute$clo = { _0: ($_, p0, p1, p2) => dom_set_attribute(p0, p1, p2) };
 const dom_taps$clo = { _0: ($_, p0) => dom_taps(p0) };
 const dom_key_presses$clo = { _0: ($_, ) => dom_key_presses() };
@@ -62,14 +64,18 @@ const canvas_line_to$clo = { _0: ($_, p0, p1, p2) => canvas_line_to(p0, p1, p2) 
 const canvas_arc$clo = { _0: ($_, p0, p1, p2, p3, p4, p5) => canvas_arc(p0, p1, p2, p3, p4, p5) };
 const canvas_fill$clo = { _0: ($_, p0) => canvas_fill(p0) };
 const canvas_stroke$clo = { _0: ($_, p0) => canvas_stroke(p0) };
-const canvas_fill_noise_circle$clo = { _0: ($_, p0, p1, p2, p3, p4) => canvas_fill_noise_circle(p0, p1, p2, p3, p4) };
 const canvas_fill_text$clo = { _0: ($_, p0, p1, p2, p3) => canvas_fill_text(p0, p1, p2, p3) };
 const canvas_set_text_align$clo = { _0: ($_, p0, p1) => canvas_set_text_align(p0, p1) };
+const canvas_draw_node$clo = { _0: ($_, p0, p1, p2, p3) => canvas_draw_node(p0, p1, p2, p3) };
 const audio_create$clo = { _0: ($_, ) => audio_create() };
 const audio_resume$clo = { _0: ($_, p0) => audio_resume(p0) };
 const audio_beep$clo = { _0: ($_, p0, p1, p2, p3) => audio_beep(p0, p1, p2, p3) };
 const audio_sweep$clo = { _0: ($_, p0, p1, p2, p3, p4) => audio_sweep(p0, p1, p2, p3, p4) };
 const audio_noise_burst$clo = { _0: ($_, p0, p1, p2) => audio_noise_burst(p0, p1, p2) };
+const webgl_get_context$clo = { _0: ($_, p0) => webgl_get_context(p0) };
+const webgl_resize$clo = { _0: ($_, p0, p1, p2) => webgl_resize(p0, p1, p2) };
+const webgl_draw_nebula$clo = { _0: ($_, p0, p1, p2, p3, p4) => webgl_draw_nebula(p0, p1, p2, p3, p4) };
+const webgl_canvas_node$clo = { _0: ($_, p0) => webgl_canvas_node(p0) };
 
 function __eq_Option(a, b) {
   if (a.$ !== b.$) return false;
@@ -3091,6 +3097,22 @@ function __eq_Audio$Ctx(a, b) {
   return true;
 }
 
+function __eq_WebGL$Context(a, b) {
+  if (a.$ !== b.$) return false;
+  switch (a.$) {
+  }
+  return true;
+}
+
+function __eq_WebGL$Cloud(a, b) {
+  if (a.x !== b.x) return false;
+  if (a.y !== b.y) return false;
+  if (a.radius !== b.radius) return false;
+  if (a.strength !== b.strength) return false;
+  if (a.seed !== b.seed) return false;
+  return true;
+}
+
 function __eq_Perihelion$Combat$AsteroidMode(a, b) {
   if (a.$ !== b.$) return false;
   switch (a.$) {
@@ -3359,6 +3381,7 @@ function __eq_Fx(a, b) {
   if (!__eq_Option(a.flash, b.flash)) return false;
   if (!__eq_Audio$Ctx(a.actx, b.actx)) return false;
   if (a.muted !== b.muted) return false;
+  if (!__eq_Option(a.gl, b.gl)) return false;
   return true;
 }
 
@@ -3380,30 +3403,30 @@ function Random$mix32(x) {
             }
           })();
           {
-            const xh_i9846 = march_int_shr($t15538, 16);
+            const xh_i9848 = march_int_shr($t15538, 16);
             {
-              const xl_i9847 = march_int_and($t15538, 65535);
+              const xl_i9849 = march_int_and($t15538, 65535);
               {
-                const $t15527_i9852 = (() => {
+                const $t15527_i9854 = (() => {
                   {
-                    const $t15525_i9850 = (() => {
+                    const $t15525_i9852 = (() => {
                       {
-                        const $t15524_i9849 = (() => {
+                        const $t15524_i9851 = (() => {
                           {
-                            const $t15523_i9848 = (xh_i9846 * 569420461);
-                            return march_int_and($t15523_i9848, 65535);
+                            const $t15523_i9850 = (xh_i9848 * 569420461);
+                            return march_int_and($t15523_i9850, 65535);
                           }
                         })();
-                        return ($t15524_i9849 * 65536);
+                        return ($t15524_i9851 * 65536);
                       }
                     })();
                     {
-                      const $t15526_i9851 = (xl_i9847 * 569420461);
-                      return ($t15525_i9850 + $t15526_i9851);
+                      const $t15526_i9853 = (xl_i9849 * 569420461);
+                      return ($t15525_i9852 + $t15526_i9853);
                     }
                   }
                 })();
-                return march_int_and($t15527_i9852, 4294967295);
+                return march_int_and($t15527_i9854, 4294967295);
               }
             }
           }
@@ -3419,30 +3442,30 @@ function Random$mix32(x) {
               }
             })();
             {
-              const xh_i9835 = march_int_shr($t15540, 16);
+              const xh_i9837 = march_int_shr($t15540, 16);
               {
-                const xl_i9836 = march_int_and($t15540, 65535);
+                const xl_i9838 = march_int_and($t15540, 65535);
                 {
-                  const $t15527_i9841 = (() => {
+                  const $t15527_i9843 = (() => {
                     {
-                      const $t15525_i9839 = (() => {
+                      const $t15525_i9841 = (() => {
                         {
-                          const $t15524_i9838 = (() => {
+                          const $t15524_i9840 = (() => {
                             {
-                              const $t15523_i9837 = (xh_i9835 * 1935289751);
-                              return march_int_and($t15523_i9837, 65535);
+                              const $t15523_i9839 = (xh_i9837 * 1935289751);
+                              return march_int_and($t15523_i9839, 65535);
                             }
                           })();
-                          return ($t15524_i9838 * 65536);
+                          return ($t15524_i9840 * 65536);
                         }
                       })();
                       {
-                        const $t15526_i9840 = (xl_i9836 * 1935289751);
-                        return ($t15525_i9839 + $t15526_i9840);
+                        const $t15526_i9842 = (xl_i9838 * 1935289751);
+                        return ($t15525_i9841 + $t15526_i9842);
                       }
                     }
                   })();
-                  return march_int_and($t15527_i9841, 4294967295);
+                  return march_int_and($t15527_i9843, 4294967295);
                 }
               }
             }
@@ -3653,6 +3676,14 @@ function Dom$find(id) {
 }
 const Dom$find$clo = { _0: ($_, id) => Dom$find(id) };
 
+function Dom$create(tag) {
+  {
+    const $rc_747 = dom_create_element$clo._0(dom_create_element$clo, tag);
+    return $rc_747;
+  }
+}
+const Dom$create$clo = { _0: ($_, tag) => Dom$create(tag) };
+
 function Dom$set_attr(el, name, val) {
   {
     const $rc_761 = dom_set_attribute$clo._0(dom_set_attribute$clo, el, name, val);
@@ -3850,14 +3881,6 @@ function Canvas$stroke(ctx) {
 }
 const Canvas$stroke$clo = { _0: ($_, ctx) => Canvas$stroke(ctx) };
 
-function Canvas$fill_noise_circle(ctx, cx, cy, radius, alpha) {
-  {
-    const $rc_810 = canvas_fill_noise_circle$clo._0(canvas_fill_noise_circle$clo, ctx, cx, cy, radius, alpha);
-    return $rc_810;
-  }
-}
-const Canvas$fill_noise_circle$clo = { _0: ($_, ctx, cx, cy, radius, alpha) => Canvas$fill_noise_circle(ctx, cx, cy, radius, alpha) };
-
 function Canvas$fill_text(ctx, text, x, y) {
   {
     const $rc_811 = canvas_fill_text$clo._0(canvas_fill_text$clo, ctx, text, x, y);
@@ -3874,37 +3897,77 @@ function Canvas$set_text_align(ctx, align) {
 }
 const Canvas$set_text_align$clo = { _0: ($_, ctx, align) => Canvas$set_text_align(ctx, align) };
 
+function Canvas$draw_node(ctx, node, x, y) {
+  {
+    const $rc_816 = canvas_draw_node$clo._0(canvas_draw_node$clo, ctx, node, x, y);
+    return $rc_816;
+  }
+}
+const Canvas$draw_node$clo = { _0: ($_, ctx, node, x, y) => Canvas$draw_node(ctx, node, x, y) };
+
 function Audio$resume(actx) {
   {
-    const $rc_817 = audio_resume$clo._0(audio_resume$clo, actx);
-    return $rc_817;
+    const $rc_818 = audio_resume$clo._0(audio_resume$clo, actx);
+    return $rc_818;
   }
 }
 const Audio$resume$clo = { _0: ($_, actx) => Audio$resume(actx) };
 
 function Audio$beep(actx, freq, duration, wave) {
   {
-    const $rc_818 = audio_beep$clo._0(audio_beep$clo, actx, freq, duration, wave);
-    return $rc_818;
+    const $rc_819 = audio_beep$clo._0(audio_beep$clo, actx, freq, duration, wave);
+    return $rc_819;
   }
 }
 const Audio$beep$clo = { _0: ($_, actx, freq, duration, wave) => Audio$beep(actx, freq, duration, wave) };
 
 function Audio$sweep(actx, freq_from, freq_to, duration, wave) {
   {
-    const $rc_819 = audio_sweep$clo._0(audio_sweep$clo, actx, freq_from, freq_to, duration, wave);
-    return $rc_819;
+    const $rc_820 = audio_sweep$clo._0(audio_sweep$clo, actx, freq_from, freq_to, duration, wave);
+    return $rc_820;
   }
 }
 const Audio$sweep$clo = { _0: ($_, actx, freq_from, freq_to, duration, wave) => Audio$sweep(actx, freq_from, freq_to, duration, wave) };
 
 function Audio$noise_burst(actx, duration, filter_freq) {
   {
-    const $rc_820 = audio_noise_burst$clo._0(audio_noise_burst$clo, actx, duration, filter_freq);
-    return $rc_820;
+    const $rc_821 = audio_noise_burst$clo._0(audio_noise_burst$clo, actx, duration, filter_freq);
+    return $rc_821;
   }
 }
 const Audio$noise_burst$clo = { _0: ($_, actx, duration, filter_freq) => Audio$noise_burst(actx, duration, filter_freq) };
+
+function WebGL$get_context(node) {
+  {
+    const $rc_823 = webgl_get_context$clo._0(webgl_get_context$clo, node);
+    return $rc_823;
+  }
+}
+const WebGL$get_context$clo = { _0: ($_, node) => WebGL$get_context(node) };
+
+function WebGL$resize(ctx, w, h) {
+  {
+    const $rc_824 = webgl_resize$clo._0(webgl_resize$clo, ctx, w, h);
+    return $rc_824;
+  }
+}
+const WebGL$resize$clo = { _0: ($_, ctx, w, h) => WebGL$resize(ctx, w, h) };
+
+function WebGL$draw_nebula(ctx, clouds, view_w, view_h, t) {
+  {
+    const $rc_825 = webgl_draw_nebula$clo._0(webgl_draw_nebula$clo, ctx, clouds, view_w, view_h, t);
+    return $rc_825;
+  }
+}
+const WebGL$draw_nebula$clo = { _0: ($_, ctx, clouds, view_w, view_h, t) => WebGL$draw_nebula(ctx, clouds, view_w, view_h, t) };
+
+function WebGL$canvas_node(ctx) {
+  {
+    const $rc_826 = webgl_canvas_node$clo._0(webgl_canvas_node$clo, ctx);
+    return $rc_826;
+  }
+}
+const WebGL$canvas_node$clo = { _0: ($_, ctx) => WebGL$canvas_node(ctx) };
 
 function Perihelion$Combat$starkiller_target_idx(game) {
   {
@@ -3969,34 +4032,34 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
               {
                 const $t27365 = game.rng;
                 {
-                  const $p29052_i10481_i10780_i10974 = (() => {
+                  const $p29052_i10494_i10793_i10987 = (() => {
                     {
-                      const $p15579_i10173_i10476_i10775_i10969 = (() => {
+                      const $p15579_i10175_i10489_i10788_i10982 = (() => {
                         {
-                          const $p15576_i1532_i10163_i10467_i10766_i10960 = Random$next_raw($t27365);
+                          const $p15576_i1532_i10165_i10480_i10779_i10973 = Random$next_raw($t27365);
                           {
-                            const hi_i1533_i10164_i10468_i10767_i10961 = $p15576_i1532_i10163_i10467_i10766_i10960._0;
+                            const hi_i1533_i10166_i10481_i10780_i10974 = $p15576_i1532_i10165_i10480_i10779_i10973._0;
                             {
-                              const rng2_i1534_i10165_i10469_i10768_i10962 = $p15576_i1532_i10163_i10467_i10766_i10960._1;
+                              const rng2_i1534_i10167_i10482_i10781_i10975 = $p15576_i1532_i10165_i10480_i10779_i10973._1;
                               {
-                                const $p15575_i1535_i10166_i10470_i10769_i10963 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10962);
+                                const $p15575_i1535_i10168_i10483_i10782_i10976 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10975);
                                 {
-                                  const lo_i1536_i10167_i10471_i10770_i10964 = $p15575_i1535_i10166_i10470_i10769_i10963._0;
+                                  const lo_i1536_i10169_i10484_i10783_i10977 = $p15575_i1535_i10168_i10483_i10782_i10976._0;
                                   {
-                                    const rng3_i1537_i10168_i10472_i10771_i10965 = $p15575_i1535_i10166_i10470_i10769_i10963._1;
+                                    const rng3_i1537_i10170_i10485_i10784_i10978 = $p15575_i1535_i10168_i10483_i10782_i10976._1;
                                     {
-                                      const $t15574_i1541_i10172_i10475_i10774_i10968 = (() => {
+                                      const $t15574_i1541_i10174_i10488_i10787_i10981 = (() => {
                                         {
-                                          const $t15573_i1540_i10171_i10474_i10773_i10967 = (() => {
+                                          const $t15573_i1540_i10173_i10487_i10786_i10980 = (() => {
                                             {
-                                              const $t15571_i1538_i10169_i10473_i10772_i10966 = march_int_and(hi_i1533_i10164_i10468_i10767_i10961, 1048575);
-                                              return ($t15571_i1538_i10169_i10473_i10772_i10966 * 4294967296);
+                                              const $t15571_i1538_i10171_i10486_i10785_i10979 = march_int_and(hi_i1533_i10166_i10481_i10780_i10974, 1048575);
+                                              return ($t15571_i1538_i10171_i10486_i10785_i10979 * 4294967296);
                                             }
                                           })();
-                                          return ($t15573_i1540_i10171_i10474_i10773_i10967 + lo_i1536_i10167_i10471_i10770_i10964);
+                                          return ($t15573_i1540_i10173_i10487_i10786_i10980 + lo_i1536_i10169_i10484_i10783_i10977);
                                         }
                                       })();
-                                      return { _0: $t15574_i1541_i10172_i10475_i10774_i10968, _1: rng3_i1537_i10168_i10472_i10771_i10965 };
+                                      return { _0: $t15574_i1541_i10174_i10488_i10787_i10981, _1: rng3_i1537_i10170_i10485_i10784_i10978 };
                                     }
                                   }
                                 }
@@ -4006,29 +4069,29 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                         }
                       })();
                       {
-                        const bits_i10174_i10477_i10776_i10970 = $p15579_i10173_i10476_i10775_i10969._0;
+                        const bits_i10176_i10490_i10789_i10983 = $p15579_i10175_i10489_i10788_i10982._0;
                         {
-                          const rng2_i10175_i10478_i10777_i10971 = $p15579_i10173_i10476_i10775_i10969._1;
+                          const rng2_i10177_i10491_i10790_i10984 = $p15579_i10175_i10489_i10788_i10982._1;
                           {
-                            const $t15578_i10177_i10480_i10779_i10973 = (() => {
+                            const $t15578_i10179_i10493_i10792_i10986 = (() => {
                               {
-                                const $t15577_i10176_i10479_i10778_i10972 = bits_i10174_i10477_i10776_i10970;
-                                return ($t15577_i10176_i10479_i10778_i10972 / 4.50359962737e+15);
+                                const $t15577_i10178_i10492_i10791_i10985 = bits_i10176_i10490_i10789_i10983;
+                                return ($t15577_i10178_i10492_i10791_i10985 / 4.50359962737e+15);
                               }
                             })();
-                            return { _0: $t15578_i10177_i10480_i10779_i10973, _1: rng2_i10175_i10478_i10777_i10971 };
+                            return { _0: $t15578_i10179_i10493_i10792_i10986, _1: rng2_i10177_i10491_i10790_i10984 };
                           }
                         }
                       }
                     }
                   })();
                   {
-                    const t_i10482_i10781_i10975 = $p29052_i10481_i10780_i10974._0;
+                    const t_i10495_i10794_i10988 = $p29052_i10494_i10793_i10987._0;
                     {
-                      const rng2_i10483_i10782_i10976 = $p29052_i10481_i10780_i10974._1;
+                      const rng2_i10496_i10795_i10989 = $p29052_i10494_i10793_i10987._1;
                       {
-                        const out_i10484_i10783_i10977 = { _0: rng2_i10483_i10782_i10976, _1: t_i10482_i10781_i10975 };
-                        return out_i10484_i10783_i10977;
+                        const out_i10497_i10796_i10990 = { _0: rng2_i10496_i10795_i10989, _1: t_i10495_i10794_i10988 };
+                        return out_i10497_i10796_i10990;
                       }
                     }
                   }
@@ -4042,34 +4105,34 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                 {
                   const $p27389 = (() => {
                     {
-                      const $p29052_i10481_i10780_i10955 = (() => {
+                      const $p29052_i10494_i10793_i10968 = (() => {
                         {
-                          const $p15579_i10173_i10476_i10775_i10950 = (() => {
+                          const $p15579_i10175_i10489_i10788_i10963 = (() => {
                             {
-                              const $p15576_i1532_i10163_i10467_i10766_i10941 = Random$next_raw(r1);
+                              const $p15576_i1532_i10165_i10480_i10779_i10954 = Random$next_raw(r1);
                               {
-                                const hi_i1533_i10164_i10468_i10767_i10942 = $p15576_i1532_i10163_i10467_i10766_i10941._0;
+                                const hi_i1533_i10166_i10481_i10780_i10955 = $p15576_i1532_i10165_i10480_i10779_i10954._0;
                                 {
-                                  const rng2_i1534_i10165_i10469_i10768_i10943 = $p15576_i1532_i10163_i10467_i10766_i10941._1;
+                                  const rng2_i1534_i10167_i10482_i10781_i10956 = $p15576_i1532_i10165_i10480_i10779_i10954._1;
                                   {
-                                    const $p15575_i1535_i10166_i10470_i10769_i10944 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10943);
+                                    const $p15575_i1535_i10168_i10483_i10782_i10957 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10956);
                                     {
-                                      const lo_i1536_i10167_i10471_i10770_i10945 = $p15575_i1535_i10166_i10470_i10769_i10944._0;
+                                      const lo_i1536_i10169_i10484_i10783_i10958 = $p15575_i1535_i10168_i10483_i10782_i10957._0;
                                       {
-                                        const rng3_i1537_i10168_i10472_i10771_i10946 = $p15575_i1535_i10166_i10470_i10769_i10944._1;
+                                        const rng3_i1537_i10170_i10485_i10784_i10959 = $p15575_i1535_i10168_i10483_i10782_i10957._1;
                                         {
-                                          const $t15574_i1541_i10172_i10475_i10774_i10949 = (() => {
+                                          const $t15574_i1541_i10174_i10488_i10787_i10962 = (() => {
                                             {
-                                              const $t15573_i1540_i10171_i10474_i10773_i10948 = (() => {
+                                              const $t15573_i1540_i10173_i10487_i10786_i10961 = (() => {
                                                 {
-                                                  const $t15571_i1538_i10169_i10473_i10772_i10947 = march_int_and(hi_i1533_i10164_i10468_i10767_i10942, 1048575);
-                                                  return ($t15571_i1538_i10169_i10473_i10772_i10947 * 4294967296);
+                                                  const $t15571_i1538_i10171_i10486_i10785_i10960 = march_int_and(hi_i1533_i10166_i10481_i10780_i10955, 1048575);
+                                                  return ($t15571_i1538_i10171_i10486_i10785_i10960 * 4294967296);
                                                 }
                                               })();
-                                              return ($t15573_i1540_i10171_i10474_i10773_i10948 + lo_i1536_i10167_i10471_i10770_i10945);
+                                              return ($t15573_i1540_i10173_i10487_i10786_i10961 + lo_i1536_i10169_i10484_i10783_i10958);
                                             }
                                           })();
-                                          return { _0: $t15574_i1541_i10172_i10475_i10774_i10949, _1: rng3_i1537_i10168_i10472_i10771_i10946 };
+                                          return { _0: $t15574_i1541_i10174_i10488_i10787_i10962, _1: rng3_i1537_i10170_i10485_i10784_i10959 };
                                         }
                                       }
                                     }
@@ -4079,29 +4142,29 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                             }
                           })();
                           {
-                            const bits_i10174_i10477_i10776_i10951 = $p15579_i10173_i10476_i10775_i10950._0;
+                            const bits_i10176_i10490_i10789_i10964 = $p15579_i10175_i10489_i10788_i10963._0;
                             {
-                              const rng2_i10175_i10478_i10777_i10952 = $p15579_i10173_i10476_i10775_i10950._1;
+                              const rng2_i10177_i10491_i10790_i10965 = $p15579_i10175_i10489_i10788_i10963._1;
                               {
-                                const $t15578_i10177_i10480_i10779_i10954 = (() => {
+                                const $t15578_i10179_i10493_i10792_i10967 = (() => {
                                   {
-                                    const $t15577_i10176_i10479_i10778_i10953 = bits_i10174_i10477_i10776_i10951;
-                                    return ($t15577_i10176_i10479_i10778_i10953 / 4.50359962737e+15);
+                                    const $t15577_i10178_i10492_i10791_i10966 = bits_i10176_i10490_i10789_i10964;
+                                    return ($t15577_i10178_i10492_i10791_i10966 / 4.50359962737e+15);
                                   }
                                 })();
-                                return { _0: $t15578_i10177_i10480_i10779_i10954, _1: rng2_i10175_i10478_i10777_i10952 };
+                                return { _0: $t15578_i10179_i10493_i10792_i10967, _1: rng2_i10177_i10491_i10790_i10965 };
                               }
                             }
                           }
                         }
                       })();
                       {
-                        const t_i10482_i10781_i10956 = $p29052_i10481_i10780_i10955._0;
+                        const t_i10495_i10794_i10969 = $p29052_i10494_i10793_i10968._0;
                         {
-                          const rng2_i10483_i10782_i10957 = $p29052_i10481_i10780_i10955._1;
+                          const rng2_i10496_i10795_i10970 = $p29052_i10494_i10793_i10968._1;
                           {
-                            const out_i10484_i10783_i10958 = { _0: rng2_i10483_i10782_i10957, _1: t_i10482_i10781_i10956 };
-                            return out_i10484_i10783_i10958;
+                            const out_i10497_i10796_i10971 = { _0: rng2_i10496_i10795_i10970, _1: t_i10495_i10794_i10969 };
+                            return out_i10497_i10796_i10971;
                           }
                         }
                       }
@@ -4114,34 +4177,34 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                       {
                         const $p27388 = (() => {
                           {
-                            const $p29052_i10481_i10780_i10936 = (() => {
+                            const $p29052_i10494_i10793_i10949 = (() => {
                               {
-                                const $p15579_i10173_i10476_i10775_i10931 = (() => {
+                                const $p15579_i10175_i10489_i10788_i10944 = (() => {
                                   {
-                                    const $p15576_i1532_i10163_i10467_i10766_i10922 = Random$next_raw(r2);
+                                    const $p15576_i1532_i10165_i10480_i10779_i10935 = Random$next_raw(r2);
                                     {
-                                      const hi_i1533_i10164_i10468_i10767_i10923 = $p15576_i1532_i10163_i10467_i10766_i10922._0;
+                                      const hi_i1533_i10166_i10481_i10780_i10936 = $p15576_i1532_i10165_i10480_i10779_i10935._0;
                                       {
-                                        const rng2_i1534_i10165_i10469_i10768_i10924 = $p15576_i1532_i10163_i10467_i10766_i10922._1;
+                                        const rng2_i1534_i10167_i10482_i10781_i10937 = $p15576_i1532_i10165_i10480_i10779_i10935._1;
                                         {
-                                          const $p15575_i1535_i10166_i10470_i10769_i10925 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10924);
+                                          const $p15575_i1535_i10168_i10483_i10782_i10938 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10937);
                                           {
-                                            const lo_i1536_i10167_i10471_i10770_i10926 = $p15575_i1535_i10166_i10470_i10769_i10925._0;
+                                            const lo_i1536_i10169_i10484_i10783_i10939 = $p15575_i1535_i10168_i10483_i10782_i10938._0;
                                             {
-                                              const rng3_i1537_i10168_i10472_i10771_i10927 = $p15575_i1535_i10166_i10470_i10769_i10925._1;
+                                              const rng3_i1537_i10170_i10485_i10784_i10940 = $p15575_i1535_i10168_i10483_i10782_i10938._1;
                                               {
-                                                const $t15574_i1541_i10172_i10475_i10774_i10930 = (() => {
+                                                const $t15574_i1541_i10174_i10488_i10787_i10943 = (() => {
                                                   {
-                                                    const $t15573_i1540_i10171_i10474_i10773_i10929 = (() => {
+                                                    const $t15573_i1540_i10173_i10487_i10786_i10942 = (() => {
                                                       {
-                                                        const $t15571_i1538_i10169_i10473_i10772_i10928 = march_int_and(hi_i1533_i10164_i10468_i10767_i10923, 1048575);
-                                                        return ($t15571_i1538_i10169_i10473_i10772_i10928 * 4294967296);
+                                                        const $t15571_i1538_i10171_i10486_i10785_i10941 = march_int_and(hi_i1533_i10166_i10481_i10780_i10936, 1048575);
+                                                        return ($t15571_i1538_i10171_i10486_i10785_i10941 * 4294967296);
                                                       }
                                                     })();
-                                                    return ($t15573_i1540_i10171_i10474_i10773_i10929 + lo_i1536_i10167_i10471_i10770_i10926);
+                                                    return ($t15573_i1540_i10173_i10487_i10786_i10942 + lo_i1536_i10169_i10484_i10783_i10939);
                                                   }
                                                 })();
-                                                return { _0: $t15574_i1541_i10172_i10475_i10774_i10930, _1: rng3_i1537_i10168_i10472_i10771_i10927 };
+                                                return { _0: $t15574_i1541_i10174_i10488_i10787_i10943, _1: rng3_i1537_i10170_i10485_i10784_i10940 };
                                               }
                                             }
                                           }
@@ -4151,29 +4214,29 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                                   }
                                 })();
                                 {
-                                  const bits_i10174_i10477_i10776_i10932 = $p15579_i10173_i10476_i10775_i10931._0;
+                                  const bits_i10176_i10490_i10789_i10945 = $p15579_i10175_i10489_i10788_i10944._0;
                                   {
-                                    const rng2_i10175_i10478_i10777_i10933 = $p15579_i10173_i10476_i10775_i10931._1;
+                                    const rng2_i10177_i10491_i10790_i10946 = $p15579_i10175_i10489_i10788_i10944._1;
                                     {
-                                      const $t15578_i10177_i10480_i10779_i10935 = (() => {
+                                      const $t15578_i10179_i10493_i10792_i10948 = (() => {
                                         {
-                                          const $t15577_i10176_i10479_i10778_i10934 = bits_i10174_i10477_i10776_i10932;
-                                          return ($t15577_i10176_i10479_i10778_i10934 / 4.50359962737e+15);
+                                          const $t15577_i10178_i10492_i10791_i10947 = bits_i10176_i10490_i10789_i10945;
+                                          return ($t15577_i10178_i10492_i10791_i10947 / 4.50359962737e+15);
                                         }
                                       })();
-                                      return { _0: $t15578_i10177_i10480_i10779_i10935, _1: rng2_i10175_i10478_i10777_i10933 };
+                                      return { _0: $t15578_i10179_i10493_i10792_i10948, _1: rng2_i10177_i10491_i10790_i10946 };
                                     }
                                   }
                                 }
                               }
                             })();
                             {
-                              const t_i10482_i10781_i10937 = $p29052_i10481_i10780_i10936._0;
+                              const t_i10495_i10794_i10950 = $p29052_i10494_i10793_i10949._0;
                               {
-                                const rng2_i10483_i10782_i10938 = $p29052_i10481_i10780_i10936._1;
+                                const rng2_i10496_i10795_i10951 = $p29052_i10494_i10793_i10949._1;
                                 {
-                                  const out_i10484_i10783_i10939 = { _0: rng2_i10483_i10782_i10938, _1: t_i10482_i10781_i10937 };
-                                  return out_i10484_i10783_i10939;
+                                  const out_i10497_i10796_i10952 = { _0: rng2_i10496_i10795_i10951, _1: t_i10495_i10794_i10950 };
+                                  return out_i10497_i10796_i10952;
                                 }
                               }
                             }
@@ -4186,34 +4249,34 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                             {
                               const $p27387 = (() => {
                                 {
-                                  const $p29052_i10481_i10780_i10917 = (() => {
+                                  const $p29052_i10494_i10793_i10930 = (() => {
                                     {
-                                      const $p15579_i10173_i10476_i10775_i10912 = (() => {
+                                      const $p15579_i10175_i10489_i10788_i10925 = (() => {
                                         {
-                                          const $p15576_i1532_i10163_i10467_i10766_i10903 = Random$next_raw(r3);
+                                          const $p15576_i1532_i10165_i10480_i10779_i10916 = Random$next_raw(r3);
                                           {
-                                            const hi_i1533_i10164_i10468_i10767_i10904 = $p15576_i1532_i10163_i10467_i10766_i10903._0;
+                                            const hi_i1533_i10166_i10481_i10780_i10917 = $p15576_i1532_i10165_i10480_i10779_i10916._0;
                                             {
-                                              const rng2_i1534_i10165_i10469_i10768_i10905 = $p15576_i1532_i10163_i10467_i10766_i10903._1;
+                                              const rng2_i1534_i10167_i10482_i10781_i10918 = $p15576_i1532_i10165_i10480_i10779_i10916._1;
                                               {
-                                                const $p15575_i1535_i10166_i10470_i10769_i10906 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10905);
+                                                const $p15575_i1535_i10168_i10483_i10782_i10919 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10918);
                                                 {
-                                                  const lo_i1536_i10167_i10471_i10770_i10907 = $p15575_i1535_i10166_i10470_i10769_i10906._0;
+                                                  const lo_i1536_i10169_i10484_i10783_i10920 = $p15575_i1535_i10168_i10483_i10782_i10919._0;
                                                   {
-                                                    const rng3_i1537_i10168_i10472_i10771_i10908 = $p15575_i1535_i10166_i10470_i10769_i10906._1;
+                                                    const rng3_i1537_i10170_i10485_i10784_i10921 = $p15575_i1535_i10168_i10483_i10782_i10919._1;
                                                     {
-                                                      const $t15574_i1541_i10172_i10475_i10774_i10911 = (() => {
+                                                      const $t15574_i1541_i10174_i10488_i10787_i10924 = (() => {
                                                         {
-                                                          const $t15573_i1540_i10171_i10474_i10773_i10910 = (() => {
+                                                          const $t15573_i1540_i10173_i10487_i10786_i10923 = (() => {
                                                             {
-                                                              const $t15571_i1538_i10169_i10473_i10772_i10909 = march_int_and(hi_i1533_i10164_i10468_i10767_i10904, 1048575);
-                                                              return ($t15571_i1538_i10169_i10473_i10772_i10909 * 4294967296);
+                                                              const $t15571_i1538_i10171_i10486_i10785_i10922 = march_int_and(hi_i1533_i10166_i10481_i10780_i10917, 1048575);
+                                                              return ($t15571_i1538_i10171_i10486_i10785_i10922 * 4294967296);
                                                             }
                                                           })();
-                                                          return ($t15573_i1540_i10171_i10474_i10773_i10910 + lo_i1536_i10167_i10471_i10770_i10907);
+                                                          return ($t15573_i1540_i10173_i10487_i10786_i10923 + lo_i1536_i10169_i10484_i10783_i10920);
                                                         }
                                                       })();
-                                                      return { _0: $t15574_i1541_i10172_i10475_i10774_i10911, _1: rng3_i1537_i10168_i10472_i10771_i10908 };
+                                                      return { _0: $t15574_i1541_i10174_i10488_i10787_i10924, _1: rng3_i1537_i10170_i10485_i10784_i10921 };
                                                     }
                                                   }
                                                 }
@@ -4223,29 +4286,29 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                                         }
                                       })();
                                       {
-                                        const bits_i10174_i10477_i10776_i10913 = $p15579_i10173_i10476_i10775_i10912._0;
+                                        const bits_i10176_i10490_i10789_i10926 = $p15579_i10175_i10489_i10788_i10925._0;
                                         {
-                                          const rng2_i10175_i10478_i10777_i10914 = $p15579_i10173_i10476_i10775_i10912._1;
+                                          const rng2_i10177_i10491_i10790_i10927 = $p15579_i10175_i10489_i10788_i10925._1;
                                           {
-                                            const $t15578_i10177_i10480_i10779_i10916 = (() => {
+                                            const $t15578_i10179_i10493_i10792_i10929 = (() => {
                                               {
-                                                const $t15577_i10176_i10479_i10778_i10915 = bits_i10174_i10477_i10776_i10913;
-                                                return ($t15577_i10176_i10479_i10778_i10915 / 4.50359962737e+15);
+                                                const $t15577_i10178_i10492_i10791_i10928 = bits_i10176_i10490_i10789_i10926;
+                                                return ($t15577_i10178_i10492_i10791_i10928 / 4.50359962737e+15);
                                               }
                                             })();
-                                            return { _0: $t15578_i10177_i10480_i10779_i10916, _1: rng2_i10175_i10478_i10777_i10914 };
+                                            return { _0: $t15578_i10179_i10493_i10792_i10929, _1: rng2_i10177_i10491_i10790_i10927 };
                                           }
                                         }
                                       }
                                     }
                                   })();
                                   {
-                                    const t_i10482_i10781_i10918 = $p29052_i10481_i10780_i10917._0;
+                                    const t_i10495_i10794_i10931 = $p29052_i10494_i10793_i10930._0;
                                     {
-                                      const rng2_i10483_i10782_i10919 = $p29052_i10481_i10780_i10917._1;
+                                      const rng2_i10496_i10795_i10932 = $p29052_i10494_i10793_i10930._1;
                                       {
-                                        const out_i10484_i10783_i10920 = { _0: rng2_i10483_i10782_i10919, _1: t_i10482_i10781_i10918 };
-                                        return out_i10484_i10783_i10920;
+                                        const out_i10497_i10796_i10933 = { _0: rng2_i10496_i10795_i10932, _1: t_i10495_i10794_i10931 };
+                                        return out_i10497_i10796_i10933;
                                       }
                                     }
                                   }
@@ -4258,34 +4321,34 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                                   {
                                     const $p27386 = (() => {
                                       {
-                                        const $p29052_i10481_i10780_i10898 = (() => {
+                                        const $p29052_i10494_i10793_i10911 = (() => {
                                           {
-                                            const $p15579_i10173_i10476_i10775_i10893 = (() => {
+                                            const $p15579_i10175_i10489_i10788_i10906 = (() => {
                                               {
-                                                const $p15576_i1532_i10163_i10467_i10766_i10884 = Random$next_raw(r4);
+                                                const $p15576_i1532_i10165_i10480_i10779_i10897 = Random$next_raw(r4);
                                                 {
-                                                  const hi_i1533_i10164_i10468_i10767_i10885 = $p15576_i1532_i10163_i10467_i10766_i10884._0;
+                                                  const hi_i1533_i10166_i10481_i10780_i10898 = $p15576_i1532_i10165_i10480_i10779_i10897._0;
                                                   {
-                                                    const rng2_i1534_i10165_i10469_i10768_i10886 = $p15576_i1532_i10163_i10467_i10766_i10884._1;
+                                                    const rng2_i1534_i10167_i10482_i10781_i10899 = $p15576_i1532_i10165_i10480_i10779_i10897._1;
                                                     {
-                                                      const $p15575_i1535_i10166_i10470_i10769_i10887 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10886);
+                                                      const $p15575_i1535_i10168_i10483_i10782_i10900 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10899);
                                                       {
-                                                        const lo_i1536_i10167_i10471_i10770_i10888 = $p15575_i1535_i10166_i10470_i10769_i10887._0;
+                                                        const lo_i1536_i10169_i10484_i10783_i10901 = $p15575_i1535_i10168_i10483_i10782_i10900._0;
                                                         {
-                                                          const rng3_i1537_i10168_i10472_i10771_i10889 = $p15575_i1535_i10166_i10470_i10769_i10887._1;
+                                                          const rng3_i1537_i10170_i10485_i10784_i10902 = $p15575_i1535_i10168_i10483_i10782_i10900._1;
                                                           {
-                                                            const $t15574_i1541_i10172_i10475_i10774_i10892 = (() => {
+                                                            const $t15574_i1541_i10174_i10488_i10787_i10905 = (() => {
                                                               {
-                                                                const $t15573_i1540_i10171_i10474_i10773_i10891 = (() => {
+                                                                const $t15573_i1540_i10173_i10487_i10786_i10904 = (() => {
                                                                   {
-                                                                    const $t15571_i1538_i10169_i10473_i10772_i10890 = march_int_and(hi_i1533_i10164_i10468_i10767_i10885, 1048575);
-                                                                    return ($t15571_i1538_i10169_i10473_i10772_i10890 * 4294967296);
+                                                                    const $t15571_i1538_i10171_i10486_i10785_i10903 = march_int_and(hi_i1533_i10166_i10481_i10780_i10898, 1048575);
+                                                                    return ($t15571_i1538_i10171_i10486_i10785_i10903 * 4294967296);
                                                                   }
                                                                 })();
-                                                                return ($t15573_i1540_i10171_i10474_i10773_i10891 + lo_i1536_i10167_i10471_i10770_i10888);
+                                                                return ($t15573_i1540_i10173_i10487_i10786_i10904 + lo_i1536_i10169_i10484_i10783_i10901);
                                                               }
                                                             })();
-                                                            return { _0: $t15574_i1541_i10172_i10475_i10774_i10892, _1: rng3_i1537_i10168_i10472_i10771_i10889 };
+                                                            return { _0: $t15574_i1541_i10174_i10488_i10787_i10905, _1: rng3_i1537_i10170_i10485_i10784_i10902 };
                                                           }
                                                         }
                                                       }
@@ -4295,29 +4358,29 @@ function Perihelion$Combat$step_spawn(game, dt_s) {
                                               }
                                             })();
                                             {
-                                              const bits_i10174_i10477_i10776_i10894 = $p15579_i10173_i10476_i10775_i10893._0;
+                                              const bits_i10176_i10490_i10789_i10907 = $p15579_i10175_i10489_i10788_i10906._0;
                                               {
-                                                const rng2_i10175_i10478_i10777_i10895 = $p15579_i10173_i10476_i10775_i10893._1;
+                                                const rng2_i10177_i10491_i10790_i10908 = $p15579_i10175_i10489_i10788_i10906._1;
                                                 {
-                                                  const $t15578_i10177_i10480_i10779_i10897 = (() => {
+                                                  const $t15578_i10179_i10493_i10792_i10910 = (() => {
                                                     {
-                                                      const $t15577_i10176_i10479_i10778_i10896 = bits_i10174_i10477_i10776_i10894;
-                                                      return ($t15577_i10176_i10479_i10778_i10896 / 4.50359962737e+15);
+                                                      const $t15577_i10178_i10492_i10791_i10909 = bits_i10176_i10490_i10789_i10907;
+                                                      return ($t15577_i10178_i10492_i10791_i10909 / 4.50359962737e+15);
                                                     }
                                                   })();
-                                                  return { _0: $t15578_i10177_i10480_i10779_i10897, _1: rng2_i10175_i10478_i10777_i10895 };
+                                                  return { _0: $t15578_i10179_i10493_i10792_i10910, _1: rng2_i10177_i10491_i10790_i10908 };
                                                 }
                                               }
                                             }
                                           }
                                         })();
                                         {
-                                          const t_i10482_i10781_i10899 = $p29052_i10481_i10780_i10898._0;
+                                          const t_i10495_i10794_i10912 = $p29052_i10494_i10793_i10911._0;
                                           {
-                                            const rng2_i10483_i10782_i10900 = $p29052_i10481_i10780_i10898._1;
+                                            const rng2_i10496_i10795_i10913 = $p29052_i10494_i10793_i10911._1;
                                             {
-                                              const out_i10484_i10783_i10901 = { _0: rng2_i10483_i10782_i10900, _1: t_i10482_i10781_i10899 };
-                                              return out_i10484_i10783_i10901;
+                                              const out_i10497_i10796_i10914 = { _0: rng2_i10496_i10795_i10913, _1: t_i10495_i10794_i10912 };
+                                              return out_i10497_i10796_i10914;
                                             }
                                           }
                                         }
@@ -5608,34 +5671,34 @@ function Perihelion$Combat$step_asteroids_go(game, asteroids, acc, dt_s) {
                                                 {
                                                   const $t27605 = game.rng;
                                                   {
-                                                    const $p29052_i10481_i10780_i10993 = (() => {
+                                                    const $p29052_i10494_i10793_i11006 = (() => {
                                                       {
-                                                        const $p15579_i10173_i10476_i10775_i10988 = (() => {
+                                                        const $p15579_i10175_i10489_i10788_i11001 = (() => {
                                                           {
-                                                            const $p15576_i1532_i10163_i10467_i10766_i10979 = Random$next_raw($t27605);
+                                                            const $p15576_i1532_i10165_i10480_i10779_i10992 = Random$next_raw($t27605);
                                                             {
-                                                              const hi_i1533_i10164_i10468_i10767_i10980 = $p15576_i1532_i10163_i10467_i10766_i10979._0;
+                                                              const hi_i1533_i10166_i10481_i10780_i10993 = $p15576_i1532_i10165_i10480_i10779_i10992._0;
                                                               {
-                                                                const rng2_i1534_i10165_i10469_i10768_i10981 = $p15576_i1532_i10163_i10467_i10766_i10979._1;
+                                                                const rng2_i1534_i10167_i10482_i10781_i10994 = $p15576_i1532_i10165_i10480_i10779_i10992._1;
                                                                 {
-                                                                  const $p15575_i1535_i10166_i10470_i10769_i10982 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i10981);
+                                                                  const $p15575_i1535_i10168_i10483_i10782_i10995 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i10994);
                                                                   {
-                                                                    const lo_i1536_i10167_i10471_i10770_i10983 = $p15575_i1535_i10166_i10470_i10769_i10982._0;
+                                                                    const lo_i1536_i10169_i10484_i10783_i10996 = $p15575_i1535_i10168_i10483_i10782_i10995._0;
                                                                     {
-                                                                      const rng3_i1537_i10168_i10472_i10771_i10984 = $p15575_i1535_i10166_i10470_i10769_i10982._1;
+                                                                      const rng3_i1537_i10170_i10485_i10784_i10997 = $p15575_i1535_i10168_i10483_i10782_i10995._1;
                                                                       {
-                                                                        const $t15574_i1541_i10172_i10475_i10774_i10987 = (() => {
+                                                                        const $t15574_i1541_i10174_i10488_i10787_i11000 = (() => {
                                                                           {
-                                                                            const $t15573_i1540_i10171_i10474_i10773_i10986 = (() => {
+                                                                            const $t15573_i1540_i10173_i10487_i10786_i10999 = (() => {
                                                                               {
-                                                                                const $t15571_i1538_i10169_i10473_i10772_i10985 = march_int_and(hi_i1533_i10164_i10468_i10767_i10980, 1048575);
-                                                                                return ($t15571_i1538_i10169_i10473_i10772_i10985 * 4294967296);
+                                                                                const $t15571_i1538_i10171_i10486_i10785_i10998 = march_int_and(hi_i1533_i10166_i10481_i10780_i10993, 1048575);
+                                                                                return ($t15571_i1538_i10171_i10486_i10785_i10998 * 4294967296);
                                                                               }
                                                                             })();
-                                                                            return ($t15573_i1540_i10171_i10474_i10773_i10986 + lo_i1536_i10167_i10471_i10770_i10983);
+                                                                            return ($t15573_i1540_i10173_i10487_i10786_i10999 + lo_i1536_i10169_i10484_i10783_i10996);
                                                                           }
                                                                         })();
-                                                                        return { _0: $t15574_i1541_i10172_i10475_i10774_i10987, _1: rng3_i1537_i10168_i10472_i10771_i10984 };
+                                                                        return { _0: $t15574_i1541_i10174_i10488_i10787_i11000, _1: rng3_i1537_i10170_i10485_i10784_i10997 };
                                                                       }
                                                                     }
                                                                   }
@@ -5645,29 +5708,29 @@ function Perihelion$Combat$step_asteroids_go(game, asteroids, acc, dt_s) {
                                                           }
                                                         })();
                                                         {
-                                                          const bits_i10174_i10477_i10776_i10989 = $p15579_i10173_i10476_i10775_i10988._0;
+                                                          const bits_i10176_i10490_i10789_i11002 = $p15579_i10175_i10489_i10788_i11001._0;
                                                           {
-                                                            const rng2_i10175_i10478_i10777_i10990 = $p15579_i10173_i10476_i10775_i10988._1;
+                                                            const rng2_i10177_i10491_i10790_i11003 = $p15579_i10175_i10489_i10788_i11001._1;
                                                             {
-                                                              const $t15578_i10177_i10480_i10779_i10992 = (() => {
+                                                              const $t15578_i10179_i10493_i10792_i11005 = (() => {
                                                                 {
-                                                                  const $t15577_i10176_i10479_i10778_i10991 = bits_i10174_i10477_i10776_i10989;
-                                                                  return ($t15577_i10176_i10479_i10778_i10991 / 4.50359962737e+15);
+                                                                  const $t15577_i10178_i10492_i10791_i11004 = bits_i10176_i10490_i10789_i11002;
+                                                                  return ($t15577_i10178_i10492_i10791_i11004 / 4.50359962737e+15);
                                                                 }
                                                               })();
-                                                              return { _0: $t15578_i10177_i10480_i10779_i10992, _1: rng2_i10175_i10478_i10777_i10990 };
+                                                              return { _0: $t15578_i10179_i10493_i10792_i11005, _1: rng2_i10177_i10491_i10790_i11003 };
                                                             }
                                                           }
                                                         }
                                                       }
                                                     })();
                                                     {
-                                                      const t_i10482_i10781_i10994 = $p29052_i10481_i10780_i10993._0;
+                                                      const t_i10495_i10794_i11007 = $p29052_i10494_i10793_i11006._0;
                                                       {
-                                                        const rng2_i10483_i10782_i10995 = $p29052_i10481_i10780_i10993._1;
+                                                        const rng2_i10496_i10795_i11008 = $p29052_i10494_i10793_i11006._1;
                                                         {
-                                                          const out_i10484_i10783_i10996 = { _0: rng2_i10483_i10782_i10995, _1: t_i10482_i10781_i10994 };
-                                                          return out_i10484_i10783_i10996;
+                                                          const out_i10497_i10796_i11009 = { _0: rng2_i10496_i10795_i11008, _1: t_i10495_i10794_i11007 };
+                                                          return out_i10497_i10796_i11009;
                                                         }
                                                       }
                                                     }
@@ -6070,34 +6133,34 @@ function Perihelion$Combat$pick_ring_idx(rng, s) {
   {
     const $p27698 = (() => {
       {
-        const $p29052_i10481_i10780_i11012 = (() => {
+        const $p29052_i10494_i10793_i11025 = (() => {
           {
-            const $p15579_i10173_i10476_i10775_i11007 = (() => {
+            const $p15579_i10175_i10489_i10788_i11020 = (() => {
               {
-                const $p15576_i1532_i10163_i10467_i10766_i10998 = Random$next_raw(rng);
+                const $p15576_i1532_i10165_i10480_i10779_i11011 = Random$next_raw(rng);
                 {
-                  const hi_i1533_i10164_i10468_i10767_i10999 = $p15576_i1532_i10163_i10467_i10766_i10998._0;
+                  const hi_i1533_i10166_i10481_i10780_i11012 = $p15576_i1532_i10165_i10480_i10779_i11011._0;
                   {
-                    const rng2_i1534_i10165_i10469_i10768_i11000 = $p15576_i1532_i10163_i10467_i10766_i10998._1;
+                    const rng2_i1534_i10167_i10482_i10781_i11013 = $p15576_i1532_i10165_i10480_i10779_i11011._1;
                     {
-                      const $p15575_i1535_i10166_i10470_i10769_i11001 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11000);
+                      const $p15575_i1535_i10168_i10483_i10782_i11014 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11013);
                       {
-                        const lo_i1536_i10167_i10471_i10770_i11002 = $p15575_i1535_i10166_i10470_i10769_i11001._0;
+                        const lo_i1536_i10169_i10484_i10783_i11015 = $p15575_i1535_i10168_i10483_i10782_i11014._0;
                         {
-                          const rng3_i1537_i10168_i10472_i10771_i11003 = $p15575_i1535_i10166_i10470_i10769_i11001._1;
+                          const rng3_i1537_i10170_i10485_i10784_i11016 = $p15575_i1535_i10168_i10483_i10782_i11014._1;
                           {
-                            const $t15574_i1541_i10172_i10475_i10774_i11006 = (() => {
+                            const $t15574_i1541_i10174_i10488_i10787_i11019 = (() => {
                               {
-                                const $t15573_i1540_i10171_i10474_i10773_i11005 = (() => {
+                                const $t15573_i1540_i10173_i10487_i10786_i11018 = (() => {
                                   {
-                                    const $t15571_i1538_i10169_i10473_i10772_i11004 = march_int_and(hi_i1533_i10164_i10468_i10767_i10999, 1048575);
-                                    return ($t15571_i1538_i10169_i10473_i10772_i11004 * 4294967296);
+                                    const $t15571_i1538_i10171_i10486_i10785_i11017 = march_int_and(hi_i1533_i10166_i10481_i10780_i11012, 1048575);
+                                    return ($t15571_i1538_i10171_i10486_i10785_i11017 * 4294967296);
                                   }
                                 })();
-                                return ($t15573_i1540_i10171_i10474_i10773_i11005 + lo_i1536_i10167_i10471_i10770_i11002);
+                                return ($t15573_i1540_i10173_i10487_i10786_i11018 + lo_i1536_i10169_i10484_i10783_i11015);
                               }
                             })();
-                            return { _0: $t15574_i1541_i10172_i10475_i10774_i11006, _1: rng3_i1537_i10168_i10472_i10771_i11003 };
+                            return { _0: $t15574_i1541_i10174_i10488_i10787_i11019, _1: rng3_i1537_i10170_i10485_i10784_i11016 };
                           }
                         }
                       }
@@ -6107,29 +6170,29 @@ function Perihelion$Combat$pick_ring_idx(rng, s) {
               }
             })();
             {
-              const bits_i10174_i10477_i10776_i11008 = $p15579_i10173_i10476_i10775_i11007._0;
+              const bits_i10176_i10490_i10789_i11021 = $p15579_i10175_i10489_i10788_i11020._0;
               {
-                const rng2_i10175_i10478_i10777_i11009 = $p15579_i10173_i10476_i10775_i11007._1;
+                const rng2_i10177_i10491_i10790_i11022 = $p15579_i10175_i10489_i10788_i11020._1;
                 {
-                  const $t15578_i10177_i10480_i10779_i11011 = (() => {
+                  const $t15578_i10179_i10493_i10792_i11024 = (() => {
                     {
-                      const $t15577_i10176_i10479_i10778_i11010 = bits_i10174_i10477_i10776_i11008;
-                      return ($t15577_i10176_i10479_i10778_i11010 / 4.50359962737e+15);
+                      const $t15577_i10178_i10492_i10791_i11023 = bits_i10176_i10490_i10789_i11021;
+                      return ($t15577_i10178_i10492_i10791_i11023 / 4.50359962737e+15);
                     }
                   })();
-                  return { _0: $t15578_i10177_i10480_i10779_i11011, _1: rng2_i10175_i10478_i10777_i11009 };
+                  return { _0: $t15578_i10179_i10493_i10792_i11024, _1: rng2_i10177_i10491_i10790_i11022 };
                 }
               }
             }
           }
         })();
         {
-          const t_i10482_i10781_i11013 = $p29052_i10481_i10780_i11012._0;
+          const t_i10495_i10794_i11026 = $p29052_i10494_i10793_i11025._0;
           {
-            const rng2_i10483_i10782_i11014 = $p29052_i10481_i10780_i11012._1;
+            const rng2_i10496_i10795_i11027 = $p29052_i10494_i10793_i11025._1;
             {
-              const out_i10484_i10783_i11015 = { _0: rng2_i10483_i10782_i11014, _1: t_i10482_i10781_i11013 };
-              return out_i10484_i10783_i11015;
+              const out_i10497_i10796_i11028 = { _0: rng2_i10496_i10795_i11027, _1: t_i10495_i10794_i11026 };
+              return out_i10497_i10796_i11028;
             }
           }
         }
@@ -6192,18 +6255,18 @@ function Perihelion$Combat$step_ships_go(game, ships, acc, new_shots, dt_s) {
           {
             const $t27701 = (() => {
               {
-                const go_i9857 = { $: "$Clo_go$4765", _0: go$apply$4765 };
+                const go_i9859 = { $: "$Clo_go$4765", _0: go$apply$4765 };
                 {
-                  const $t261_i9860 = (() => {
+                  const $t261_i9862 = (() => {
                     {
-                      const go_i4485_i9858 = { $: "$Clo_go$5248", _0: go$apply$5248 };
+                      const go_i4487_i9860 = { $: "$Clo_go$5248", _0: go$apply$5248 };
                       {
-                        const $t253_i4486_i9859 = { $: "Nil" };
-                        return go$apply$5248(go_i4485_i9858, new_shots, $t253_i4486_i9859);
+                        const $t253_i4488_i9861 = { $: "Nil" };
+                        return go$apply$5248(go_i4487_i9860, new_shots, $t253_i4488_i9861);
                       }
                     }
                   })();
-                  return go$apply$4765(go_i9857, $t261_i9860, $t27700);
+                  return go$apply$4765(go_i9859, $t261_i9862, $t27700);
                 }
               }
             })();
@@ -6679,34 +6742,34 @@ function Perihelion$Combat$step_ships_go(game, ships, acc, new_shots, dt_s) {
                                           {
                                             const $t27781 = game.rng;
                                             {
-                                              const $p29052_i10481_i10780_i11031 = (() => {
+                                              const $p29052_i10494_i10793_i11044 = (() => {
                                                 {
-                                                  const $p15579_i10173_i10476_i10775_i11026 = (() => {
+                                                  const $p15579_i10175_i10489_i10788_i11039 = (() => {
                                                     {
-                                                      const $p15576_i1532_i10163_i10467_i10766_i11017 = Random$next_raw($t27781);
+                                                      const $p15576_i1532_i10165_i10480_i10779_i11030 = Random$next_raw($t27781);
                                                       {
-                                                        const hi_i1533_i10164_i10468_i10767_i11018 = $p15576_i1532_i10163_i10467_i10766_i11017._0;
+                                                        const hi_i1533_i10166_i10481_i10780_i11031 = $p15576_i1532_i10165_i10480_i10779_i11030._0;
                                                         {
-                                                          const rng2_i1534_i10165_i10469_i10768_i11019 = $p15576_i1532_i10163_i10467_i10766_i11017._1;
+                                                          const rng2_i1534_i10167_i10482_i10781_i11032 = $p15576_i1532_i10165_i10480_i10779_i11030._1;
                                                           {
-                                                            const $p15575_i1535_i10166_i10470_i10769_i11020 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11019);
+                                                            const $p15575_i1535_i10168_i10483_i10782_i11033 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11032);
                                                             {
-                                                              const lo_i1536_i10167_i10471_i10770_i11021 = $p15575_i1535_i10166_i10470_i10769_i11020._0;
+                                                              const lo_i1536_i10169_i10484_i10783_i11034 = $p15575_i1535_i10168_i10483_i10782_i11033._0;
                                                               {
-                                                                const rng3_i1537_i10168_i10472_i10771_i11022 = $p15575_i1535_i10166_i10470_i10769_i11020._1;
+                                                                const rng3_i1537_i10170_i10485_i10784_i11035 = $p15575_i1535_i10168_i10483_i10782_i11033._1;
                                                                 {
-                                                                  const $t15574_i1541_i10172_i10475_i10774_i11025 = (() => {
+                                                                  const $t15574_i1541_i10174_i10488_i10787_i11038 = (() => {
                                                                     {
-                                                                      const $t15573_i1540_i10171_i10474_i10773_i11024 = (() => {
+                                                                      const $t15573_i1540_i10173_i10487_i10786_i11037 = (() => {
                                                                         {
-                                                                          const $t15571_i1538_i10169_i10473_i10772_i11023 = march_int_and(hi_i1533_i10164_i10468_i10767_i11018, 1048575);
-                                                                          return ($t15571_i1538_i10169_i10473_i10772_i11023 * 4294967296);
+                                                                          const $t15571_i1538_i10171_i10486_i10785_i11036 = march_int_and(hi_i1533_i10166_i10481_i10780_i11031, 1048575);
+                                                                          return ($t15571_i1538_i10171_i10486_i10785_i11036 * 4294967296);
                                                                         }
                                                                       })();
-                                                                      return ($t15573_i1540_i10171_i10474_i10773_i11024 + lo_i1536_i10167_i10471_i10770_i11021);
+                                                                      return ($t15573_i1540_i10173_i10487_i10786_i11037 + lo_i1536_i10169_i10484_i10783_i11034);
                                                                     }
                                                                   })();
-                                                                  return { _0: $t15574_i1541_i10172_i10475_i10774_i11025, _1: rng3_i1537_i10168_i10472_i10771_i11022 };
+                                                                  return { _0: $t15574_i1541_i10174_i10488_i10787_i11038, _1: rng3_i1537_i10170_i10485_i10784_i11035 };
                                                                 }
                                                               }
                                                             }
@@ -6716,29 +6779,29 @@ function Perihelion$Combat$step_ships_go(game, ships, acc, new_shots, dt_s) {
                                                     }
                                                   })();
                                                   {
-                                                    const bits_i10174_i10477_i10776_i11027 = $p15579_i10173_i10476_i10775_i11026._0;
+                                                    const bits_i10176_i10490_i10789_i11040 = $p15579_i10175_i10489_i10788_i11039._0;
                                                     {
-                                                      const rng2_i10175_i10478_i10777_i11028 = $p15579_i10173_i10476_i10775_i11026._1;
+                                                      const rng2_i10177_i10491_i10790_i11041 = $p15579_i10175_i10489_i10788_i11039._1;
                                                       {
-                                                        const $t15578_i10177_i10480_i10779_i11030 = (() => {
+                                                        const $t15578_i10179_i10493_i10792_i11043 = (() => {
                                                           {
-                                                            const $t15577_i10176_i10479_i10778_i11029 = bits_i10174_i10477_i10776_i11027;
-                                                            return ($t15577_i10176_i10479_i10778_i11029 / 4.50359962737e+15);
+                                                            const $t15577_i10178_i10492_i10791_i11042 = bits_i10176_i10490_i10789_i11040;
+                                                            return ($t15577_i10178_i10492_i10791_i11042 / 4.50359962737e+15);
                                                           }
                                                         })();
-                                                        return { _0: $t15578_i10177_i10480_i10779_i11030, _1: rng2_i10175_i10478_i10777_i11028 };
+                                                        return { _0: $t15578_i10179_i10493_i10792_i11043, _1: rng2_i10177_i10491_i10790_i11041 };
                                                       }
                                                     }
                                                   }
                                                 }
                                               })();
                                               {
-                                                const t_i10482_i10781_i11032 = $p29052_i10481_i10780_i11031._0;
+                                                const t_i10495_i10794_i11045 = $p29052_i10494_i10793_i11044._0;
                                                 {
-                                                  const rng2_i10483_i10782_i11033 = $p29052_i10481_i10780_i11031._1;
+                                                  const rng2_i10496_i10795_i11046 = $p29052_i10494_i10793_i11044._1;
                                                   {
-                                                    const out_i10484_i10783_i11034 = { _0: rng2_i10483_i10782_i11033, _1: t_i10482_i10781_i11032 };
-                                                    return out_i10484_i10783_i11034;
+                                                    const out_i10497_i10796_i11047 = { _0: rng2_i10496_i10795_i11046, _1: t_i10495_i10794_i11045 };
+                                                    return out_i10497_i10796_i11047;
                                                   }
                                                 }
                                               }
@@ -7094,46 +7157,46 @@ function Perihelion$Combat$spread_shots(x, y, ax, ay) {
       {
         const $t27906 = (0. - 0.5236);
         {
-          const $t27899_i9937 = (() => {
+          const $t27899_i9939 = (() => {
             {
-              const $t27896_i9934 = (() => {
+              const $t27896_i9936 = (() => {
                 {
-                  const $t27895_i9933 = Math.cos($t27906);
-                  return (ax * $t27895_i9933);
+                  const $t27895_i9935 = Math.cos($t27906);
+                  return (ax * $t27895_i9935);
                 }
               })();
               {
-                const $t27898_i9936 = (() => {
+                const $t27898_i9938 = (() => {
                   {
-                    const $t27897_i9935 = Math.sin($t27906);
-                    return (ay * $t27897_i9935);
+                    const $t27897_i9937 = Math.sin($t27906);
+                    return (ay * $t27897_i9937);
                   }
                 })();
-                return ($t27896_i9934 - $t27898_i9936);
+                return ($t27896_i9936 - $t27898_i9938);
               }
             }
           })();
           {
-            const $t27904_i9942 = (() => {
+            const $t27904_i9944 = (() => {
               {
-                const $t27901_i9939 = (() => {
+                const $t27901_i9941 = (() => {
                   {
-                    const $t27900_i9938 = Math.sin($t27906);
-                    return (ax * $t27900_i9938);
+                    const $t27900_i9940 = Math.sin($t27906);
+                    return (ax * $t27900_i9940);
                   }
                 })();
                 {
-                  const $t27903_i9941 = (() => {
+                  const $t27903_i9943 = (() => {
                     {
-                      const $t27902_i9940 = Math.cos($t27906);
-                      return (ay * $t27902_i9940);
+                      const $t27902_i9942 = Math.cos($t27906);
+                      return (ay * $t27902_i9942);
                     }
                   })();
-                  return ($t27901_i9939 + $t27903_i9941);
+                  return ($t27901_i9941 + $t27903_i9943);
                 }
               }
             })();
-            return { _0: $t27899_i9937, _1: $t27904_i9942 };
+            return { _0: $t27899_i9939, _1: $t27904_i9944 };
           }
         }
       }
@@ -7152,46 +7215,46 @@ function Perihelion$Combat$spread_shots(x, y, ax, ay) {
                 }
               })();
               {
-                const $t27899_i9924 = (() => {
+                const $t27899_i9926 = (() => {
                   {
-                    const $t27896_i9921 = (() => {
+                    const $t27896_i9923 = (() => {
                       {
-                        const $t27895_i9920 = Math.cos($t27909);
-                        return (ax * $t27895_i9920);
+                        const $t27895_i9922 = Math.cos($t27909);
+                        return (ax * $t27895_i9922);
                       }
                     })();
                     {
-                      const $t27898_i9923 = (() => {
+                      const $t27898_i9925 = (() => {
                         {
-                          const $t27897_i9922 = Math.sin($t27909);
-                          return (ay * $t27897_i9922);
+                          const $t27897_i9924 = Math.sin($t27909);
+                          return (ay * $t27897_i9924);
                         }
                       })();
-                      return ($t27896_i9921 - $t27898_i9923);
+                      return ($t27896_i9923 - $t27898_i9925);
                     }
                   }
                 })();
                 {
-                  const $t27904_i9929 = (() => {
+                  const $t27904_i9931 = (() => {
                     {
-                      const $t27901_i9926 = (() => {
+                      const $t27901_i9928 = (() => {
                         {
-                          const $t27900_i9925 = Math.sin($t27909);
-                          return (ax * $t27900_i9925);
+                          const $t27900_i9927 = Math.sin($t27909);
+                          return (ax * $t27900_i9927);
                         }
                       })();
                       {
-                        const $t27903_i9928 = (() => {
+                        const $t27903_i9930 = (() => {
                           {
-                            const $t27902_i9927 = Math.cos($t27909);
-                            return (ay * $t27902_i9927);
+                            const $t27902_i9929 = Math.cos($t27909);
+                            return (ay * $t27902_i9929);
                           }
                         })();
-                        return ($t27901_i9926 + $t27903_i9928);
+                        return ($t27901_i9928 + $t27903_i9930);
                       }
                     }
                   })();
-                  return { _0: $t27899_i9924, _1: $t27904_i9929 };
+                  return { _0: $t27899_i9926, _1: $t27904_i9931 };
                 }
               }
             }
@@ -7205,46 +7268,46 @@ function Perihelion$Combat$spread_shots(x, y, ax, ay) {
                   {
                     const $t27911 = (0.5236 / 2.);
                     {
-                      const $t27899_i9911 = (() => {
+                      const $t27899_i9913 = (() => {
                         {
-                          const $t27896_i9908 = (() => {
+                          const $t27896_i9910 = (() => {
                             {
-                              const $t27895_i9907 = Math.cos($t27911);
-                              return (ax * $t27895_i9907);
+                              const $t27895_i9909 = Math.cos($t27911);
+                              return (ax * $t27895_i9909);
                             }
                           })();
                           {
-                            const $t27898_i9910 = (() => {
+                            const $t27898_i9912 = (() => {
                               {
-                                const $t27897_i9909 = Math.sin($t27911);
-                                return (ay * $t27897_i9909);
+                                const $t27897_i9911 = Math.sin($t27911);
+                                return (ay * $t27897_i9911);
                               }
                             })();
-                            return ($t27896_i9908 - $t27898_i9910);
+                            return ($t27896_i9910 - $t27898_i9912);
                           }
                         }
                       })();
                       {
-                        const $t27904_i9916 = (() => {
+                        const $t27904_i9918 = (() => {
                           {
-                            const $t27901_i9913 = (() => {
+                            const $t27901_i9915 = (() => {
                               {
-                                const $t27900_i9912 = Math.sin($t27911);
-                                return (ax * $t27900_i9912);
+                                const $t27900_i9914 = Math.sin($t27911);
+                                return (ax * $t27900_i9914);
                               }
                             })();
                             {
-                              const $t27903_i9915 = (() => {
+                              const $t27903_i9917 = (() => {
                                 {
-                                  const $t27902_i9914 = Math.cos($t27911);
-                                  return (ay * $t27902_i9914);
+                                  const $t27902_i9916 = Math.cos($t27911);
+                                  return (ay * $t27902_i9916);
                                 }
                               })();
-                              return ($t27901_i9913 + $t27903_i9915);
+                              return ($t27901_i9915 + $t27903_i9917);
                             }
                           }
                         })();
-                        return { _0: $t27899_i9911, _1: $t27904_i9916 };
+                        return { _0: $t27899_i9913, _1: $t27904_i9918 };
                       }
                     }
                   }
@@ -7256,46 +7319,46 @@ function Perihelion$Combat$spread_shots(x, y, ax, ay) {
                     {
                       const $p27923 = (() => {
                         {
-                          const $t27899_i9898 = (() => {
+                          const $t27899_i9900 = (() => {
                             {
-                              const $t27896_i9895 = (() => {
+                              const $t27896_i9897 = (() => {
                                 {
-                                  const $t27895_i9894 = Math.cos(0.5236);
-                                  return (ax * $t27895_i9894);
+                                  const $t27895_i9896 = Math.cos(0.5236);
+                                  return (ax * $t27895_i9896);
                                 }
                               })();
                               {
-                                const $t27898_i9897 = (() => {
+                                const $t27898_i9899 = (() => {
                                   {
-                                    const $t27897_i9896 = Math.sin(0.5236);
-                                    return (ay * $t27897_i9896);
+                                    const $t27897_i9898 = Math.sin(0.5236);
+                                    return (ay * $t27897_i9898);
                                   }
                                 })();
-                                return ($t27896_i9895 - $t27898_i9897);
+                                return ($t27896_i9897 - $t27898_i9899);
                               }
                             }
                           })();
                           {
-                            const $t27904_i9903 = (() => {
+                            const $t27904_i9905 = (() => {
                               {
-                                const $t27901_i9900 = (() => {
+                                const $t27901_i9902 = (() => {
                                   {
-                                    const $t27900_i9899 = Math.sin(0.5236);
-                                    return (ax * $t27900_i9899);
+                                    const $t27900_i9901 = Math.sin(0.5236);
+                                    return (ax * $t27900_i9901);
                                   }
                                 })();
                                 {
-                                  const $t27903_i9902 = (() => {
+                                  const $t27903_i9904 = (() => {
                                     {
-                                      const $t27902_i9901 = Math.cos(0.5236);
-                                      return (ay * $t27902_i9901);
+                                      const $t27902_i9903 = Math.cos(0.5236);
+                                      return (ay * $t27902_i9903);
                                     }
                                   })();
-                                  return ($t27901_i9900 + $t27903_i9902);
+                                  return ($t27901_i9902 + $t27903_i9904);
                                 }
                               }
                             })();
-                            return { _0: $t27899_i9898, _1: $t27904_i9903 };
+                            return { _0: $t27899_i9900, _1: $t27904_i9905 };
                           }
                         }
                       })();
@@ -7306,50 +7369,50 @@ function Perihelion$Combat$spread_shots(x, y, ax, ay) {
                           {
                             const $t27913 = (() => {
                               {
-                                const $t27886_i9889 = (ax * 420.);
+                                const $t27886_i9891 = (ax * 420.);
                                 {
-                                  const $t27888_i9890 = (ay * 420.);
-                                  return ({ x: x, y: y, vx: $t27886_i9889, vy: $t27888_i9890, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                  const $t27888_i9892 = (ay * 420.);
+                                  return ({ x: x, y: y, vx: $t27886_i9891, vy: $t27888_i9892, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                 }
                               }
                             })();
                             {
                               const $t27914 = (() => {
                                 {
-                                  const $t27886_i9883 = (a1x * 420.);
+                                  const $t27886_i9885 = (a1x * 420.);
                                   {
-                                    const $t27888_i9884 = (a1y * 420.);
-                                    return ({ x: x, y: y, vx: $t27886_i9883, vy: $t27888_i9884, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                    const $t27888_i9886 = (a1y * 420.);
+                                    return ({ x: x, y: y, vx: $t27886_i9885, vy: $t27888_i9886, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                   }
                                 }
                               })();
                               {
                                 const $t27915 = (() => {
                                   {
-                                    const $t27886_i9877 = (a2x * 420.);
+                                    const $t27886_i9879 = (a2x * 420.);
                                     {
-                                      const $t27888_i9878 = (a2y * 420.);
-                                      return ({ x: x, y: y, vx: $t27886_i9877, vy: $t27888_i9878, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                      const $t27888_i9880 = (a2y * 420.);
+                                      return ({ x: x, y: y, vx: $t27886_i9879, vy: $t27888_i9880, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                     }
                                   }
                                 })();
                                 {
                                   const $t27916 = (() => {
                                     {
-                                      const $t27886_i9871 = (a3x * 420.);
+                                      const $t27886_i9873 = (a3x * 420.);
                                       {
-                                        const $t27888_i9872 = (a3y * 420.);
-                                        return ({ x: x, y: y, vx: $t27886_i9871, vy: $t27888_i9872, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                        const $t27888_i9874 = (a3y * 420.);
+                                        return ({ x: x, y: y, vx: $t27886_i9873, vy: $t27888_i9874, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                       }
                                     }
                                   })();
                                   {
                                     const $t27917 = (() => {
                                       {
-                                        const $t27886_i9865 = (a4x * 420.);
+                                        const $t27886_i9867 = (a4x * 420.);
                                         {
-                                          const $t27888_i9866 = (a4y * 420.);
-                                          return ({ x: x, y: y, vx: $t27886_i9865, vy: $t27888_i9866, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                          const $t27888_i9868 = (a4y * 420.);
+                                          return ({ x: x, y: y, vx: $t27886_i9867, vy: $t27888_i9868, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                         }
                                       }
                                     })();
@@ -7549,10 +7612,10 @@ function Perihelion$Combat$fire(game, keys, cursor, _dt_s) {
                                                       {
                                                         const $t27952 = game.ball_y;
                                                         {
-                                                          const $t27886_i9959 = (ax * 420.);
+                                                          const $t27886_i9961 = (ax * 420.);
                                                           {
-                                                            const $t27888_i9960 = (ay * 420.);
-                                                            return ({ x: $t27951, y: $t27952, vx: $t27886_i9959, vy: $t27888_i9960, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
+                                                            const $t27888_i9962 = (ay * 420.);
+                                                            return ({ x: $t27951, y: $t27952, vx: $t27886_i9961, vy: $t27888_i9962, ttl: 3., homing: false, star_killer: false, target_x: 0., target_y: 0. });
                                                           }
                                                         }
                                                       }
@@ -7575,10 +7638,10 @@ function Perihelion$Combat$fire(game, keys, cursor, _dt_s) {
                                                       {
                                                         const $t27956 = game.ball_y;
                                                         {
-                                                          const $t27891_i9965 = (ax * 420.);
+                                                          const $t27891_i9967 = (ax * 420.);
                                                           {
-                                                            const $t27893_i9966 = (ay * 420.);
-                                                            return ({ x: $t27955, y: $t27956, vx: $t27891_i9965, vy: $t27893_i9966, ttl: 3., homing: true, star_killer: false, target_x: 0., target_y: 0. });
+                                                            const $t27893_i9968 = (ay * 420.);
+                                                            return ({ x: $t27955, y: $t27956, vx: $t27891_i9967, vy: $t27893_i9968, ttl: 3., homing: true, star_killer: false, target_x: 0., target_y: 0. });
                                                           }
                                                         }
                                                       }
@@ -7738,28 +7801,28 @@ function Perihelion$Combat$fire(game, keys, cursor, _dt_s) {
                                                   }
                                                   default: {
                                                     {
-                                                      const reduced_i9953 = (() => {
+                                                      const reduced_i9955 = (() => {
                                                         {
-                                                          const $t27346_i9952 = (() => {
+                                                          const $t27346_i9954 = (() => {
                                                             {
-                                                              const $t27344_i9951 = (() => {
+                                                              const $t27344_i9953 = (() => {
                                                                 {
-                                                                  const $t27343_i9950 = game.fire_rate_stacks;
-                                                                  return $t27343_i9950;
+                                                                  const $t27343_i9952 = game.fire_rate_stacks;
+                                                                  return $t27343_i9952;
                                                                 }
                                                               })();
-                                                              return ($t27344_i9951 * 0.05);
+                                                              return ($t27344_i9953 * 0.05);
                                                             }
                                                           })();
-                                                          return (0.4 - $t27346_i9952);
+                                                          return (0.4 - $t27346_i9954);
                                                         }
                                                       })();
                                                       {
-                                                        const $t27348_i9954 = (reduced_i9953 < 0.15);
-                                                        if ($t27348_i9954 === true) {
+                                                        const $t27348_i9956 = (reduced_i9955 < 0.15);
+                                                        if ($t27348_i9956 === true) {
                                                           return 0.15;
                                                         } else {
-                                                          return reduced_i9953;
+                                                          return reduced_i9955;
                                                         }
                                                       }
                                                     }
@@ -7804,18 +7867,18 @@ function Perihelion$Combat$fire(game, keys, cursor, _dt_s) {
                                                 {
                                                   const $t27994 = (() => {
                                                     {
-                                                      const go_i9945 = { $: "$Clo_go$4765", _0: go$apply$4765 };
+                                                      const go_i9947 = { $: "$Clo_go$4765", _0: go$apply$4765 };
                                                       {
-                                                        const $t261_i9948 = (() => {
+                                                        const $t261_i9950 = (() => {
                                                           {
-                                                            const go_i4485_i9946 = { $: "$Clo_go$5248", _0: go$apply$5248 };
+                                                            const go_i4487_i9948 = { $: "$Clo_go$5248", _0: go$apply$5248 };
                                                             {
-                                                              const $t253_i4486_i9947 = { $: "Nil" };
-                                                              return go$apply$5248(go_i4485_i9946, $t27993, $t253_i4486_i9947);
+                                                              const $t253_i4488_i9949 = { $: "Nil" };
+                                                              return go$apply$5248(go_i4487_i9948, $t27993, $t253_i4488_i9949);
                                                             }
                                                           }
                                                         })();
-                                                        return go$apply$4765(go_i9945, $t261_i9948, new_shots);
+                                                        return go$apply$4765(go_i9947, $t261_i9950, new_shots);
                                                       }
                                                     }
                                                   })();
@@ -7875,32 +7938,32 @@ function Perihelion$Combat$find_star_by_pos(stars, tx, ty, i) {
                 {
                   const $t28009 = s.y;
                   {
-                    const $t27359_i9977 = (() => {
+                    const $t27359_i9979 = (() => {
                       {
-                        const dx_i3632_i9973 = (tx - $t28008);
+                        const dx_i3632_i9975 = (tx - $t28008);
                         {
-                          const dy_i3633_i9974 = (ty - $t28009);
+                          const dy_i3633_i9976 = (ty - $t28009);
                           {
-                            const $t27357_i3634_i9975 = (dx_i3632_i9973 * dx_i3632_i9973);
+                            const $t27357_i3634_i9977 = (dx_i3632_i9975 * dx_i3632_i9975);
                             {
-                              const $t27358_i3635_i9976 = (dy_i3633_i9974 * dy_i3633_i9974);
-                              return ($t27357_i3634_i9975 + $t27358_i3635_i9976);
+                              const $t27358_i3635_i9978 = (dy_i3633_i9976 * dy_i3633_i9976);
+                              return ($t27357_i3634_i9977 + $t27358_i3635_i9978);
                             }
                           }
                         }
                       }
                     })();
                     {
-                      const $t27362_i9980 = (() => {
+                      const $t27362_i9982 = (() => {
                         {
-                          const $t27360_i9978 = (0.001 + 0.);
+                          const $t27360_i9980 = (0.001 + 0.);
                           {
-                            const $t27361_i9979 = (0.001 + 0.);
-                            return ($t27360_i9978 * $t27361_i9979);
+                            const $t27361_i9981 = (0.001 + 0.);
+                            return ($t27360_i9980 * $t27361_i9981);
                           }
                         }
                       })();
-                      return ($t27359_i9977 <= $t27362_i9980);
+                      return ($t27359_i9979 <= $t27362_i9982);
                     }
                   }
                 }
@@ -7967,32 +8030,32 @@ function Perihelion$Combat$collide_shots_stars(game) {
                         {
                           const $t28025 = s.target_y;
                           {
-                            const $t27359_i10002 = (() => {
+                            const $t27359_i10004 = (() => {
                               {
-                                const dx_i3632_i9998 = ($t28024 - $t28021);
+                                const dx_i3632_i10000 = ($t28024 - $t28021);
                                 {
-                                  const dy_i3633_i9999 = ($t28025 - $t28022);
+                                  const dy_i3633_i10001 = ($t28025 - $t28022);
                                   {
-                                    const $t27357_i3634_i10000 = (dx_i3632_i9998 * dx_i3632_i9998);
+                                    const $t27357_i3634_i10002 = (dx_i3632_i10000 * dx_i3632_i10000);
                                     {
-                                      const $t27358_i3635_i10001 = (dy_i3633_i9999 * dy_i3633_i9999);
-                                      return ($t27357_i3634_i10000 + $t27358_i3635_i10001);
+                                      const $t27358_i3635_i10003 = (dy_i3633_i10001 * dy_i3633_i10001);
+                                      return ($t27357_i3634_i10002 + $t27358_i3635_i10003);
                                     }
                                   }
                                 }
                               }
                             })();
                             {
-                              const $t27362_i10005 = (() => {
+                              const $t27362_i10007 = (() => {
                                 {
-                                  const $t27360_i10003 = (20. + 0.);
+                                  const $t27360_i10005 = (20. + 0.);
                                   {
-                                    const $t27361_i10004 = (20. + 0.);
-                                    return ($t27360_i10003 * $t27361_i10004);
+                                    const $t27361_i10006 = (20. + 0.);
+                                    return ($t27360_i10005 * $t27361_i10006);
                                   }
                                 }
                               })();
-                              return ($t27359_i10002 <= $t27362_i10005);
+                              return ($t27359_i10004 <= $t27362_i10007);
                             }
                           }
                         }
@@ -8051,29 +8114,29 @@ function Perihelion$Combat$collide_shots_stars(game) {
                                 {
                                   const $t28037 = (() => {
                                     {
-                                      const $t28000_i9983 = { $: "$Clo_$lam27998$3697", _0: $lam27998$apply$3697, _1: tidx };
+                                      const $t28000_i9985 = { $: "$Clo_$lam27998$3697", _0: $lam27998$apply$3697, _1: tidx };
                                       {
-                                        const $t28001_i9987 = (() => {
+                                        const $t28001_i9989 = (() => {
                                           {
-                                            const pred_i3740_i9984 = $t28000_i9983;
+                                            const pred_i3740_i9986 = $t28000_i9985;
                                             {
-                                              const go_i3741_i9985 = { $: "$Clo_go$4771", _0: go$apply$4771, _1: pred_i3740_i9984 };
+                                              const go_i3741_i9987 = { $: "$Clo_go$4771", _0: go$apply$4771, _1: pred_i3740_i9986 };
                                               {
-                                                const $t302_i3742_i9986 = { $: "Nil" };
-                                                return go$apply$4771(go_i3741_i9985, $t28036, $t302_i3742_i9986);
+                                                const $t302_i3742_i9988 = { $: "Nil" };
+                                                return go$apply$4771(go_i3741_i9987, $t28036, $t302_i3742_i9988);
                                               }
                                             }
                                           }
                                         })();
                                         {
-                                          const $t28007_i9988 = { $: "$Clo_$lam28002$3698", _0: $lam28002$apply$3698, _1: tidx };
+                                          const $t28007_i9990 = { $: "$Clo_$lam28002$3698", _0: $lam28002$apply$3698, _1: tidx };
                                           {
-                                            const f_i3736_i9989 = $t28007_i9988;
+                                            const f_i3736_i9991 = $t28007_i9990;
                                             {
-                                              const go_i3737_i9990 = { $: "$Clo_go$4769", _0: go$apply$4769, _1: f_i3736_i9989 };
+                                              const go_i3737_i9992 = { $: "$Clo_go$4769", _0: go$apply$4769, _1: f_i3736_i9991 };
                                               {
-                                                const $t270_i3738_i9991 = { $: "Nil" };
-                                                return go$apply$4769(go_i3737_i9990, $t28001_i9987, $t270_i3738_i9991);
+                                                const $t270_i3738_i9993 = { $: "Nil" };
+                                                return go$apply$4769(go_i3737_i9992, $t28001_i9989, $t270_i3738_i9993);
                                               }
                                             }
                                           }
@@ -8200,14 +8263,14 @@ function Perihelion$Combat$collide_shots_asteroids(game) {
                       {
                         const $t28081 = (() => {
                           {
-                            const $t28056_i10030 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
+                            const $t28056_i10032 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
                             {
-                              const f_i3759_i10031 = $t28056_i10030;
+                              const f_i3759_i10033 = $t28056_i10032;
                               {
-                                const go_i3760_i10032 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10031 };
+                                const go_i3760_i10034 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10033 };
                                 {
-                                  const $t270_i3761_i10033 = { $: "Nil" };
-                                  return go$apply$4773(go_i3760_i10032, dead, $t270_i3761_i10033);
+                                  const $t270_i3761_i10035 = { $: "Nil" };
+                                  return go$apply$4773(go_i3760_i10034, dead, $t270_i3761_i10035);
                                 }
                               }
                             }
@@ -8237,13 +8300,13 @@ function Perihelion$Combat$collide_shots_asteroids(game) {
                               {
                                 const $t28085 = game.multiplier;
                                 {
-                                  const raw_i10027 = ($t28085 + bumps);
+                                  const raw_i10029 = ($t28085 + bumps);
                                   {
-                                    const $t28060_i10028 = (raw_i10027 > 5);
-                                    if ($t28060_i10028 === true) {
+                                    const $t28060_i10030 = (raw_i10029 > 5);
+                                    if ($t28060_i10030 === true) {
                                       return 5;
                                     } else {
-                                      return raw_i10027;
+                                      return raw_i10029;
                                     }
                                   }
                                 }
@@ -8262,14 +8325,14 @@ function Perihelion$Combat$collide_shots_asteroids(game) {
                               {
                                 const $t28089 = (() => {
                                   {
-                                    const $t28056_i10021 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
+                                    const $t28056_i10023 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
                                     {
-                                      const f_i3759_i10022 = $t28056_i10021;
+                                      const f_i3759_i10024 = $t28056_i10023;
                                       {
-                                        const go_i3760_i10023 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10022 };
+                                        const go_i3760_i10025 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10024 };
                                         {
-                                          const $t270_i3761_i10024 = { $: "Nil" };
-                                          return go$apply$4773(go_i3760_i10023, dead, $t270_i3761_i10024);
+                                          const $t270_i3761_i10026 = { $: "Nil" };
+                                          return go$apply$4773(go_i3760_i10025, dead, $t270_i3761_i10026);
                                         }
                                       }
                                     }
@@ -8332,36 +8395,36 @@ function Perihelion$Combat$ship_shot_hit(sh, s) {
       {
         const sy = pos._1;
         {
-          const $t28050_i10442 = s.x;
+          const $t28050_i10455 = s.x;
           {
-            const $t28051_i10443 = s.y;
+            const $t28051_i10456 = s.y;
             {
-              const $t27359_i10016_i10448 = (() => {
+              const $t27359_i10018_i10461 = (() => {
                 {
-                  const dx_i3632_i10012_i10444 = (sx - $t28050_i10442);
+                  const dx_i3632_i10014_i10457 = (sx - $t28050_i10455);
                   {
-                    const dy_i3633_i10013_i10445 = (sy - $t28051_i10443);
+                    const dy_i3633_i10015_i10458 = (sy - $t28051_i10456);
                     {
-                      const $t27357_i3634_i10014_i10446 = (dx_i3632_i10012_i10444 * dx_i3632_i10012_i10444);
+                      const $t27357_i3634_i10016_i10459 = (dx_i3632_i10014_i10457 * dx_i3632_i10014_i10457);
                       {
-                        const $t27358_i3635_i10015_i10447 = (dy_i3633_i10013_i10445 * dy_i3633_i10013_i10445);
-                        return ($t27357_i3634_i10014_i10446 + $t27358_i3635_i10015_i10447);
+                        const $t27358_i3635_i10017_i10460 = (dy_i3633_i10015_i10458 * dy_i3633_i10015_i10458);
+                        return ($t27357_i3634_i10016_i10459 + $t27358_i3635_i10017_i10460);
                       }
                     }
                   }
                 }
               })();
               {
-                const $t27362_i10019_i10451 = (() => {
+                const $t27362_i10021_i10464 = (() => {
                   {
-                    const $t27360_i10017_i10449 = (3. + 10.);
+                    const $t27360_i10019_i10462 = (3. + 10.);
                     {
-                      const $t27361_i10018_i10450 = (3. + 10.);
-                      return ($t27360_i10017_i10449 * $t27361_i10018_i10450);
+                      const $t27361_i10020_i10463 = (3. + 10.);
+                      return ($t27360_i10019_i10462 * $t27361_i10020_i10463);
                     }
                   }
                 })();
-                return ($t27359_i10016_i10448 <= $t27362_i10019_i10451);
+                return ($t27359_i10018_i10461 <= $t27362_i10021_i10464);
               }
             }
           }
@@ -8452,13 +8515,13 @@ function Perihelion$Combat$collide_shots_ships(game) {
                                   {
                                     const $t28113 = game.multiplier;
                                     {
-                                      const raw_i10036 = ($t28113 + bumps);
+                                      const raw_i10038 = ($t28113 + bumps);
                                       {
-                                        const $t28060_i10037 = (raw_i10036 > 5);
-                                        if ($t28060_i10037 === true) {
+                                        const $t28060_i10039 = (raw_i10038 > 5);
+                                        if ($t28060_i10039 === true) {
                                           return 5;
                                         } else {
-                                          return raw_i10036;
+                                          return raw_i10038;
                                         }
                                       }
                                     }
@@ -8559,34 +8622,34 @@ function Perihelion$Combat$roll_drops(game, dead) {
                     {
                       const $t28122 = game.rng;
                       {
-                        const $p29052_i10481_i10780_i11069 = (() => {
+                        const $p29052_i10494_i10793_i11082 = (() => {
                           {
-                            const $p15579_i10173_i10476_i10775_i11064 = (() => {
+                            const $p15579_i10175_i10489_i10788_i11077 = (() => {
                               {
-                                const $p15576_i1532_i10163_i10467_i10766_i11055 = Random$next_raw($t28122);
+                                const $p15576_i1532_i10165_i10480_i10779_i11068 = Random$next_raw($t28122);
                                 {
-                                  const hi_i1533_i10164_i10468_i10767_i11056 = $p15576_i1532_i10163_i10467_i10766_i11055._0;
+                                  const hi_i1533_i10166_i10481_i10780_i11069 = $p15576_i1532_i10165_i10480_i10779_i11068._0;
                                   {
-                                    const rng2_i1534_i10165_i10469_i10768_i11057 = $p15576_i1532_i10163_i10467_i10766_i11055._1;
+                                    const rng2_i1534_i10167_i10482_i10781_i11070 = $p15576_i1532_i10165_i10480_i10779_i11068._1;
                                     {
-                                      const $p15575_i1535_i10166_i10470_i10769_i11058 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11057);
+                                      const $p15575_i1535_i10168_i10483_i10782_i11071 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11070);
                                       {
-                                        const lo_i1536_i10167_i10471_i10770_i11059 = $p15575_i1535_i10166_i10470_i10769_i11058._0;
+                                        const lo_i1536_i10169_i10484_i10783_i11072 = $p15575_i1535_i10168_i10483_i10782_i11071._0;
                                         {
-                                          const rng3_i1537_i10168_i10472_i10771_i11060 = $p15575_i1535_i10166_i10470_i10769_i11058._1;
+                                          const rng3_i1537_i10170_i10485_i10784_i11073 = $p15575_i1535_i10168_i10483_i10782_i11071._1;
                                           {
-                                            const $t15574_i1541_i10172_i10475_i10774_i11063 = (() => {
+                                            const $t15574_i1541_i10174_i10488_i10787_i11076 = (() => {
                                               {
-                                                const $t15573_i1540_i10171_i10474_i10773_i11062 = (() => {
+                                                const $t15573_i1540_i10173_i10487_i10786_i11075 = (() => {
                                                   {
-                                                    const $t15571_i1538_i10169_i10473_i10772_i11061 = march_int_and(hi_i1533_i10164_i10468_i10767_i11056, 1048575);
-                                                    return ($t15571_i1538_i10169_i10473_i10772_i11061 * 4294967296);
+                                                    const $t15571_i1538_i10171_i10486_i10785_i11074 = march_int_and(hi_i1533_i10166_i10481_i10780_i11069, 1048575);
+                                                    return ($t15571_i1538_i10171_i10486_i10785_i11074 * 4294967296);
                                                   }
                                                 })();
-                                                return ($t15573_i1540_i10171_i10474_i10773_i11062 + lo_i1536_i10167_i10471_i10770_i11059);
+                                                return ($t15573_i1540_i10173_i10487_i10786_i11075 + lo_i1536_i10169_i10484_i10783_i11072);
                                               }
                                             })();
-                                            return { _0: $t15574_i1541_i10172_i10475_i10774_i11063, _1: rng3_i1537_i10168_i10472_i10771_i11060 };
+                                            return { _0: $t15574_i1541_i10174_i10488_i10787_i11076, _1: rng3_i1537_i10170_i10485_i10784_i11073 };
                                           }
                                         }
                                       }
@@ -8596,29 +8659,29 @@ function Perihelion$Combat$roll_drops(game, dead) {
                               }
                             })();
                             {
-                              const bits_i10174_i10477_i10776_i11065 = $p15579_i10173_i10476_i10775_i11064._0;
+                              const bits_i10176_i10490_i10789_i11078 = $p15579_i10175_i10489_i10788_i11077._0;
                               {
-                                const rng2_i10175_i10478_i10777_i11066 = $p15579_i10173_i10476_i10775_i11064._1;
+                                const rng2_i10177_i10491_i10790_i11079 = $p15579_i10175_i10489_i10788_i11077._1;
                                 {
-                                  const $t15578_i10177_i10480_i10779_i11068 = (() => {
+                                  const $t15578_i10179_i10493_i10792_i11081 = (() => {
                                     {
-                                      const $t15577_i10176_i10479_i10778_i11067 = bits_i10174_i10477_i10776_i11065;
-                                      return ($t15577_i10176_i10479_i10778_i11067 / 4.50359962737e+15);
+                                      const $t15577_i10178_i10492_i10791_i11080 = bits_i10176_i10490_i10789_i11078;
+                                      return ($t15577_i10178_i10492_i10791_i11080 / 4.50359962737e+15);
                                     }
                                   })();
-                                  return { _0: $t15578_i10177_i10480_i10779_i11068, _1: rng2_i10175_i10478_i10777_i11066 };
+                                  return { _0: $t15578_i10179_i10493_i10792_i11081, _1: rng2_i10177_i10491_i10790_i11079 };
                                 }
                               }
                             }
                           }
                         })();
                         {
-                          const t_i10482_i10781_i11070 = $p29052_i10481_i10780_i11069._0;
+                          const t_i10495_i10794_i11083 = $p29052_i10494_i10793_i11082._0;
                           {
-                            const rng2_i10483_i10782_i11071 = $p29052_i10481_i10780_i11069._1;
+                            const rng2_i10496_i10795_i11084 = $p29052_i10494_i10793_i11082._1;
                             {
-                              const out_i10484_i10783_i11072 = { _0: rng2_i10483_i10782_i11071, _1: t_i10482_i10781_i11070 };
-                              return out_i10484_i10783_i11072;
+                              const out_i10497_i10796_i11085 = { _0: rng2_i10496_i10795_i11084, _1: t_i10495_i10794_i11083 };
+                              return out_i10497_i10796_i11085;
                             }
                           }
                         }
@@ -8651,34 +8714,34 @@ function Perihelion$Combat$roll_drops(game, dead) {
                                   {
                                     const $p28144 = (() => {
                                       {
-                                        const $p29052_i10481_i10780_i11050 = (() => {
+                                        const $p29052_i10494_i10793_i11063 = (() => {
                                           {
-                                            const $p15579_i10173_i10476_i10775_i11045 = (() => {
+                                            const $p15579_i10175_i10489_i10788_i11058 = (() => {
                                               {
-                                                const $p15576_i1532_i10163_i10467_i10766_i11036 = Random$next_raw(rng2);
+                                                const $p15576_i1532_i10165_i10480_i10779_i11049 = Random$next_raw(rng2);
                                                 {
-                                                  const hi_i1533_i10164_i10468_i10767_i11037 = $p15576_i1532_i10163_i10467_i10766_i11036._0;
+                                                  const hi_i1533_i10166_i10481_i10780_i11050 = $p15576_i1532_i10165_i10480_i10779_i11049._0;
                                                   {
-                                                    const rng2_i1534_i10165_i10469_i10768_i11038 = $p15576_i1532_i10163_i10467_i10766_i11036._1;
+                                                    const rng2_i1534_i10167_i10482_i10781_i11051 = $p15576_i1532_i10165_i10480_i10779_i11049._1;
                                                     {
-                                                      const $p15575_i1535_i10166_i10470_i10769_i11039 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11038);
+                                                      const $p15575_i1535_i10168_i10483_i10782_i11052 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11051);
                                                       {
-                                                        const lo_i1536_i10167_i10471_i10770_i11040 = $p15575_i1535_i10166_i10470_i10769_i11039._0;
+                                                        const lo_i1536_i10169_i10484_i10783_i11053 = $p15575_i1535_i10168_i10483_i10782_i11052._0;
                                                         {
-                                                          const rng3_i1537_i10168_i10472_i10771_i11041 = $p15575_i1535_i10166_i10470_i10769_i11039._1;
+                                                          const rng3_i1537_i10170_i10485_i10784_i11054 = $p15575_i1535_i10168_i10483_i10782_i11052._1;
                                                           {
-                                                            const $t15574_i1541_i10172_i10475_i10774_i11044 = (() => {
+                                                            const $t15574_i1541_i10174_i10488_i10787_i11057 = (() => {
                                                               {
-                                                                const $t15573_i1540_i10171_i10474_i10773_i11043 = (() => {
+                                                                const $t15573_i1540_i10173_i10487_i10786_i11056 = (() => {
                                                                   {
-                                                                    const $t15571_i1538_i10169_i10473_i10772_i11042 = march_int_and(hi_i1533_i10164_i10468_i10767_i11037, 1048575);
-                                                                    return ($t15571_i1538_i10169_i10473_i10772_i11042 * 4294967296);
+                                                                    const $t15571_i1538_i10171_i10486_i10785_i11055 = march_int_and(hi_i1533_i10166_i10481_i10780_i11050, 1048575);
+                                                                    return ($t15571_i1538_i10171_i10486_i10785_i11055 * 4294967296);
                                                                   }
                                                                 })();
-                                                                return ($t15573_i1540_i10171_i10474_i10773_i11043 + lo_i1536_i10167_i10471_i10770_i11040);
+                                                                return ($t15573_i1540_i10173_i10487_i10786_i11056 + lo_i1536_i10169_i10484_i10783_i11053);
                                                               }
                                                             })();
-                                                            return { _0: $t15574_i1541_i10172_i10475_i10774_i11044, _1: rng3_i1537_i10168_i10472_i10771_i11041 };
+                                                            return { _0: $t15574_i1541_i10174_i10488_i10787_i11057, _1: rng3_i1537_i10170_i10485_i10784_i11054 };
                                                           }
                                                         }
                                                       }
@@ -8688,29 +8751,29 @@ function Perihelion$Combat$roll_drops(game, dead) {
                                               }
                                             })();
                                             {
-                                              const bits_i10174_i10477_i10776_i11046 = $p15579_i10173_i10476_i10775_i11045._0;
+                                              const bits_i10176_i10490_i10789_i11059 = $p15579_i10175_i10489_i10788_i11058._0;
                                               {
-                                                const rng2_i10175_i10478_i10777_i11047 = $p15579_i10173_i10476_i10775_i11045._1;
+                                                const rng2_i10177_i10491_i10790_i11060 = $p15579_i10175_i10489_i10788_i11058._1;
                                                 {
-                                                  const $t15578_i10177_i10480_i10779_i11049 = (() => {
+                                                  const $t15578_i10179_i10493_i10792_i11062 = (() => {
                                                     {
-                                                      const $t15577_i10176_i10479_i10778_i11048 = bits_i10174_i10477_i10776_i11046;
-                                                      return ($t15577_i10176_i10479_i10778_i11048 / 4.50359962737e+15);
+                                                      const $t15577_i10178_i10492_i10791_i11061 = bits_i10176_i10490_i10789_i11059;
+                                                      return ($t15577_i10178_i10492_i10791_i11061 / 4.50359962737e+15);
                                                     }
                                                   })();
-                                                  return { _0: $t15578_i10177_i10480_i10779_i11049, _1: rng2_i10175_i10478_i10777_i11047 };
+                                                  return { _0: $t15578_i10179_i10493_i10792_i11062, _1: rng2_i10177_i10491_i10790_i11060 };
                                                 }
                                               }
                                             }
                                           }
                                         })();
                                         {
-                                          const t_i10482_i10781_i11051 = $p29052_i10481_i10780_i11050._0;
+                                          const t_i10495_i10794_i11064 = $p29052_i10494_i10793_i11063._0;
                                           {
-                                            const rng2_i10483_i10782_i11052 = $p29052_i10481_i10780_i11050._1;
+                                            const rng2_i10496_i10795_i11065 = $p29052_i10494_i10793_i11063._1;
                                             {
-                                              const out_i10484_i10783_i11053 = { _0: rng2_i10483_i10782_i11052, _1: t_i10482_i10781_i11051 };
-                                              return out_i10484_i10783_i11053;
+                                              const out_i10497_i10796_i11066 = { _0: rng2_i10496_i10795_i11065, _1: t_i10495_i10794_i11064 };
+                                              return out_i10497_i10796_i11066;
                                             }
                                           }
                                         }
@@ -8989,32 +9052,32 @@ function Perihelion$Combat$ball_hits_ship(game, sh) {
           {
             const $t28191 = game.ball_y;
             {
-              const $t27359_i10062 = (() => {
+              const $t27359_i10064 = (() => {
                 {
-                  const dx_i3632_i10058 = ($t28190 - sx);
+                  const dx_i3632_i10060 = ($t28190 - sx);
                   {
-                    const dy_i3633_i10059 = ($t28191 - sy);
+                    const dy_i3633_i10061 = ($t28191 - sy);
                     {
-                      const $t27357_i3634_i10060 = (dx_i3632_i10058 * dx_i3632_i10058);
+                      const $t27357_i3634_i10062 = (dx_i3632_i10060 * dx_i3632_i10060);
                       {
-                        const $t27358_i3635_i10061 = (dy_i3633_i10059 * dy_i3633_i10059);
-                        return ($t27357_i3634_i10060 + $t27358_i3635_i10061);
+                        const $t27358_i3635_i10063 = (dy_i3633_i10061 * dy_i3633_i10061);
+                        return ($t27357_i3634_i10062 + $t27358_i3635_i10063);
                       }
                     }
                   }
                 }
               })();
               {
-                const $t27362_i10065 = (() => {
+                const $t27362_i10067 = (() => {
                   {
-                    const $t27360_i10063 = (10. + 6.);
+                    const $t27360_i10065 = (10. + 6.);
                     {
-                      const $t27361_i10064 = (10. + 6.);
-                      return ($t27360_i10063 * $t27361_i10064);
+                      const $t27361_i10066 = (10. + 6.);
+                      return ($t27360_i10065 * $t27361_i10066);
                     }
                   }
                 })();
-                return ($t27359_i10062 <= $t27362_i10065);
+                return ($t27359_i10064 <= $t27362_i10067);
               }
             }
           }
@@ -9031,34 +9094,34 @@ function Perihelion$Combat$deflector_roll(game) {
       {
         const $t28203 = game.rng;
         {
-          const $p29052_i10481_i10780_i11088 = (() => {
+          const $p29052_i10494_i10793_i11101 = (() => {
             {
-              const $p15579_i10173_i10476_i10775_i11083 = (() => {
+              const $p15579_i10175_i10489_i10788_i11096 = (() => {
                 {
-                  const $p15576_i1532_i10163_i10467_i10766_i11074 = Random$next_raw($t28203);
+                  const $p15576_i1532_i10165_i10480_i10779_i11087 = Random$next_raw($t28203);
                   {
-                    const hi_i1533_i10164_i10468_i10767_i11075 = $p15576_i1532_i10163_i10467_i10766_i11074._0;
+                    const hi_i1533_i10166_i10481_i10780_i11088 = $p15576_i1532_i10165_i10480_i10779_i11087._0;
                     {
-                      const rng2_i1534_i10165_i10469_i10768_i11076 = $p15576_i1532_i10163_i10467_i10766_i11074._1;
+                      const rng2_i1534_i10167_i10482_i10781_i11089 = $p15576_i1532_i10165_i10480_i10779_i11087._1;
                       {
-                        const $p15575_i1535_i10166_i10470_i10769_i11077 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11076);
+                        const $p15575_i1535_i10168_i10483_i10782_i11090 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11089);
                         {
-                          const lo_i1536_i10167_i10471_i10770_i11078 = $p15575_i1535_i10166_i10470_i10769_i11077._0;
+                          const lo_i1536_i10169_i10484_i10783_i11091 = $p15575_i1535_i10168_i10483_i10782_i11090._0;
                           {
-                            const rng3_i1537_i10168_i10472_i10771_i11079 = $p15575_i1535_i10166_i10470_i10769_i11077._1;
+                            const rng3_i1537_i10170_i10485_i10784_i11092 = $p15575_i1535_i10168_i10483_i10782_i11090._1;
                             {
-                              const $t15574_i1541_i10172_i10475_i10774_i11082 = (() => {
+                              const $t15574_i1541_i10174_i10488_i10787_i11095 = (() => {
                                 {
-                                  const $t15573_i1540_i10171_i10474_i10773_i11081 = (() => {
+                                  const $t15573_i1540_i10173_i10487_i10786_i11094 = (() => {
                                     {
-                                      const $t15571_i1538_i10169_i10473_i10772_i11080 = march_int_and(hi_i1533_i10164_i10468_i10767_i11075, 1048575);
-                                      return ($t15571_i1538_i10169_i10473_i10772_i11080 * 4294967296);
+                                      const $t15571_i1538_i10171_i10486_i10785_i11093 = march_int_and(hi_i1533_i10166_i10481_i10780_i11088, 1048575);
+                                      return ($t15571_i1538_i10171_i10486_i10785_i11093 * 4294967296);
                                     }
                                   })();
-                                  return ($t15573_i1540_i10171_i10474_i10773_i11081 + lo_i1536_i10167_i10471_i10770_i11078);
+                                  return ($t15573_i1540_i10173_i10487_i10786_i11094 + lo_i1536_i10169_i10484_i10783_i11091);
                                 }
                               })();
-                              return { _0: $t15574_i1541_i10172_i10475_i10774_i11082, _1: rng3_i1537_i10168_i10472_i10771_i11079 };
+                              return { _0: $t15574_i1541_i10174_i10488_i10787_i11095, _1: rng3_i1537_i10170_i10485_i10784_i11092 };
                             }
                           }
                         }
@@ -9068,29 +9131,29 @@ function Perihelion$Combat$deflector_roll(game) {
                 }
               })();
               {
-                const bits_i10174_i10477_i10776_i11084 = $p15579_i10173_i10476_i10775_i11083._0;
+                const bits_i10176_i10490_i10789_i11097 = $p15579_i10175_i10489_i10788_i11096._0;
                 {
-                  const rng2_i10175_i10478_i10777_i11085 = $p15579_i10173_i10476_i10775_i11083._1;
+                  const rng2_i10177_i10491_i10790_i11098 = $p15579_i10175_i10489_i10788_i11096._1;
                   {
-                    const $t15578_i10177_i10480_i10779_i11087 = (() => {
+                    const $t15578_i10179_i10493_i10792_i11100 = (() => {
                       {
-                        const $t15577_i10176_i10479_i10778_i11086 = bits_i10174_i10477_i10776_i11084;
-                        return ($t15577_i10176_i10479_i10778_i11086 / 4.50359962737e+15);
+                        const $t15577_i10178_i10492_i10791_i11099 = bits_i10176_i10490_i10789_i11097;
+                        return ($t15577_i10178_i10492_i10791_i11099 / 4.50359962737e+15);
                       }
                     })();
-                    return { _0: $t15578_i10177_i10480_i10779_i11087, _1: rng2_i10175_i10478_i10777_i11085 };
+                    return { _0: $t15578_i10179_i10493_i10792_i11100, _1: rng2_i10177_i10491_i10790_i11098 };
                   }
                 }
               }
             }
           })();
           {
-            const t_i10482_i10781_i11089 = $p29052_i10481_i10780_i11088._0;
+            const t_i10495_i10794_i11102 = $p29052_i10494_i10793_i11101._0;
             {
-              const rng2_i10483_i10782_i11090 = $p29052_i10481_i10780_i11088._1;
+              const rng2_i10496_i10795_i11103 = $p29052_i10494_i10793_i11101._1;
               {
-                const out_i10484_i10783_i11091 = { _0: rng2_i10483_i10782_i11090, _1: t_i10482_i10781_i11089 };
-                return out_i10484_i10783_i11091;
+                const out_i10497_i10796_i11104 = { _0: rng2_i10496_i10795_i11103, _1: t_i10495_i10794_i11102 };
+                return out_i10497_i10796_i11104;
               }
             }
           }
@@ -9342,14 +9405,14 @@ function Perihelion$Combat$collide_ball_hazards_shield_or_die(game) {
                                     {
                                       const $t28256 = (() => {
                                         {
-                                          const $t28056_i10087 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
+                                          const $t28056_i10089 = { $: "$Clo_$lam28053$3704", _0: $lam28053$apply$3704 };
                                           {
-                                            const f_i3759_i10088 = $t28056_i10087;
+                                            const f_i3759_i10090 = $t28056_i10089;
                                             {
-                                              const go_i3760_i10089 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10088 };
+                                              const go_i3760_i10091 = { $: "$Clo_go$4773", _0: go$apply$4773, _1: f_i3759_i10090 };
                                               {
-                                                const $t270_i3761_i10090 = { $: "Nil" };
-                                                return go$apply$4773(go_i3760_i10089, dead_ast, $t270_i3761_i10090);
+                                                const $t270_i3761_i10092 = { $: "Nil" };
+                                                return go$apply$4773(go_i3760_i10091, dead_ast, $t270_i3761_i10092);
                                               }
                                             }
                                           }
@@ -9358,18 +9421,18 @@ function Perihelion$Combat$collide_ball_hazards_shield_or_die(game) {
                                       {
                                         const $t28257 = (() => {
                                           {
-                                            const go_i10082 = { $: "$Clo_go$4788", _0: go$apply$4788 };
+                                            const go_i10084 = { $: "$Clo_go$4788", _0: go$apply$4788 };
                                             {
-                                              const $t261_i10085 = (() => {
+                                              const $t261_i10087 = (() => {
                                                 {
-                                                  const go_i4492_i10083 = { $: "$Clo_go$4313", _0: go$apply$4313 };
+                                                  const go_i4494_i10085 = { $: "$Clo_go$4313", _0: go$apply$4313 };
                                                   {
-                                                    const $t253_i4493_i10084 = { $: "Nil" };
-                                                    return go$apply$4313(go_i4492_i10083, $t28255, $t253_i4493_i10084);
+                                                    const $t253_i4495_i10086 = { $: "Nil" };
+                                                    return go$apply$4313(go_i4494_i10085, $t28255, $t253_i4495_i10086);
                                                   }
                                                 }
                                               })();
-                                              return go$apply$4788(go_i10082, $t261_i10085, $t28256);
+                                              return go$apply$4788(go_i10084, $t261_i10087, $t28256);
                                             }
                                           }
                                         })();
@@ -9413,34 +9476,34 @@ function Perihelion$Combat$spawn_star_turret(game, star_idx, rng) {
           {
             const $p28277 = (() => {
               {
-                const $p29052_i10481_i10780_i11107 = (() => {
+                const $p29052_i10494_i10793_i11120 = (() => {
                   {
-                    const $p15579_i10173_i10476_i10775_i11102 = (() => {
+                    const $p15579_i10175_i10489_i10788_i11115 = (() => {
                       {
-                        const $p15576_i1532_i10163_i10467_i10766_i11093 = Random$next_raw(rng);
+                        const $p15576_i1532_i10165_i10480_i10779_i11106 = Random$next_raw(rng);
                         {
-                          const hi_i1533_i10164_i10468_i10767_i11094 = $p15576_i1532_i10163_i10467_i10766_i11093._0;
+                          const hi_i1533_i10166_i10481_i10780_i11107 = $p15576_i1532_i10165_i10480_i10779_i11106._0;
                           {
-                            const rng2_i1534_i10165_i10469_i10768_i11095 = $p15576_i1532_i10163_i10467_i10766_i11093._1;
+                            const rng2_i1534_i10167_i10482_i10781_i11108 = $p15576_i1532_i10165_i10480_i10779_i11106._1;
                             {
-                              const $p15575_i1535_i10166_i10470_i10769_i11096 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11095);
+                              const $p15575_i1535_i10168_i10483_i10782_i11109 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11108);
                               {
-                                const lo_i1536_i10167_i10471_i10770_i11097 = $p15575_i1535_i10166_i10470_i10769_i11096._0;
+                                const lo_i1536_i10169_i10484_i10783_i11110 = $p15575_i1535_i10168_i10483_i10782_i11109._0;
                                 {
-                                  const rng3_i1537_i10168_i10472_i10771_i11098 = $p15575_i1535_i10166_i10470_i10769_i11096._1;
+                                  const rng3_i1537_i10170_i10485_i10784_i11111 = $p15575_i1535_i10168_i10483_i10782_i11109._1;
                                   {
-                                    const $t15574_i1541_i10172_i10475_i10774_i11101 = (() => {
+                                    const $t15574_i1541_i10174_i10488_i10787_i11114 = (() => {
                                       {
-                                        const $t15573_i1540_i10171_i10474_i10773_i11100 = (() => {
+                                        const $t15573_i1540_i10173_i10487_i10786_i11113 = (() => {
                                           {
-                                            const $t15571_i1538_i10169_i10473_i10772_i11099 = march_int_and(hi_i1533_i10164_i10468_i10767_i11094, 1048575);
-                                            return ($t15571_i1538_i10169_i10473_i10772_i11099 * 4294967296);
+                                            const $t15571_i1538_i10171_i10486_i10785_i11112 = march_int_and(hi_i1533_i10166_i10481_i10780_i11107, 1048575);
+                                            return ($t15571_i1538_i10171_i10486_i10785_i11112 * 4294967296);
                                           }
                                         })();
-                                        return ($t15573_i1540_i10171_i10474_i10773_i11100 + lo_i1536_i10167_i10471_i10770_i11097);
+                                        return ($t15573_i1540_i10173_i10487_i10786_i11113 + lo_i1536_i10169_i10484_i10783_i11110);
                                       }
                                     })();
-                                    return { _0: $t15574_i1541_i10172_i10475_i10774_i11101, _1: rng3_i1537_i10168_i10472_i10771_i11098 };
+                                    return { _0: $t15574_i1541_i10174_i10488_i10787_i11114, _1: rng3_i1537_i10170_i10485_i10784_i11111 };
                                   }
                                 }
                               }
@@ -9450,29 +9513,29 @@ function Perihelion$Combat$spawn_star_turret(game, star_idx, rng) {
                       }
                     })();
                     {
-                      const bits_i10174_i10477_i10776_i11103 = $p15579_i10173_i10476_i10775_i11102._0;
+                      const bits_i10176_i10490_i10789_i11116 = $p15579_i10175_i10489_i10788_i11115._0;
                       {
-                        const rng2_i10175_i10478_i10777_i11104 = $p15579_i10173_i10476_i10775_i11102._1;
+                        const rng2_i10177_i10491_i10790_i11117 = $p15579_i10175_i10489_i10788_i11115._1;
                         {
-                          const $t15578_i10177_i10480_i10779_i11106 = (() => {
+                          const $t15578_i10179_i10493_i10792_i11119 = (() => {
                             {
-                              const $t15577_i10176_i10479_i10778_i11105 = bits_i10174_i10477_i10776_i11103;
-                              return ($t15577_i10176_i10479_i10778_i11105 / 4.50359962737e+15);
+                              const $t15577_i10178_i10492_i10791_i11118 = bits_i10176_i10490_i10789_i11116;
+                              return ($t15577_i10178_i10492_i10791_i11118 / 4.50359962737e+15);
                             }
                           })();
-                          return { _0: $t15578_i10177_i10480_i10779_i11106, _1: rng2_i10175_i10478_i10777_i11104 };
+                          return { _0: $t15578_i10179_i10493_i10792_i11119, _1: rng2_i10177_i10491_i10790_i11117 };
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const t_i10482_i10781_i11108 = $p29052_i10481_i10780_i11107._0;
+                  const t_i10495_i10794_i11121 = $p29052_i10494_i10793_i11120._0;
                   {
-                    const rng2_i10483_i10782_i11109 = $p29052_i10481_i10780_i11107._1;
+                    const rng2_i10496_i10795_i11122 = $p29052_i10494_i10793_i11120._1;
                     {
-                      const out_i10484_i10783_i11110 = { _0: rng2_i10483_i10782_i11109, _1: t_i10482_i10781_i11108 };
-                      return out_i10484_i10783_i11110;
+                      const out_i10497_i10796_i11123 = { _0: rng2_i10496_i10795_i11122, _1: t_i10495_i10794_i11121 };
+                      return out_i10497_i10796_i11123;
                     }
                   }
                 }
@@ -9609,34 +9672,34 @@ function Perihelion$Combat$spawn_hunter(game, rng) {
             {
               const $p28301 = (() => {
                 {
-                  const $p29052_i10481_i10780_i11126 = (() => {
+                  const $p29052_i10494_i10793_i11139 = (() => {
                     {
-                      const $p15579_i10173_i10476_i10775_i11121 = (() => {
+                      const $p15579_i10175_i10489_i10788_i11134 = (() => {
                         {
-                          const $p15576_i1532_i10163_i10467_i10766_i11112 = Random$next_raw(rng);
+                          const $p15576_i1532_i10165_i10480_i10779_i11125 = Random$next_raw(rng);
                           {
-                            const hi_i1533_i10164_i10468_i10767_i11113 = $p15576_i1532_i10163_i10467_i10766_i11112._0;
+                            const hi_i1533_i10166_i10481_i10780_i11126 = $p15576_i1532_i10165_i10480_i10779_i11125._0;
                             {
-                              const rng2_i1534_i10165_i10469_i10768_i11114 = $p15576_i1532_i10163_i10467_i10766_i11112._1;
+                              const rng2_i1534_i10167_i10482_i10781_i11127 = $p15576_i1532_i10165_i10480_i10779_i11125._1;
                               {
-                                const $p15575_i1535_i10166_i10470_i10769_i11115 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11114);
+                                const $p15575_i1535_i10168_i10483_i10782_i11128 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11127);
                                 {
-                                  const lo_i1536_i10167_i10471_i10770_i11116 = $p15575_i1535_i10166_i10470_i10769_i11115._0;
+                                  const lo_i1536_i10169_i10484_i10783_i11129 = $p15575_i1535_i10168_i10483_i10782_i11128._0;
                                   {
-                                    const rng3_i1537_i10168_i10472_i10771_i11117 = $p15575_i1535_i10166_i10470_i10769_i11115._1;
+                                    const rng3_i1537_i10170_i10485_i10784_i11130 = $p15575_i1535_i10168_i10483_i10782_i11128._1;
                                     {
-                                      const $t15574_i1541_i10172_i10475_i10774_i11120 = (() => {
+                                      const $t15574_i1541_i10174_i10488_i10787_i11133 = (() => {
                                         {
-                                          const $t15573_i1540_i10171_i10474_i10773_i11119 = (() => {
+                                          const $t15573_i1540_i10173_i10487_i10786_i11132 = (() => {
                                             {
-                                              const $t15571_i1538_i10169_i10473_i10772_i11118 = march_int_and(hi_i1533_i10164_i10468_i10767_i11113, 1048575);
-                                              return ($t15571_i1538_i10169_i10473_i10772_i11118 * 4294967296);
+                                              const $t15571_i1538_i10171_i10486_i10785_i11131 = march_int_and(hi_i1533_i10166_i10481_i10780_i11126, 1048575);
+                                              return ($t15571_i1538_i10171_i10486_i10785_i11131 * 4294967296);
                                             }
                                           })();
-                                          return ($t15573_i1540_i10171_i10474_i10773_i11119 + lo_i1536_i10167_i10471_i10770_i11116);
+                                          return ($t15573_i1540_i10173_i10487_i10786_i11132 + lo_i1536_i10169_i10484_i10783_i11129);
                                         }
                                       })();
-                                      return { _0: $t15574_i1541_i10172_i10475_i10774_i11120, _1: rng3_i1537_i10168_i10472_i10771_i11117 };
+                                      return { _0: $t15574_i1541_i10174_i10488_i10787_i11133, _1: rng3_i1537_i10170_i10485_i10784_i11130 };
                                     }
                                   }
                                 }
@@ -9646,29 +9709,29 @@ function Perihelion$Combat$spawn_hunter(game, rng) {
                         }
                       })();
                       {
-                        const bits_i10174_i10477_i10776_i11122 = $p15579_i10173_i10476_i10775_i11121._0;
+                        const bits_i10176_i10490_i10789_i11135 = $p15579_i10175_i10489_i10788_i11134._0;
                         {
-                          const rng2_i10175_i10478_i10777_i11123 = $p15579_i10173_i10476_i10775_i11121._1;
+                          const rng2_i10177_i10491_i10790_i11136 = $p15579_i10175_i10489_i10788_i11134._1;
                           {
-                            const $t15578_i10177_i10480_i10779_i11125 = (() => {
+                            const $t15578_i10179_i10493_i10792_i11138 = (() => {
                               {
-                                const $t15577_i10176_i10479_i10778_i11124 = bits_i10174_i10477_i10776_i11122;
-                                return ($t15577_i10176_i10479_i10778_i11124 / 4.50359962737e+15);
+                                const $t15577_i10178_i10492_i10791_i11137 = bits_i10176_i10490_i10789_i11135;
+                                return ($t15577_i10178_i10492_i10791_i11137 / 4.50359962737e+15);
                               }
                             })();
-                            return { _0: $t15578_i10177_i10480_i10779_i11125, _1: rng2_i10175_i10478_i10777_i11123 };
+                            return { _0: $t15578_i10179_i10493_i10792_i11138, _1: rng2_i10177_i10491_i10790_i11136 };
                           }
                         }
                       }
                     }
                   })();
                   {
-                    const t_i10482_i10781_i11127 = $p29052_i10481_i10780_i11126._0;
+                    const t_i10495_i10794_i11140 = $p29052_i10494_i10793_i11139._0;
                     {
-                      const rng2_i10483_i10782_i11128 = $p29052_i10481_i10780_i11126._1;
+                      const rng2_i10496_i10795_i11141 = $p29052_i10494_i10793_i11139._1;
                       {
-                        const out_i10484_i10783_i11129 = { _0: rng2_i10483_i10782_i11128, _1: t_i10482_i10781_i11127 };
-                        return out_i10484_i10783_i11129;
+                        const out_i10497_i10796_i11142 = { _0: rng2_i10496_i10795_i11141, _1: t_i10495_i10794_i11140 };
+                        return out_i10497_i10796_i11142;
                       }
                     }
                   }
@@ -9787,34 +9850,34 @@ function Perihelion$Combat$maybe_spawn_ship(game, star_idx) {
             {
               const $t28306 = game.rng;
               {
-                const $p29052_i10481_i10780_i11164 = (() => {
+                const $p29052_i10494_i10793_i11177 = (() => {
                   {
-                    const $p15579_i10173_i10476_i10775_i11159 = (() => {
+                    const $p15579_i10175_i10489_i10788_i11172 = (() => {
                       {
-                        const $p15576_i1532_i10163_i10467_i10766_i11150 = Random$next_raw($t28306);
+                        const $p15576_i1532_i10165_i10480_i10779_i11163 = Random$next_raw($t28306);
                         {
-                          const hi_i1533_i10164_i10468_i10767_i11151 = $p15576_i1532_i10163_i10467_i10766_i11150._0;
+                          const hi_i1533_i10166_i10481_i10780_i11164 = $p15576_i1532_i10165_i10480_i10779_i11163._0;
                           {
-                            const rng2_i1534_i10165_i10469_i10768_i11152 = $p15576_i1532_i10163_i10467_i10766_i11150._1;
+                            const rng2_i1534_i10167_i10482_i10781_i11165 = $p15576_i1532_i10165_i10480_i10779_i11163._1;
                             {
-                              const $p15575_i1535_i10166_i10470_i10769_i11153 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11152);
+                              const $p15575_i1535_i10168_i10483_i10782_i11166 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11165);
                               {
-                                const lo_i1536_i10167_i10471_i10770_i11154 = $p15575_i1535_i10166_i10470_i10769_i11153._0;
+                                const lo_i1536_i10169_i10484_i10783_i11167 = $p15575_i1535_i10168_i10483_i10782_i11166._0;
                                 {
-                                  const rng3_i1537_i10168_i10472_i10771_i11155 = $p15575_i1535_i10166_i10470_i10769_i11153._1;
+                                  const rng3_i1537_i10170_i10485_i10784_i11168 = $p15575_i1535_i10168_i10483_i10782_i11166._1;
                                   {
-                                    const $t15574_i1541_i10172_i10475_i10774_i11158 = (() => {
+                                    const $t15574_i1541_i10174_i10488_i10787_i11171 = (() => {
                                       {
-                                        const $t15573_i1540_i10171_i10474_i10773_i11157 = (() => {
+                                        const $t15573_i1540_i10173_i10487_i10786_i11170 = (() => {
                                           {
-                                            const $t15571_i1538_i10169_i10473_i10772_i11156 = march_int_and(hi_i1533_i10164_i10468_i10767_i11151, 1048575);
-                                            return ($t15571_i1538_i10169_i10473_i10772_i11156 * 4294967296);
+                                            const $t15571_i1538_i10171_i10486_i10785_i11169 = march_int_and(hi_i1533_i10166_i10481_i10780_i11164, 1048575);
+                                            return ($t15571_i1538_i10171_i10486_i10785_i11169 * 4294967296);
                                           }
                                         })();
-                                        return ($t15573_i1540_i10171_i10474_i10773_i11157 + lo_i1536_i10167_i10471_i10770_i11154);
+                                        return ($t15573_i1540_i10173_i10487_i10786_i11170 + lo_i1536_i10169_i10484_i10783_i11167);
                                       }
                                     })();
-                                    return { _0: $t15574_i1541_i10172_i10475_i10774_i11158, _1: rng3_i1537_i10168_i10472_i10771_i11155 };
+                                    return { _0: $t15574_i1541_i10174_i10488_i10787_i11171, _1: rng3_i1537_i10170_i10485_i10784_i11168 };
                                   }
                                 }
                               }
@@ -9824,29 +9887,29 @@ function Perihelion$Combat$maybe_spawn_ship(game, star_idx) {
                       }
                     })();
                     {
-                      const bits_i10174_i10477_i10776_i11160 = $p15579_i10173_i10476_i10775_i11159._0;
+                      const bits_i10176_i10490_i10789_i11173 = $p15579_i10175_i10489_i10788_i11172._0;
                       {
-                        const rng2_i10175_i10478_i10777_i11161 = $p15579_i10173_i10476_i10775_i11159._1;
+                        const rng2_i10177_i10491_i10790_i11174 = $p15579_i10175_i10489_i10788_i11172._1;
                         {
-                          const $t15578_i10177_i10480_i10779_i11163 = (() => {
+                          const $t15578_i10179_i10493_i10792_i11176 = (() => {
                             {
-                              const $t15577_i10176_i10479_i10778_i11162 = bits_i10174_i10477_i10776_i11160;
-                              return ($t15577_i10176_i10479_i10778_i11162 / 4.50359962737e+15);
+                              const $t15577_i10178_i10492_i10791_i11175 = bits_i10176_i10490_i10789_i11173;
+                              return ($t15577_i10178_i10492_i10791_i11175 / 4.50359962737e+15);
                             }
                           })();
-                          return { _0: $t15578_i10177_i10480_i10779_i11163, _1: rng2_i10175_i10478_i10777_i11161 };
+                          return { _0: $t15578_i10179_i10493_i10792_i11176, _1: rng2_i10177_i10491_i10790_i11174 };
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const t_i10482_i10781_i11165 = $p29052_i10481_i10780_i11164._0;
+                  const t_i10495_i10794_i11178 = $p29052_i10494_i10793_i11177._0;
                   {
-                    const rng2_i10483_i10782_i11166 = $p29052_i10481_i10780_i11164._1;
+                    const rng2_i10496_i10795_i11179 = $p29052_i10494_i10793_i11177._1;
                     {
-                      const out_i10484_i10783_i11167 = { _0: rng2_i10483_i10782_i11166, _1: t_i10482_i10781_i11165 };
-                      return out_i10484_i10783_i11167;
+                      const out_i10497_i10796_i11180 = { _0: rng2_i10496_i10795_i11179, _1: t_i10495_i10794_i11178 };
+                      return out_i10497_i10796_i11180;
                     }
                   }
                 }
@@ -9897,34 +9960,34 @@ function Perihelion$Combat$maybe_spawn_ship(game, star_idx) {
                         {
                           const $p28316 = (() => {
                             {
-                              const $p29052_i10481_i10780_i11145 = (() => {
+                              const $p29052_i10494_i10793_i11158 = (() => {
                                 {
-                                  const $p15579_i10173_i10476_i10775_i11140 = (() => {
+                                  const $p15579_i10175_i10489_i10788_i11153 = (() => {
                                     {
-                                      const $p15576_i1532_i10163_i10467_i10766_i11131 = Random$next_raw(rng2);
+                                      const $p15576_i1532_i10165_i10480_i10779_i11144 = Random$next_raw(rng2);
                                       {
-                                        const hi_i1533_i10164_i10468_i10767_i11132 = $p15576_i1532_i10163_i10467_i10766_i11131._0;
+                                        const hi_i1533_i10166_i10481_i10780_i11145 = $p15576_i1532_i10165_i10480_i10779_i11144._0;
                                         {
-                                          const rng2_i1534_i10165_i10469_i10768_i11133 = $p15576_i1532_i10163_i10467_i10766_i11131._1;
+                                          const rng2_i1534_i10167_i10482_i10781_i11146 = $p15576_i1532_i10165_i10480_i10779_i11144._1;
                                           {
-                                            const $p15575_i1535_i10166_i10470_i10769_i11134 = Random$next_raw(rng2_i1534_i10165_i10469_i10768_i11133);
+                                            const $p15575_i1535_i10168_i10483_i10782_i11147 = Random$next_raw(rng2_i1534_i10167_i10482_i10781_i11146);
                                             {
-                                              const lo_i1536_i10167_i10471_i10770_i11135 = $p15575_i1535_i10166_i10470_i10769_i11134._0;
+                                              const lo_i1536_i10169_i10484_i10783_i11148 = $p15575_i1535_i10168_i10483_i10782_i11147._0;
                                               {
-                                                const rng3_i1537_i10168_i10472_i10771_i11136 = $p15575_i1535_i10166_i10470_i10769_i11134._1;
+                                                const rng3_i1537_i10170_i10485_i10784_i11149 = $p15575_i1535_i10168_i10483_i10782_i11147._1;
                                                 {
-                                                  const $t15574_i1541_i10172_i10475_i10774_i11139 = (() => {
+                                                  const $t15574_i1541_i10174_i10488_i10787_i11152 = (() => {
                                                     {
-                                                      const $t15573_i1540_i10171_i10474_i10773_i11138 = (() => {
+                                                      const $t15573_i1540_i10173_i10487_i10786_i11151 = (() => {
                                                         {
-                                                          const $t15571_i1538_i10169_i10473_i10772_i11137 = march_int_and(hi_i1533_i10164_i10468_i10767_i11132, 1048575);
-                                                          return ($t15571_i1538_i10169_i10473_i10772_i11137 * 4294967296);
+                                                          const $t15571_i1538_i10171_i10486_i10785_i11150 = march_int_and(hi_i1533_i10166_i10481_i10780_i11145, 1048575);
+                                                          return ($t15571_i1538_i10171_i10486_i10785_i11150 * 4294967296);
                                                         }
                                                       })();
-                                                      return ($t15573_i1540_i10171_i10474_i10773_i11138 + lo_i1536_i10167_i10471_i10770_i11135);
+                                                      return ($t15573_i1540_i10173_i10487_i10786_i11151 + lo_i1536_i10169_i10484_i10783_i11148);
                                                     }
                                                   })();
-                                                  return { _0: $t15574_i1541_i10172_i10475_i10774_i11139, _1: rng3_i1537_i10168_i10472_i10771_i11136 };
+                                                  return { _0: $t15574_i1541_i10174_i10488_i10787_i11152, _1: rng3_i1537_i10170_i10485_i10784_i11149 };
                                                 }
                                               }
                                             }
@@ -9934,29 +9997,29 @@ function Perihelion$Combat$maybe_spawn_ship(game, star_idx) {
                                     }
                                   })();
                                   {
-                                    const bits_i10174_i10477_i10776_i11141 = $p15579_i10173_i10476_i10775_i11140._0;
+                                    const bits_i10176_i10490_i10789_i11154 = $p15579_i10175_i10489_i10788_i11153._0;
                                     {
-                                      const rng2_i10175_i10478_i10777_i11142 = $p15579_i10173_i10476_i10775_i11140._1;
+                                      const rng2_i10177_i10491_i10790_i11155 = $p15579_i10175_i10489_i10788_i11153._1;
                                       {
-                                        const $t15578_i10177_i10480_i10779_i11144 = (() => {
+                                        const $t15578_i10179_i10493_i10792_i11157 = (() => {
                                           {
-                                            const $t15577_i10176_i10479_i10778_i11143 = bits_i10174_i10477_i10776_i11141;
-                                            return ($t15577_i10176_i10479_i10778_i11143 / 4.50359962737e+15);
+                                            const $t15577_i10178_i10492_i10791_i11156 = bits_i10176_i10490_i10789_i11154;
+                                            return ($t15577_i10178_i10492_i10791_i11156 / 4.50359962737e+15);
                                           }
                                         })();
-                                        return { _0: $t15578_i10177_i10480_i10779_i11144, _1: rng2_i10175_i10478_i10777_i11142 };
+                                        return { _0: $t15578_i10179_i10493_i10792_i11157, _1: rng2_i10177_i10491_i10790_i11155 };
                                       }
                                     }
                                   }
                                 }
                               })();
                               {
-                                const t_i10482_i10781_i11146 = $p29052_i10481_i10780_i11145._0;
+                                const t_i10495_i10794_i11159 = $p29052_i10494_i10793_i11158._0;
                                 {
-                                  const rng2_i10483_i10782_i11147 = $p29052_i10481_i10780_i11145._1;
+                                  const rng2_i10496_i10795_i11160 = $p29052_i10494_i10793_i11158._1;
                                   {
-                                    const out_i10484_i10783_i11148 = { _0: rng2_i10483_i10782_i11147, _1: t_i10482_i10781_i11146 };
-                                    return out_i10484_i10783_i11148;
+                                    const out_i10497_i10796_i11161 = { _0: rng2_i10496_i10795_i11160, _1: t_i10495_i10794_i11159 };
+                                    return out_i10497_i10796_i11161;
                                   }
                                 }
                               }
@@ -10017,18 +10080,18 @@ function Perihelion$Core$remove_at(xs, idx) {
       {
         const $t28321 = List$drop$List_R_capture_radius_Float_orbits_List_R_radius_Float_speed_mult_Float_radius_Float_speed_mult_Float_x_Float_y_Float$Int(xs, $t28320);
         {
-          const go_i10093 = { $: "$Clo_go$4793", _0: go$apply$4793 };
+          const go_i10095 = { $: "$Clo_go$4793", _0: go$apply$4793 };
           {
-            const $t261_i10096 = (() => {
+            const $t261_i10098 = (() => {
               {
-                const go_i4496_i10094 = { $: "$Clo_go$5251", _0: go$apply$5251 };
+                const go_i4498_i10096 = { $: "$Clo_go$5251", _0: go$apply$5251 };
                 {
-                  const $t253_i4497_i10095 = { $: "Nil" };
-                  return go$apply$5251(go_i4496_i10094, $t28319, $t253_i4497_i10095);
+                  const $t253_i4499_i10097 = { $: "Nil" };
+                  return go$apply$5251(go_i4498_i10096, $t28319, $t253_i4499_i10097);
                 }
               }
             })();
-            return go$apply$4793(go_i10093, $t261_i10096, $t28321);
+            return go$apply$4793(go_i10095, $t261_i10098, $t28321);
           }
         }
       }
@@ -10488,8 +10551,8 @@ function Perihelion$Core$nearest_star_dir(game) {
                 }
               })();
               {
-                const $rc_822 = Perihelion$Core$nearest_star_dir_go(game, rest, s0, $t28400);
-                return $rc_822;
+                const $rc_827 = Perihelion$Core$nearest_star_dir_go(game, rest, s0, $t28400);
+                return $rc_827;
               }
             }
           }
@@ -10510,34 +10573,34 @@ function Perihelion$Core$apply_star_jump(game) {
       {
         const $t28407 = game.rng;
         {
-          const $p29052_i10481_i10799 = (() => {
+          const $p29052_i10494_i10812 = (() => {
             {
-              const $p15579_i10173_i10476_i10794 = (() => {
+              const $p15579_i10175_i10489_i10807 = (() => {
                 {
-                  const $p15576_i1532_i10163_i10467_i10785 = Random$next_raw($t28407);
+                  const $p15576_i1532_i10165_i10480_i10798 = Random$next_raw($t28407);
                   {
-                    const hi_i1533_i10164_i10468_i10786 = $p15576_i1532_i10163_i10467_i10785._0;
+                    const hi_i1533_i10166_i10481_i10799 = $p15576_i1532_i10165_i10480_i10798._0;
                     {
-                      const rng2_i1534_i10165_i10469_i10787 = $p15576_i1532_i10163_i10467_i10785._1;
+                      const rng2_i1534_i10167_i10482_i10800 = $p15576_i1532_i10165_i10480_i10798._1;
                       {
-                        const $p15575_i1535_i10166_i10470_i10788 = Random$next_raw(rng2_i1534_i10165_i10469_i10787);
+                        const $p15575_i1535_i10168_i10483_i10801 = Random$next_raw(rng2_i1534_i10167_i10482_i10800);
                         {
-                          const lo_i1536_i10167_i10471_i10789 = $p15575_i1535_i10166_i10470_i10788._0;
+                          const lo_i1536_i10169_i10484_i10802 = $p15575_i1535_i10168_i10483_i10801._0;
                           {
-                            const rng3_i1537_i10168_i10472_i10790 = $p15575_i1535_i10166_i10470_i10788._1;
+                            const rng3_i1537_i10170_i10485_i10803 = $p15575_i1535_i10168_i10483_i10801._1;
                             {
-                              const $t15574_i1541_i10172_i10475_i10793 = (() => {
+                              const $t15574_i1541_i10174_i10488_i10806 = (() => {
                                 {
-                                  const $t15573_i1540_i10171_i10474_i10792 = (() => {
+                                  const $t15573_i1540_i10173_i10487_i10805 = (() => {
                                     {
-                                      const $t15571_i1538_i10169_i10473_i10791 = march_int_and(hi_i1533_i10164_i10468_i10786, 1048575);
-                                      return ($t15571_i1538_i10169_i10473_i10791 * 4294967296);
+                                      const $t15571_i1538_i10171_i10486_i10804 = march_int_and(hi_i1533_i10166_i10481_i10799, 1048575);
+                                      return ($t15571_i1538_i10171_i10486_i10804 * 4294967296);
                                     }
                                   })();
-                                  return ($t15573_i1540_i10171_i10474_i10792 + lo_i1536_i10167_i10471_i10789);
+                                  return ($t15573_i1540_i10173_i10487_i10805 + lo_i1536_i10169_i10484_i10802);
                                 }
                               })();
-                              return { _0: $t15574_i1541_i10172_i10475_i10793, _1: rng3_i1537_i10168_i10472_i10790 };
+                              return { _0: $t15574_i1541_i10174_i10488_i10806, _1: rng3_i1537_i10170_i10485_i10803 };
                             }
                           }
                         }
@@ -10547,29 +10610,29 @@ function Perihelion$Core$apply_star_jump(game) {
                 }
               })();
               {
-                const bits_i10174_i10477_i10795 = $p15579_i10173_i10476_i10794._0;
+                const bits_i10176_i10490_i10808 = $p15579_i10175_i10489_i10807._0;
                 {
-                  const rng2_i10175_i10478_i10796 = $p15579_i10173_i10476_i10794._1;
+                  const rng2_i10177_i10491_i10809 = $p15579_i10175_i10489_i10807._1;
                   {
-                    const $t15578_i10177_i10480_i10798 = (() => {
+                    const $t15578_i10179_i10493_i10811 = (() => {
                       {
-                        const $t15577_i10176_i10479_i10797 = bits_i10174_i10477_i10795;
-                        return ($t15577_i10176_i10479_i10797 / 4.50359962737e+15);
+                        const $t15577_i10178_i10492_i10810 = bits_i10176_i10490_i10808;
+                        return ($t15577_i10178_i10492_i10810 / 4.50359962737e+15);
                       }
                     })();
-                    return { _0: $t15578_i10177_i10480_i10798, _1: rng2_i10175_i10478_i10796 };
+                    return { _0: $t15578_i10179_i10493_i10811, _1: rng2_i10177_i10491_i10809 };
                   }
                 }
               }
             }
           })();
           {
-            const t_i10482_i10800 = $p29052_i10481_i10799._0;
+            const t_i10495_i10813 = $p29052_i10494_i10812._0;
             {
-              const rng2_i10483_i10801 = $p29052_i10481_i10799._1;
+              const rng2_i10496_i10814 = $p29052_i10494_i10812._1;
               {
-                const out_i10484_i10802 = { _0: rng2_i10483_i10801, _1: t_i10482_i10800 };
-                return out_i10484_i10802;
+                const out_i10497_i10815 = { _0: rng2_i10496_i10814, _1: t_i10495_i10813 };
+                return out_i10497_i10815;
               }
             }
           }
@@ -11053,8 +11116,8 @@ function Perihelion$Core$step_playing(game, tapped, keys, cursor, dt_s) {
                               {
                                 const $t28501 = (() => {
                                   {
-                                    const $rc_823 = Perihelion$Core$step_camera(g4, dt_s);
-                                    return $rc_823;
+                                    const $rc_828 = Perihelion$Core$step_camera(g4, dt_s);
+                                    return $rc_828;
                                   }
                                 })();
                                 return Perihelion$Core$top_up($t28501);
@@ -11099,33 +11162,33 @@ function Perihelion$Core$step_orbit(game, idx, ring, angle, tapped, keys, dt_s) 
           if (tapped === true) {
             return (() => {
               {
-                const vx_i10104 = (() => {
+                const vx_i10106 = (() => {
                   {
-                    const $t28529_i10103 = (() => {
+                    const $t28529_i10105 = (() => {
                       {
-                        const $t28527_i10101 = (1. * 340.);
+                        const $t28527_i10103 = (1. * 340.);
                         {
-                          const $t28528_i10102 = Math.sin(angle);
-                          return ($t28527_i10101 * $t28528_i10102);
+                          const $t28528_i10104 = Math.sin(angle);
+                          return ($t28527_i10103 * $t28528_i10104);
                         }
                       }
                     })();
-                    return (0. - $t28529_i10103);
+                    return (0. - $t28529_i10105);
                   }
                 })();
                 {
-                  const vy_i10107 = (() => {
+                  const vy_i10109 = (() => {
                     {
-                      const $t28531_i10105 = (1. * 340.);
+                      const $t28531_i10107 = (1. * 340.);
                       {
-                        const $t28532_i10106 = Math.cos(angle);
-                        return ($t28531_i10105 * $t28532_i10106);
+                        const $t28532_i10108 = Math.cos(angle);
+                        return ($t28531_i10107 * $t28532_i10108);
                       }
                     }
                   })();
                   {
-                    const $t28533_i10108 = { $: "Flying", _0: vx_i10104, _1: vy_i10107 };
-                    return ({ ...game, mode: $t28533_i10108 });
+                    const $t28533_i10110 = { $: "Flying", _0: vx_i10106, _1: vy_i10109 };
+                    return ({ ...game, mode: $t28533_i10110 });
                   }
                 }
               }
@@ -11644,33 +11707,33 @@ function Perihelion$Core$predict_trajectory(game, idx, ring, angle) {
                     {
                       const $t28609 = (() => {
                         {
-                          const vx_i10116 = (() => {
+                          const vx_i10118 = (() => {
                             {
-                              const $t28529_i10115 = (() => {
+                              const $t28529_i10117 = (() => {
                                 {
-                                  const $t28527_i10113 = (1. * 340.);
+                                  const $t28527_i10115 = (1. * 340.);
                                   {
-                                    const $t28528_i10114 = Math.sin(angle);
-                                    return ($t28527_i10113 * $t28528_i10114);
+                                    const $t28528_i10116 = Math.sin(angle);
+                                    return ($t28527_i10115 * $t28528_i10116);
                                   }
                                 }
                               })();
-                              return (0. - $t28529_i10115);
+                              return (0. - $t28529_i10117);
                             }
                           })();
                           {
-                            const vy_i10119 = (() => {
+                            const vy_i10121 = (() => {
                               {
-                                const $t28531_i10117 = (1. * 340.);
+                                const $t28531_i10119 = (1. * 340.);
                                 {
-                                  const $t28532_i10118 = Math.cos(angle);
-                                  return ($t28531_i10117 * $t28532_i10118);
+                                  const $t28532_i10120 = Math.cos(angle);
+                                  return ($t28531_i10119 * $t28532_i10120);
                                 }
                               }
                             })();
                             {
-                              const $t28533_i10120 = { $: "Flying", _0: vx_i10116, _1: vy_i10119 };
-                              return ({ ...game, mode: $t28533_i10120 });
+                              const $t28533_i10122 = { $: "Flying", _0: vx_i10118, _1: vy_i10121 };
+                              return ({ ...game, mode: $t28533_i10122 });
                             }
                           }
                         }
@@ -12281,18 +12344,18 @@ function Perihelion$Core$apply_upgrade(game, u) {
                     {
                       const $t28736 = (() => {
                         {
-                          const go_i10123 = { $: "$Clo_go$4805", _0: go$apply$4805 };
+                          const go_i10125 = { $: "$Clo_go$4805", _0: go$apply$4805 };
                           {
-                            const $t261_i10126 = (() => {
+                            const $t261_i10128 = (() => {
                               {
-                                const go_i4503_i10124 = { $: "$Clo_go$5253", _0: go$apply$5253 };
+                                const go_i4505_i10126 = { $: "$Clo_go$5253", _0: go$apply$5253 };
                                 {
-                                  const $t253_i4504_i10125 = { $: "Nil" };
-                                  return go$apply$5253(go_i4503_i10124, $t28733, $t253_i4504_i10125);
+                                  const $t253_i4506_i10127 = { $: "Nil" };
+                                  return go$apply$5253(go_i4505_i10126, $t28733, $t253_i4506_i10127);
                                 }
                               }
                             })();
-                            return go$apply$4805(go_i10123, $t261_i10126, $t28735);
+                            return go$apply$4805(go_i10125, $t261_i10128, $t28735);
                           }
                         }
                       })();
@@ -12350,26 +12413,26 @@ function Perihelion$Core$apply_upgrade(game, u) {
           {
             const $t28742 = (() => {
               {
-                let $rc_824;
+                let $rc_829;
                 switch (k.$) {
                   case "StarThrust": {
-                    $rc_824 = 3;
+                    $rc_829 = 3;
                     break;
                   }
                   case "StarJump": {
-                    $rc_824 = 1;
+                    $rc_829 = 1;
                     break;
                   }
                   case "TrajectoryPreview": {
-                    $rc_824 = 0;
+                    $rc_829 = 0;
                     break;
                   }
                   default: {
-                    $rc_824 = (() => { throw new Error("non-exhaustive pattern match"); })();
+                    $rc_829 = (() => { throw new Error("non-exhaustive pattern match"); })();
                     break;
                   }
                 }
-                return $rc_824;
+                return $rc_829;
               }
             })();
             return ({ ...game, special: $t28741, special_charges: $t28742 });
@@ -12464,18 +12527,18 @@ function Perihelion$Core$top_up(game) {
                             {
                               const $t28763 = (() => {
                                 {
-                                  const go_i10130 = { $: "$Clo_go$4793", _0: go$apply$4793 };
+                                  const go_i10132 = { $: "$Clo_go$4793", _0: go$apply$4793 };
                                   {
-                                    const $t261_i10133 = (() => {
+                                    const $t261_i10135 = (() => {
                                       {
-                                        const go_i4496_i10131 = { $: "$Clo_go$5251", _0: go$apply$5251 };
+                                        const go_i4498_i10133 = { $: "$Clo_go$5251", _0: go$apply$5251 };
                                         {
-                                          const $t253_i4497_i10132 = { $: "Nil" };
-                                          return go$apply$5251(go_i4496_i10131, $t28760, $t253_i4497_i10132);
+                                          const $t253_i4499_i10134 = { $: "Nil" };
+                                          return go$apply$5251(go_i4498_i10133, $t28760, $t253_i4499_i10134);
                                         }
                                       }
                                     })();
-                                    return go$apply$4793(go_i10130, $t261_i10133, $t28762);
+                                    return go$apply$4793(go_i10132, $t261_i10135, $t28762);
                                   }
                                 }
                               })();
@@ -13196,34 +13259,34 @@ function Perihelion$Core$restart(game) {
       {
         const $t28958 = (() => {
           {
-            const $p28957_i10146 = (() => {
+            const $p28957_i10148 = (() => {
               {
-                const $t28956_i10135 = game.rng;
+                const $t28956_i10137 = game.rng;
                 {
-                  const $p15576_i3946_i10136 = Random$next_raw($t28956_i10135);
+                  const $p15576_i3946_i10138 = Random$next_raw($t28956_i10137);
                   {
-                    const hi_i3947_i10137 = $p15576_i3946_i10136._0;
+                    const hi_i3947_i10139 = $p15576_i3946_i10138._0;
                     {
-                      const rng2_i3948_i10138 = $p15576_i3946_i10136._1;
+                      const rng2_i3948_i10140 = $p15576_i3946_i10138._1;
                       {
-                        const $p15575_i3949_i10139 = Random$next_raw(rng2_i3948_i10138);
+                        const $p15575_i3949_i10141 = Random$next_raw(rng2_i3948_i10140);
                         {
-                          const lo_i3950_i10140 = $p15575_i3949_i10139._0;
+                          const lo_i3950_i10142 = $p15575_i3949_i10141._0;
                           {
-                            const rng3_i3951_i10141 = $p15575_i3949_i10139._1;
+                            const rng3_i3951_i10143 = $p15575_i3949_i10141._1;
                             {
-                              const $t15574_i3955_i10145 = (() => {
+                              const $t15574_i3955_i10147 = (() => {
                                 {
-                                  const $t15573_i3954_i10144 = (() => {
+                                  const $t15573_i3954_i10146 = (() => {
                                     {
-                                      const $t15571_i3952_i10142 = march_int_and(hi_i3947_i10137, 1048575);
-                                      return ($t15571_i3952_i10142 * 4294967296);
+                                      const $t15571_i3952_i10144 = march_int_and(hi_i3947_i10139, 1048575);
+                                      return ($t15571_i3952_i10144 * 4294967296);
                                     }
                                   })();
-                                  return ($t15573_i3954_i10144 + lo_i3950_i10140);
+                                  return ($t15573_i3954_i10146 + lo_i3950_i10142);
                                 }
                               })();
-                              return { _0: $t15574_i3955_i10145, _1: rng3_i3951_i10141 };
+                              return { _0: $t15574_i3955_i10147, _1: rng3_i3951_i10143 };
                             }
                           }
                         }
@@ -13234,8 +13297,8 @@ function Perihelion$Core$restart(game) {
               }
             })();
             {
-              const s_i10147 = $p28957_i10146._0;
-              return s_i10147;
+              const s_i10149 = $p28957_i10148._0;
+              return s_i10149;
             }
           }
         })();
@@ -13328,34 +13391,34 @@ function Perihelion$Core$reset(game) {
   {
     const $t28973 = (() => {
       {
-        const $p28957_i10160 = (() => {
+        const $p28957_i10162 = (() => {
           {
-            const $t28956_i10149 = game.rng;
+            const $t28956_i10151 = game.rng;
             {
-              const $p15576_i3946_i10150 = Random$next_raw($t28956_i10149);
+              const $p15576_i3946_i10152 = Random$next_raw($t28956_i10151);
               {
-                const hi_i3947_i10151 = $p15576_i3946_i10150._0;
+                const hi_i3947_i10153 = $p15576_i3946_i10152._0;
                 {
-                  const rng2_i3948_i10152 = $p15576_i3946_i10150._1;
+                  const rng2_i3948_i10154 = $p15576_i3946_i10152._1;
                   {
-                    const $p15575_i3949_i10153 = Random$next_raw(rng2_i3948_i10152);
+                    const $p15575_i3949_i10155 = Random$next_raw(rng2_i3948_i10154);
                     {
-                      const lo_i3950_i10154 = $p15575_i3949_i10153._0;
+                      const lo_i3950_i10156 = $p15575_i3949_i10155._0;
                       {
-                        const rng3_i3951_i10155 = $p15575_i3949_i10153._1;
+                        const rng3_i3951_i10157 = $p15575_i3949_i10155._1;
                         {
-                          const $t15574_i3955_i10159 = (() => {
+                          const $t15574_i3955_i10161 = (() => {
                             {
-                              const $t15573_i3954_i10158 = (() => {
+                              const $t15573_i3954_i10160 = (() => {
                                 {
-                                  const $t15571_i3952_i10156 = march_int_and(hi_i3947_i10151, 1048575);
-                                  return ($t15571_i3952_i10156 * 4294967296);
+                                  const $t15571_i3952_i10158 = march_int_and(hi_i3947_i10153, 1048575);
+                                  return ($t15571_i3952_i10158 * 4294967296);
                                 }
                               })();
-                              return ($t15573_i3954_i10158 + lo_i3950_i10154);
+                              return ($t15573_i3954_i10160 + lo_i3950_i10156);
                             }
                           })();
-                          return { _0: $t15574_i3955_i10159, _1: rng3_i3951_i10155 };
+                          return { _0: $t15574_i3955_i10161, _1: rng3_i3951_i10157 };
                         }
                       }
                     }
@@ -13366,8 +13429,8 @@ function Perihelion$Core$reset(game) {
           }
         })();
         {
-          const s_i10161 = $p28957_i10160._0;
-          return s_i10161;
+          const s_i10163 = $p28957_i10162._0;
+          return s_i10163;
         }
       }
     })();
@@ -13403,8 +13466,8 @@ function Perihelion$Core$encode_run(r) {
                   }
                 })();
                 {
-                  const $rc_828 = ($t28979 + ":");
-                  return $rc_828;
+                  const $rc_833 = ($t28979 + ":");
+                  return $rc_833;
                 }
               }
             })();
@@ -13416,15 +13479,15 @@ function Perihelion$Core$encode_run(r) {
                 }
               })();
               {
-                const $rc_827 = ($t28980 + $t28982);
-                return $rc_827;
+                const $rc_832 = ($t28980 + $t28982);
+                return $rc_832;
               }
             }
           }
         })();
         {
-          const $rc_826 = ($t28983 + ":");
-          return $rc_826;
+          const $rc_831 = ($t28983 + ":");
+          return $rc_831;
         }
       }
     })();
@@ -13436,8 +13499,8 @@ function Perihelion$Core$encode_run(r) {
         }
       })();
       {
-        const $rc_825 = ($t28984 + $t28986);
-        return $rc_825;
+        const $rc_830 = ($t28984 + $t28986);
+        return $rc_830;
       }
     }
   }
@@ -13450,8 +13513,8 @@ function Perihelion$Core$encode_save(best, runs) {
       {
         const $t28987 = String(best);
         {
-          const $rc_830 = ($t28987 + "|");
-          return $rc_830;
+          const $rc_835 = ($t28987 + "|");
+          return $rc_835;
         }
       }
     })();
@@ -13477,8 +13540,8 @@ function Perihelion$Core$encode_save(best, runs) {
         }
       })();
       {
-        const $rc_829 = ($t28988 + $t28992);
-        return $rc_829;
+        const $rc_834 = ($t28988 + $t28992);
+        return $rc_834;
       }
     }
   }
@@ -13523,8 +13586,8 @@ function Perihelion$Core$decode_run(s) {
                                       {
                                         const $t28994 = (() => {
                                           {
-                                            const $rc_833 = march_string_to_int(a);
-                                            return $rc_833;
+                                            const $rc_838 = march_string_to_int(a);
+                                            return $rc_838;
                                           }
                                         })();
                                         switch ($t28994.$) {
@@ -13539,8 +13602,8 @@ function Perihelion$Core$decode_run(s) {
                                               {
                                                 const $t28995 = (() => {
                                                   {
-                                                    const $rc_832 = march_string_to_int(b);
-                                                    return $rc_832;
+                                                    const $rc_837 = march_string_to_int(b);
+                                                    return $rc_837;
                                                   }
                                                 })();
                                                 switch ($t28995.$) {
@@ -13555,8 +13618,8 @@ function Perihelion$Core$decode_run(s) {
                                                       {
                                                         const $t28996 = (() => {
                                                           {
-                                                            const $rc_831 = march_string_to_int(c);
-                                                            return $rc_831;
+                                                            const $rc_836 = march_string_to_int(c);
+                                                            return $rc_836;
                                                           }
                                                         })();
                                                         switch ($t28996.$) {
@@ -13660,8 +13723,8 @@ function Perihelion$Core$decode_runs(parts, acc) {
           {
             const $t29028 = (() => {
               {
-                const $rc_834 = Perihelion$Core$decode_run(p);
-                return $rc_834;
+                const $rc_839 = Perihelion$Core$decode_run(p);
+                return $rc_839;
               }
             })();
             switch ($t29028.$) {
@@ -13723,8 +13786,8 @@ function Perihelion$Core$decode_save(s) {
                       {
                         const $t29039 = (() => {
                           {
-                            const $rc_836 = march_string_to_int(best_s);
-                            return $rc_836;
+                            const $rc_841 = march_string_to_int(best_s);
+                            return $rc_841;
                           }
                         })();
                         switch ($t29039.$) {
@@ -13750,8 +13813,8 @@ function Perihelion$Core$decode_save(s) {
                                       {
                                         const $t29041 = (() => {
                                           {
-                                            const $rc_835 = march_string_split(runs_s, ";");
-                                            return $rc_835;
+                                            const $rc_840 = march_string_split(runs_s, ";");
+                                            return $rc_840;
                                           }
                                         })();
                                         {
@@ -13894,34 +13957,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
   {
     const $p29104 = (() => {
       {
-        const $p29052_i10595 = (() => {
+        const $p29052_i10608 = (() => {
           {
-            const $p15579_i10173_i10590 = (() => {
+            const $p15579_i10175_i10603 = (() => {
               {
-                const $p15576_i1532_i10163_i10581 = Random$next_raw(rng);
+                const $p15576_i1532_i10165_i10594 = Random$next_raw(rng);
                 {
-                  const hi_i1533_i10164_i10582 = $p15576_i1532_i10163_i10581._0;
+                  const hi_i1533_i10166_i10595 = $p15576_i1532_i10165_i10594._0;
                   {
-                    const rng2_i1534_i10165_i10583 = $p15576_i1532_i10163_i10581._1;
+                    const rng2_i1534_i10167_i10596 = $p15576_i1532_i10165_i10594._1;
                     {
-                      const $p15575_i1535_i10166_i10584 = Random$next_raw(rng2_i1534_i10165_i10583);
+                      const $p15575_i1535_i10168_i10597 = Random$next_raw(rng2_i1534_i10167_i10596);
                       {
-                        const lo_i1536_i10167_i10585 = $p15575_i1535_i10166_i10584._0;
+                        const lo_i1536_i10169_i10598 = $p15575_i1535_i10168_i10597._0;
                         {
-                          const rng3_i1537_i10168_i10586 = $p15575_i1535_i10166_i10584._1;
+                          const rng3_i1537_i10170_i10599 = $p15575_i1535_i10168_i10597._1;
                           {
-                            const $t15574_i1541_i10172_i10589 = (() => {
+                            const $t15574_i1541_i10174_i10602 = (() => {
                               {
-                                const $t15573_i1540_i10171_i10588 = (() => {
+                                const $t15573_i1540_i10173_i10601 = (() => {
                                   {
-                                    const $t15571_i1538_i10169_i10587 = march_int_and(hi_i1533_i10164_i10582, 1048575);
-                                    return ($t15571_i1538_i10169_i10587 * 4294967296);
+                                    const $t15571_i1538_i10171_i10600 = march_int_and(hi_i1533_i10166_i10595, 1048575);
+                                    return ($t15571_i1538_i10171_i10600 * 4294967296);
                                   }
                                 })();
-                                return ($t15573_i1540_i10171_i10588 + lo_i1536_i10167_i10585);
+                                return ($t15573_i1540_i10173_i10601 + lo_i1536_i10169_i10598);
                               }
                             })();
-                            return { _0: $t15574_i1541_i10172_i10589, _1: rng3_i1537_i10168_i10586 };
+                            return { _0: $t15574_i1541_i10174_i10602, _1: rng3_i1537_i10170_i10599 };
                           }
                         }
                       }
@@ -13931,29 +13994,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
               }
             })();
             {
-              const bits_i10174_i10591 = $p15579_i10173_i10590._0;
+              const bits_i10176_i10604 = $p15579_i10175_i10603._0;
               {
-                const rng2_i10175_i10592 = $p15579_i10173_i10590._1;
+                const rng2_i10177_i10605 = $p15579_i10175_i10603._1;
                 {
-                  const $t15578_i10177_i10594 = (() => {
+                  const $t15578_i10179_i10607 = (() => {
                     {
-                      const $t15577_i10176_i10593 = bits_i10174_i10591;
-                      return ($t15577_i10176_i10593 / 4.50359962737e+15);
+                      const $t15577_i10178_i10606 = bits_i10176_i10604;
+                      return ($t15577_i10178_i10606 / 4.50359962737e+15);
                     }
                   })();
-                  return { _0: $t15578_i10177_i10594, _1: rng2_i10175_i10592 };
+                  return { _0: $t15578_i10179_i10607, _1: rng2_i10177_i10605 };
                 }
               }
             }
           }
         })();
         {
-          const t_i10596 = $p29052_i10595._0;
+          const t_i10609 = $p29052_i10608._0;
           {
-            const rng2_i10597 = $p29052_i10595._1;
+            const rng2_i10610 = $p29052_i10608._1;
             {
-              const out_i10598 = { _0: rng2_i10597, _1: t_i10596 };
-              return out_i10598;
+              const out_i10611 = { _0: rng2_i10610, _1: t_i10609 };
+              return out_i10611;
             }
           }
         }
@@ -13966,34 +14029,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
         {
           const $p29103 = (() => {
             {
-              const $p29052_i10576 = (() => {
+              const $p29052_i10589 = (() => {
                 {
-                  const $p15579_i10173_i10571 = (() => {
+                  const $p15579_i10175_i10584 = (() => {
                     {
-                      const $p15576_i1532_i10163_i10562 = Random$next_raw(r1);
+                      const $p15576_i1532_i10165_i10575 = Random$next_raw(r1);
                       {
-                        const hi_i1533_i10164_i10563 = $p15576_i1532_i10163_i10562._0;
+                        const hi_i1533_i10166_i10576 = $p15576_i1532_i10165_i10575._0;
                         {
-                          const rng2_i1534_i10165_i10564 = $p15576_i1532_i10163_i10562._1;
+                          const rng2_i1534_i10167_i10577 = $p15576_i1532_i10165_i10575._1;
                           {
-                            const $p15575_i1535_i10166_i10565 = Random$next_raw(rng2_i1534_i10165_i10564);
+                            const $p15575_i1535_i10168_i10578 = Random$next_raw(rng2_i1534_i10167_i10577);
                             {
-                              const lo_i1536_i10167_i10566 = $p15575_i1535_i10166_i10565._0;
+                              const lo_i1536_i10169_i10579 = $p15575_i1535_i10168_i10578._0;
                               {
-                                const rng3_i1537_i10168_i10567 = $p15575_i1535_i10166_i10565._1;
+                                const rng3_i1537_i10170_i10580 = $p15575_i1535_i10168_i10578._1;
                                 {
-                                  const $t15574_i1541_i10172_i10570 = (() => {
+                                  const $t15574_i1541_i10174_i10583 = (() => {
                                     {
-                                      const $t15573_i1540_i10171_i10569 = (() => {
+                                      const $t15573_i1540_i10173_i10582 = (() => {
                                         {
-                                          const $t15571_i1538_i10169_i10568 = march_int_and(hi_i1533_i10164_i10563, 1048575);
-                                          return ($t15571_i1538_i10169_i10568 * 4294967296);
+                                          const $t15571_i1538_i10171_i10581 = march_int_and(hi_i1533_i10166_i10576, 1048575);
+                                          return ($t15571_i1538_i10171_i10581 * 4294967296);
                                         }
                                       })();
-                                      return ($t15573_i1540_i10171_i10569 + lo_i1536_i10167_i10566);
+                                      return ($t15573_i1540_i10173_i10582 + lo_i1536_i10169_i10579);
                                     }
                                   })();
-                                  return { _0: $t15574_i1541_i10172_i10570, _1: rng3_i1537_i10168_i10567 };
+                                  return { _0: $t15574_i1541_i10174_i10583, _1: rng3_i1537_i10170_i10580 };
                                 }
                               }
                             }
@@ -14003,29 +14066,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                     }
                   })();
                   {
-                    const bits_i10174_i10572 = $p15579_i10173_i10571._0;
+                    const bits_i10176_i10585 = $p15579_i10175_i10584._0;
                     {
-                      const rng2_i10175_i10573 = $p15579_i10173_i10571._1;
+                      const rng2_i10177_i10586 = $p15579_i10175_i10584._1;
                       {
-                        const $t15578_i10177_i10575 = (() => {
+                        const $t15578_i10179_i10588 = (() => {
                           {
-                            const $t15577_i10176_i10574 = bits_i10174_i10572;
-                            return ($t15577_i10176_i10574 / 4.50359962737e+15);
+                            const $t15577_i10178_i10587 = bits_i10176_i10585;
+                            return ($t15577_i10178_i10587 / 4.50359962737e+15);
                           }
                         })();
-                        return { _0: $t15578_i10177_i10575, _1: rng2_i10175_i10573 };
+                        return { _0: $t15578_i10179_i10588, _1: rng2_i10177_i10586 };
                       }
                     }
                   }
                 }
               })();
               {
-                const t_i10577 = $p29052_i10576._0;
+                const t_i10590 = $p29052_i10589._0;
                 {
-                  const rng2_i10578 = $p29052_i10576._1;
+                  const rng2_i10591 = $p29052_i10589._1;
                   {
-                    const out_i10579 = { _0: rng2_i10578, _1: t_i10577 };
-                    return out_i10579;
+                    const out_i10592 = { _0: rng2_i10591, _1: t_i10590 };
+                    return out_i10592;
                   }
                 }
               }
@@ -14038,34 +14101,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
               {
                 const $p29102 = (() => {
                   {
-                    const $p29052_i10557 = (() => {
+                    const $p29052_i10570 = (() => {
                       {
-                        const $p15579_i10173_i10552 = (() => {
+                        const $p15579_i10175_i10565 = (() => {
                           {
-                            const $p15576_i1532_i10163_i10543 = Random$next_raw(r2);
+                            const $p15576_i1532_i10165_i10556 = Random$next_raw(r2);
                             {
-                              const hi_i1533_i10164_i10544 = $p15576_i1532_i10163_i10543._0;
+                              const hi_i1533_i10166_i10557 = $p15576_i1532_i10165_i10556._0;
                               {
-                                const rng2_i1534_i10165_i10545 = $p15576_i1532_i10163_i10543._1;
+                                const rng2_i1534_i10167_i10558 = $p15576_i1532_i10165_i10556._1;
                                 {
-                                  const $p15575_i1535_i10166_i10546 = Random$next_raw(rng2_i1534_i10165_i10545);
+                                  const $p15575_i1535_i10168_i10559 = Random$next_raw(rng2_i1534_i10167_i10558);
                                   {
-                                    const lo_i1536_i10167_i10547 = $p15575_i1535_i10166_i10546._0;
+                                    const lo_i1536_i10169_i10560 = $p15575_i1535_i10168_i10559._0;
                                     {
-                                      const rng3_i1537_i10168_i10548 = $p15575_i1535_i10166_i10546._1;
+                                      const rng3_i1537_i10170_i10561 = $p15575_i1535_i10168_i10559._1;
                                       {
-                                        const $t15574_i1541_i10172_i10551 = (() => {
+                                        const $t15574_i1541_i10174_i10564 = (() => {
                                           {
-                                            const $t15573_i1540_i10171_i10550 = (() => {
+                                            const $t15573_i1540_i10173_i10563 = (() => {
                                               {
-                                                const $t15571_i1538_i10169_i10549 = march_int_and(hi_i1533_i10164_i10544, 1048575);
-                                                return ($t15571_i1538_i10169_i10549 * 4294967296);
+                                                const $t15571_i1538_i10171_i10562 = march_int_and(hi_i1533_i10166_i10557, 1048575);
+                                                return ($t15571_i1538_i10171_i10562 * 4294967296);
                                               }
                                             })();
-                                            return ($t15573_i1540_i10171_i10550 + lo_i1536_i10167_i10547);
+                                            return ($t15573_i1540_i10173_i10563 + lo_i1536_i10169_i10560);
                                           }
                                         })();
-                                        return { _0: $t15574_i1541_i10172_i10551, _1: rng3_i1537_i10168_i10548 };
+                                        return { _0: $t15574_i1541_i10174_i10564, _1: rng3_i1537_i10170_i10561 };
                                       }
                                     }
                                   }
@@ -14075,29 +14138,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                           }
                         })();
                         {
-                          const bits_i10174_i10553 = $p15579_i10173_i10552._0;
+                          const bits_i10176_i10566 = $p15579_i10175_i10565._0;
                           {
-                            const rng2_i10175_i10554 = $p15579_i10173_i10552._1;
+                            const rng2_i10177_i10567 = $p15579_i10175_i10565._1;
                             {
-                              const $t15578_i10177_i10556 = (() => {
+                              const $t15578_i10179_i10569 = (() => {
                                 {
-                                  const $t15577_i10176_i10555 = bits_i10174_i10553;
-                                  return ($t15577_i10176_i10555 / 4.50359962737e+15);
+                                  const $t15577_i10178_i10568 = bits_i10176_i10566;
+                                  return ($t15577_i10178_i10568 / 4.50359962737e+15);
                                 }
                               })();
-                              return { _0: $t15578_i10177_i10556, _1: rng2_i10175_i10554 };
+                              return { _0: $t15578_i10179_i10569, _1: rng2_i10177_i10567 };
                             }
                           }
                         }
                       }
                     })();
                     {
-                      const t_i10558 = $p29052_i10557._0;
+                      const t_i10571 = $p29052_i10570._0;
                       {
-                        const rng2_i10559 = $p29052_i10557._1;
+                        const rng2_i10572 = $p29052_i10570._1;
                         {
-                          const out_i10560 = { _0: rng2_i10559, _1: t_i10558 };
-                          return out_i10560;
+                          const out_i10573 = { _0: rng2_i10572, _1: t_i10571 };
+                          return out_i10573;
                         }
                       }
                     }
@@ -14110,34 +14173,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                     {
                       const $p29101 = (() => {
                         {
-                          const $p29052_i10538 = (() => {
+                          const $p29052_i10551 = (() => {
                             {
-                              const $p15579_i10173_i10533 = (() => {
+                              const $p15579_i10175_i10546 = (() => {
                                 {
-                                  const $p15576_i1532_i10163_i10524 = Random$next_raw(r3);
+                                  const $p15576_i1532_i10165_i10537 = Random$next_raw(r3);
                                   {
-                                    const hi_i1533_i10164_i10525 = $p15576_i1532_i10163_i10524._0;
+                                    const hi_i1533_i10166_i10538 = $p15576_i1532_i10165_i10537._0;
                                     {
-                                      const rng2_i1534_i10165_i10526 = $p15576_i1532_i10163_i10524._1;
+                                      const rng2_i1534_i10167_i10539 = $p15576_i1532_i10165_i10537._1;
                                       {
-                                        const $p15575_i1535_i10166_i10527 = Random$next_raw(rng2_i1534_i10165_i10526);
+                                        const $p15575_i1535_i10168_i10540 = Random$next_raw(rng2_i1534_i10167_i10539);
                                         {
-                                          const lo_i1536_i10167_i10528 = $p15575_i1535_i10166_i10527._0;
+                                          const lo_i1536_i10169_i10541 = $p15575_i1535_i10168_i10540._0;
                                           {
-                                            const rng3_i1537_i10168_i10529 = $p15575_i1535_i10166_i10527._1;
+                                            const rng3_i1537_i10170_i10542 = $p15575_i1535_i10168_i10540._1;
                                             {
-                                              const $t15574_i1541_i10172_i10532 = (() => {
+                                              const $t15574_i1541_i10174_i10545 = (() => {
                                                 {
-                                                  const $t15573_i1540_i10171_i10531 = (() => {
+                                                  const $t15573_i1540_i10173_i10544 = (() => {
                                                     {
-                                                      const $t15571_i1538_i10169_i10530 = march_int_and(hi_i1533_i10164_i10525, 1048575);
-                                                      return ($t15571_i1538_i10169_i10530 * 4294967296);
+                                                      const $t15571_i1538_i10171_i10543 = march_int_and(hi_i1533_i10166_i10538, 1048575);
+                                                      return ($t15571_i1538_i10171_i10543 * 4294967296);
                                                     }
                                                   })();
-                                                  return ($t15573_i1540_i10171_i10531 + lo_i1536_i10167_i10528);
+                                                  return ($t15573_i1540_i10173_i10544 + lo_i1536_i10169_i10541);
                                                 }
                                               })();
-                                              return { _0: $t15574_i1541_i10172_i10532, _1: rng3_i1537_i10168_i10529 };
+                                              return { _0: $t15574_i1541_i10174_i10545, _1: rng3_i1537_i10170_i10542 };
                                             }
                                           }
                                         }
@@ -14147,29 +14210,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                                 }
                               })();
                               {
-                                const bits_i10174_i10534 = $p15579_i10173_i10533._0;
+                                const bits_i10176_i10547 = $p15579_i10175_i10546._0;
                                 {
-                                  const rng2_i10175_i10535 = $p15579_i10173_i10533._1;
+                                  const rng2_i10177_i10548 = $p15579_i10175_i10546._1;
                                   {
-                                    const $t15578_i10177_i10537 = (() => {
+                                    const $t15578_i10179_i10550 = (() => {
                                       {
-                                        const $t15577_i10176_i10536 = bits_i10174_i10534;
-                                        return ($t15577_i10176_i10536 / 4.50359962737e+15);
+                                        const $t15577_i10178_i10549 = bits_i10176_i10547;
+                                        return ($t15577_i10178_i10549 / 4.50359962737e+15);
                                       }
                                     })();
-                                    return { _0: $t15578_i10177_i10537, _1: rng2_i10175_i10535 };
+                                    return { _0: $t15578_i10179_i10550, _1: rng2_i10177_i10548 };
                                   }
                                 }
                               }
                             }
                           })();
                           {
-                            const t_i10539 = $p29052_i10538._0;
+                            const t_i10552 = $p29052_i10551._0;
                             {
-                              const rng2_i10540 = $p29052_i10538._1;
+                              const rng2_i10553 = $p29052_i10551._1;
                               {
-                                const out_i10541 = { _0: rng2_i10540, _1: t_i10539 };
-                                return out_i10541;
+                                const out_i10554 = { _0: rng2_i10553, _1: t_i10552 };
+                                return out_i10554;
                               }
                             }
                           }
@@ -14182,34 +14245,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                           {
                             const $p29100 = (() => {
                               {
-                                const $p29052_i10519 = (() => {
+                                const $p29052_i10532 = (() => {
                                   {
-                                    const $p15579_i10173_i10514 = (() => {
+                                    const $p15579_i10175_i10527 = (() => {
                                       {
-                                        const $p15576_i1532_i10163_i10505 = Random$next_raw(r4);
+                                        const $p15576_i1532_i10165_i10518 = Random$next_raw(r4);
                                         {
-                                          const hi_i1533_i10164_i10506 = $p15576_i1532_i10163_i10505._0;
+                                          const hi_i1533_i10166_i10519 = $p15576_i1532_i10165_i10518._0;
                                           {
-                                            const rng2_i1534_i10165_i10507 = $p15576_i1532_i10163_i10505._1;
+                                            const rng2_i1534_i10167_i10520 = $p15576_i1532_i10165_i10518._1;
                                             {
-                                              const $p15575_i1535_i10166_i10508 = Random$next_raw(rng2_i1534_i10165_i10507);
+                                              const $p15575_i1535_i10168_i10521 = Random$next_raw(rng2_i1534_i10167_i10520);
                                               {
-                                                const lo_i1536_i10167_i10509 = $p15575_i1535_i10166_i10508._0;
+                                                const lo_i1536_i10169_i10522 = $p15575_i1535_i10168_i10521._0;
                                                 {
-                                                  const rng3_i1537_i10168_i10510 = $p15575_i1535_i10166_i10508._1;
+                                                  const rng3_i1537_i10170_i10523 = $p15575_i1535_i10168_i10521._1;
                                                   {
-                                                    const $t15574_i1541_i10172_i10513 = (() => {
+                                                    const $t15574_i1541_i10174_i10526 = (() => {
                                                       {
-                                                        const $t15573_i1540_i10171_i10512 = (() => {
+                                                        const $t15573_i1540_i10173_i10525 = (() => {
                                                           {
-                                                            const $t15571_i1538_i10169_i10511 = march_int_and(hi_i1533_i10164_i10506, 1048575);
-                                                            return ($t15571_i1538_i10169_i10511 * 4294967296);
+                                                            const $t15571_i1538_i10171_i10524 = march_int_and(hi_i1533_i10166_i10519, 1048575);
+                                                            return ($t15571_i1538_i10171_i10524 * 4294967296);
                                                           }
                                                         })();
-                                                        return ($t15573_i1540_i10171_i10512 + lo_i1536_i10167_i10509);
+                                                        return ($t15573_i1540_i10173_i10525 + lo_i1536_i10169_i10522);
                                                       }
                                                     })();
-                                                    return { _0: $t15574_i1541_i10172_i10513, _1: rng3_i1537_i10168_i10510 };
+                                                    return { _0: $t15574_i1541_i10174_i10526, _1: rng3_i1537_i10170_i10523 };
                                                   }
                                                 }
                                               }
@@ -14219,29 +14282,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                                       }
                                     })();
                                     {
-                                      const bits_i10174_i10515 = $p15579_i10173_i10514._0;
+                                      const bits_i10176_i10528 = $p15579_i10175_i10527._0;
                                       {
-                                        const rng2_i10175_i10516 = $p15579_i10173_i10514._1;
+                                        const rng2_i10177_i10529 = $p15579_i10175_i10527._1;
                                         {
-                                          const $t15578_i10177_i10518 = (() => {
+                                          const $t15578_i10179_i10531 = (() => {
                                             {
-                                              const $t15577_i10176_i10517 = bits_i10174_i10515;
-                                              return ($t15577_i10176_i10517 / 4.50359962737e+15);
+                                              const $t15577_i10178_i10530 = bits_i10176_i10528;
+                                              return ($t15577_i10178_i10530 / 4.50359962737e+15);
                                             }
                                           })();
-                                          return { _0: $t15578_i10177_i10518, _1: rng2_i10175_i10516 };
+                                          return { _0: $t15578_i10179_i10531, _1: rng2_i10177_i10529 };
                                         }
                                       }
                                     }
                                   }
                                 })();
                                 {
-                                  const t_i10520 = $p29052_i10519._0;
+                                  const t_i10533 = $p29052_i10532._0;
                                   {
-                                    const rng2_i10521 = $p29052_i10519._1;
+                                    const rng2_i10534 = $p29052_i10532._1;
                                     {
-                                      const out_i10522 = { _0: rng2_i10521, _1: t_i10520 };
-                                      return out_i10522;
+                                      const out_i10535 = { _0: rng2_i10534, _1: t_i10533 };
+                                      return out_i10535;
                                     }
                                   }
                                 }
@@ -14254,34 +14317,34 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                                 {
                                   const $p29099 = (() => {
                                     {
-                                      const $p29052_i10500 = (() => {
+                                      const $p29052_i10513 = (() => {
                                         {
-                                          const $p15579_i10173_i10495 = (() => {
+                                          const $p15579_i10175_i10508 = (() => {
                                             {
-                                              const $p15576_i1532_i10163_i10486 = Random$next_raw(r5);
+                                              const $p15576_i1532_i10165_i10499 = Random$next_raw(r5);
                                               {
-                                                const hi_i1533_i10164_i10487 = $p15576_i1532_i10163_i10486._0;
+                                                const hi_i1533_i10166_i10500 = $p15576_i1532_i10165_i10499._0;
                                                 {
-                                                  const rng2_i1534_i10165_i10488 = $p15576_i1532_i10163_i10486._1;
+                                                  const rng2_i1534_i10167_i10501 = $p15576_i1532_i10165_i10499._1;
                                                   {
-                                                    const $p15575_i1535_i10166_i10489 = Random$next_raw(rng2_i1534_i10165_i10488);
+                                                    const $p15575_i1535_i10168_i10502 = Random$next_raw(rng2_i1534_i10167_i10501);
                                                     {
-                                                      const lo_i1536_i10167_i10490 = $p15575_i1535_i10166_i10489._0;
+                                                      const lo_i1536_i10169_i10503 = $p15575_i1535_i10168_i10502._0;
                                                       {
-                                                        const rng3_i1537_i10168_i10491 = $p15575_i1535_i10166_i10489._1;
+                                                        const rng3_i1537_i10170_i10504 = $p15575_i1535_i10168_i10502._1;
                                                         {
-                                                          const $t15574_i1541_i10172_i10494 = (() => {
+                                                          const $t15574_i1541_i10174_i10507 = (() => {
                                                             {
-                                                              const $t15573_i1540_i10171_i10493 = (() => {
+                                                              const $t15573_i1540_i10173_i10506 = (() => {
                                                                 {
-                                                                  const $t15571_i1538_i10169_i10492 = march_int_and(hi_i1533_i10164_i10487, 1048575);
-                                                                  return ($t15571_i1538_i10169_i10492 * 4294967296);
+                                                                  const $t15571_i1538_i10171_i10505 = march_int_and(hi_i1533_i10166_i10500, 1048575);
+                                                                  return ($t15571_i1538_i10171_i10505 * 4294967296);
                                                                 }
                                                               })();
-                                                              return ($t15573_i1540_i10171_i10493 + lo_i1536_i10167_i10490);
+                                                              return ($t15573_i1540_i10173_i10506 + lo_i1536_i10169_i10503);
                                                             }
                                                           })();
-                                                          return { _0: $t15574_i1541_i10172_i10494, _1: rng3_i1537_i10168_i10491 };
+                                                          return { _0: $t15574_i1541_i10174_i10507, _1: rng3_i1537_i10170_i10504 };
                                                         }
                                                       }
                                                     }
@@ -14291,29 +14354,29 @@ function Perihelion$Level$next_star(rng, prev, view_w) {
                                             }
                                           })();
                                           {
-                                            const bits_i10174_i10496 = $p15579_i10173_i10495._0;
+                                            const bits_i10176_i10509 = $p15579_i10175_i10508._0;
                                             {
-                                              const rng2_i10175_i10497 = $p15579_i10173_i10495._1;
+                                              const rng2_i10177_i10510 = $p15579_i10175_i10508._1;
                                               {
-                                                const $t15578_i10177_i10499 = (() => {
+                                                const $t15578_i10179_i10512 = (() => {
                                                   {
-                                                    const $t15577_i10176_i10498 = bits_i10174_i10496;
-                                                    return ($t15577_i10176_i10498 / 4.50359962737e+15);
+                                                    const $t15577_i10178_i10511 = bits_i10176_i10509;
+                                                    return ($t15577_i10178_i10511 / 4.50359962737e+15);
                                                   }
                                                 })();
-                                                return { _0: $t15578_i10177_i10499, _1: rng2_i10175_i10497 };
+                                                return { _0: $t15578_i10179_i10512, _1: rng2_i10177_i10510 };
                                               }
                                             }
                                           }
                                         }
                                       })();
                                       {
-                                        const t_i10501 = $p29052_i10500._0;
+                                        const t_i10514 = $p29052_i10513._0;
                                         {
-                                          const rng2_i10502 = $p29052_i10500._1;
+                                          const rng2_i10515 = $p29052_i10513._1;
                                           {
-                                            const out_i10503 = { _0: rng2_i10502, _1: t_i10501 };
-                                            return out_i10503;
+                                            const out_i10516 = { _0: rng2_i10515, _1: t_i10514 };
+                                            return out_i10516;
                                           }
                                         }
                                       }
@@ -14552,41 +14615,41 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
       {
         const $t29123 = (() => {
           {
-            const x_i10235 = (() => {
+            const x_i10237 = (() => {
               {
-                const $t29119_i10234 = (() => {
+                const $t29119_i10236 = (() => {
                   {
-                    const $t29118_i10233 = (() => {
+                    const $t29118_i10235 = (() => {
                       {
-                        const $t29116_i10231 = (() => {
+                        const $t29116_i10233 = (() => {
                           {
-                            const $t29114_i10229 = (sx * 12.9898);
+                            const $t29114_i10231 = (sx * 12.9898);
                             {
-                              const $t29115_i10230 = (sy * 78.233);
-                              return ($t29114_i10229 + $t29115_i10230);
+                              const $t29115_i10232 = (sy * 78.233);
+                              return ($t29114_i10231 + $t29115_i10232);
                             }
                           }
                         })();
                         {
-                          const $t29117_i10232 = (seed * 37.719);
-                          return ($t29116_i10231 + $t29117_i10232);
+                          const $t29117_i10234 = (seed * 37.719);
+                          return ($t29116_i10233 + $t29117_i10234);
                         }
                       }
                     })();
-                    return Math.sin($t29118_i10233);
+                    return Math.sin($t29118_i10235);
                   }
                 })();
-                return ($t29119_i10234 * 43758.5453);
+                return ($t29119_i10236 * 43758.5453);
               }
             })();
             {
-              const $t29120_i10237 = (() => {
+              const $t29120_i10239 = (() => {
                 {
-                  const $t1582_i4013_i10236 = Math.floor(x_i10235);
-                  return $t1582_i4013_i10236;
+                  const $t1582_i4013_i10238 = Math.floor(x_i10237);
+                  return $t1582_i4013_i10238;
                 }
               })();
-              return (x_i10235 - $t29120_i10237);
+              return (x_i10237 - $t29120_i10239);
             }
           }
         })();
@@ -14608,41 +14671,41 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
                         {
                           const $t29126 = (sx + 1.);
                           {
-                            const x_i10223 = (() => {
+                            const x_i10225 = (() => {
                               {
-                                const $t29119_i10222 = (() => {
+                                const $t29119_i10224 = (() => {
                                   {
-                                    const $t29118_i10221 = (() => {
+                                    const $t29118_i10223 = (() => {
                                       {
-                                        const $t29116_i10219 = (() => {
+                                        const $t29116_i10221 = (() => {
                                           {
-                                            const $t29114_i10217 = ($t29126 * 12.9898);
+                                            const $t29114_i10219 = ($t29126 * 12.9898);
                                             {
-                                              const $t29115_i10218 = (sy * 78.233);
-                                              return ($t29114_i10217 + $t29115_i10218);
+                                              const $t29115_i10220 = (sy * 78.233);
+                                              return ($t29114_i10219 + $t29115_i10220);
                                             }
                                           }
                                         })();
                                         {
-                                          const $t29117_i10220 = (seed * 37.719);
-                                          return ($t29116_i10219 + $t29117_i10220);
+                                          const $t29117_i10222 = (seed * 37.719);
+                                          return ($t29116_i10221 + $t29117_i10222);
                                         }
                                       }
                                     })();
-                                    return Math.sin($t29118_i10221);
+                                    return Math.sin($t29118_i10223);
                                   }
                                 })();
-                                return ($t29119_i10222 * 43758.5453);
+                                return ($t29119_i10224 * 43758.5453);
                               }
                             })();
                             {
-                              const $t29120_i10225 = (() => {
+                              const $t29120_i10227 = (() => {
                                 {
-                                  const $t1582_i4013_i10224 = Math.floor(x_i10223);
-                                  return $t1582_i4013_i10224;
+                                  const $t1582_i4013_i10226 = Math.floor(x_i10225);
+                                  return $t1582_i4013_i10226;
                                 }
                               })();
-                              return (x_i10223 - $t29120_i10225);
+                              return (x_i10225 - $t29120_i10227);
                             }
                           }
                         }
@@ -14667,41 +14730,41 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
                           {
                             const $t29131 = (sy + 1.);
                             {
-                              const x_i10211 = (() => {
+                              const x_i10213 = (() => {
                                 {
-                                  const $t29119_i10210 = (() => {
+                                  const $t29119_i10212 = (() => {
                                     {
-                                      const $t29118_i10209 = (() => {
+                                      const $t29118_i10211 = (() => {
                                         {
-                                          const $t29116_i10207 = (() => {
+                                          const $t29116_i10209 = (() => {
                                             {
-                                              const $t29114_i10205 = (sx * 12.9898);
+                                              const $t29114_i10207 = (sx * 12.9898);
                                               {
-                                                const $t29115_i10206 = ($t29131 * 78.233);
-                                                return ($t29114_i10205 + $t29115_i10206);
+                                                const $t29115_i10208 = ($t29131 * 78.233);
+                                                return ($t29114_i10207 + $t29115_i10208);
                                               }
                                             }
                                           })();
                                           {
-                                            const $t29117_i10208 = (seed * 37.719);
-                                            return ($t29116_i10207 + $t29117_i10208);
+                                            const $t29117_i10210 = (seed * 37.719);
+                                            return ($t29116_i10209 + $t29117_i10210);
                                           }
                                         }
                                       })();
-                                      return Math.sin($t29118_i10209);
+                                      return Math.sin($t29118_i10211);
                                     }
                                   })();
-                                  return ($t29119_i10210 * 43758.5453);
+                                  return ($t29119_i10212 * 43758.5453);
                                 }
                               })();
                               {
-                                const $t29120_i10213 = (() => {
+                                const $t29120_i10215 = (() => {
                                   {
-                                    const $t1582_i4013_i10212 = Math.floor(x_i10211);
-                                    return $t1582_i4013_i10212;
+                                    const $t1582_i4013_i10214 = Math.floor(x_i10213);
+                                    return $t1582_i4013_i10214;
                                   }
                                 })();
-                                return (x_i10211 - $t29120_i10213);
+                                return (x_i10213 - $t29120_i10215);
                               }
                             }
                           }
@@ -14720,41 +14783,41 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
                 {
                   const $t29136 = (sx + 2.);
                   {
-                    const x_i10199 = (() => {
+                    const x_i10201 = (() => {
                       {
-                        const $t29119_i10198 = (() => {
+                        const $t29119_i10200 = (() => {
                           {
-                            const $t29118_i10197 = (() => {
+                            const $t29118_i10199 = (() => {
                               {
-                                const $t29116_i10195 = (() => {
+                                const $t29116_i10197 = (() => {
                                   {
-                                    const $t29114_i10193 = ($t29136 * 12.9898);
+                                    const $t29114_i10195 = ($t29136 * 12.9898);
                                     {
-                                      const $t29115_i10194 = (sy * 78.233);
-                                      return ($t29114_i10193 + $t29115_i10194);
+                                      const $t29115_i10196 = (sy * 78.233);
+                                      return ($t29114_i10195 + $t29115_i10196);
                                     }
                                   }
                                 })();
                                 {
-                                  const $t29117_i10196 = (seed * 37.719);
-                                  return ($t29116_i10195 + $t29117_i10196);
+                                  const $t29117_i10198 = (seed * 37.719);
+                                  return ($t29116_i10197 + $t29117_i10198);
                                 }
                               }
                             })();
-                            return Math.sin($t29118_i10197);
+                            return Math.sin($t29118_i10199);
                           }
                         })();
-                        return ($t29119_i10198 * 43758.5453);
+                        return ($t29119_i10200 * 43758.5453);
                       }
                     })();
                     {
-                      const $t29120_i10201 = (() => {
+                      const $t29120_i10203 = (() => {
                         {
-                          const $t1582_i4013_i10200 = Math.floor(x_i10199);
-                          return $t1582_i4013_i10200;
+                          const $t1582_i4013_i10202 = Math.floor(x_i10201);
+                          return $t1582_i4013_i10202;
                         }
                       })();
-                      return (x_i10199 - $t29120_i10201);
+                      return (x_i10201 - $t29120_i10203);
                     }
                   }
                 }
@@ -14783,41 +14846,41 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
                             {
                               const $t29140 = (sy + 2.);
                               {
-                                const x_i10187 = (() => {
+                                const x_i10189 = (() => {
                                   {
-                                    const $t29119_i10186 = (() => {
+                                    const $t29119_i10188 = (() => {
                                       {
-                                        const $t29118_i10185 = (() => {
+                                        const $t29118_i10187 = (() => {
                                           {
-                                            const $t29116_i10183 = (() => {
+                                            const $t29116_i10185 = (() => {
                                               {
-                                                const $t29114_i10181 = (sx * 12.9898);
+                                                const $t29114_i10183 = (sx * 12.9898);
                                                 {
-                                                  const $t29115_i10182 = ($t29140 * 78.233);
-                                                  return ($t29114_i10181 + $t29115_i10182);
+                                                  const $t29115_i10184 = ($t29140 * 78.233);
+                                                  return ($t29114_i10183 + $t29115_i10184);
                                                 }
                                               }
                                             })();
                                             {
-                                              const $t29117_i10184 = (seed * 37.719);
-                                              return ($t29116_i10183 + $t29117_i10184);
+                                              const $t29117_i10186 = (seed * 37.719);
+                                              return ($t29116_i10185 + $t29117_i10186);
                                             }
                                           }
                                         })();
-                                        return Math.sin($t29118_i10185);
+                                        return Math.sin($t29118_i10187);
                                       }
                                     })();
-                                    return ($t29119_i10186 * 43758.5453);
+                                    return ($t29119_i10188 * 43758.5453);
                                   }
                                 })();
                                 {
-                                  const $t29120_i10189 = (() => {
+                                  const $t29120_i10191 = (() => {
                                     {
-                                      const $t1582_i4013_i10188 = Math.floor(x_i10187);
-                                      return $t1582_i4013_i10188;
+                                      const $t1582_i4013_i10190 = Math.floor(x_i10189);
+                                      return $t1582_i4013_i10190;
                                     }
                                   })();
-                                  return (x_i10187 - $t29120_i10189);
+                                  return (x_i10189 - $t29120_i10191);
                                 }
                               }
                             }
@@ -15001,34 +15064,34 @@ function Perihelion$Upgrades$milestone_check(rng, stars_chained) {
         {
           const $p29211 = (() => {
             {
-              const $p29052_i10481_i10818 = (() => {
+              const $p29052_i10494_i10831 = (() => {
                 {
-                  const $p15579_i10173_i10476_i10813 = (() => {
+                  const $p15579_i10175_i10489_i10826 = (() => {
                     {
-                      const $p15576_i1532_i10163_i10467_i10804 = Random$next_raw(rng);
+                      const $p15576_i1532_i10165_i10480_i10817 = Random$next_raw(rng);
                       {
-                        const hi_i1533_i10164_i10468_i10805 = $p15576_i1532_i10163_i10467_i10804._0;
+                        const hi_i1533_i10166_i10481_i10818 = $p15576_i1532_i10165_i10480_i10817._0;
                         {
-                          const rng2_i1534_i10165_i10469_i10806 = $p15576_i1532_i10163_i10467_i10804._1;
+                          const rng2_i1534_i10167_i10482_i10819 = $p15576_i1532_i10165_i10480_i10817._1;
                           {
-                            const $p15575_i1535_i10166_i10470_i10807 = Random$next_raw(rng2_i1534_i10165_i10469_i10806);
+                            const $p15575_i1535_i10168_i10483_i10820 = Random$next_raw(rng2_i1534_i10167_i10482_i10819);
                             {
-                              const lo_i1536_i10167_i10471_i10808 = $p15575_i1535_i10166_i10470_i10807._0;
+                              const lo_i1536_i10169_i10484_i10821 = $p15575_i1535_i10168_i10483_i10820._0;
                               {
-                                const rng3_i1537_i10168_i10472_i10809 = $p15575_i1535_i10166_i10470_i10807._1;
+                                const rng3_i1537_i10170_i10485_i10822 = $p15575_i1535_i10168_i10483_i10820._1;
                                 {
-                                  const $t15574_i1541_i10172_i10475_i10812 = (() => {
+                                  const $t15574_i1541_i10174_i10488_i10825 = (() => {
                                     {
-                                      const $t15573_i1540_i10171_i10474_i10811 = (() => {
+                                      const $t15573_i1540_i10173_i10487_i10824 = (() => {
                                         {
-                                          const $t15571_i1538_i10169_i10473_i10810 = march_int_and(hi_i1533_i10164_i10468_i10805, 1048575);
-                                          return ($t15571_i1538_i10169_i10473_i10810 * 4294967296);
+                                          const $t15571_i1538_i10171_i10486_i10823 = march_int_and(hi_i1533_i10166_i10481_i10818, 1048575);
+                                          return ($t15571_i1538_i10171_i10486_i10823 * 4294967296);
                                         }
                                       })();
-                                      return ($t15573_i1540_i10171_i10474_i10811 + lo_i1536_i10167_i10471_i10808);
+                                      return ($t15573_i1540_i10173_i10487_i10824 + lo_i1536_i10169_i10484_i10821);
                                     }
                                   })();
-                                  return { _0: $t15574_i1541_i10172_i10475_i10812, _1: rng3_i1537_i10168_i10472_i10809 };
+                                  return { _0: $t15574_i1541_i10174_i10488_i10825, _1: rng3_i1537_i10170_i10485_i10822 };
                                 }
                               }
                             }
@@ -15038,29 +15101,29 @@ function Perihelion$Upgrades$milestone_check(rng, stars_chained) {
                     }
                   })();
                   {
-                    const bits_i10174_i10477_i10814 = $p15579_i10173_i10476_i10813._0;
+                    const bits_i10176_i10490_i10827 = $p15579_i10175_i10489_i10826._0;
                     {
-                      const rng2_i10175_i10478_i10815 = $p15579_i10173_i10476_i10813._1;
+                      const rng2_i10177_i10491_i10828 = $p15579_i10175_i10489_i10826._1;
                       {
-                        const $t15578_i10177_i10480_i10817 = (() => {
+                        const $t15578_i10179_i10493_i10830 = (() => {
                           {
-                            const $t15577_i10176_i10479_i10816 = bits_i10174_i10477_i10814;
-                            return ($t15577_i10176_i10479_i10816 / 4.50359962737e+15);
+                            const $t15577_i10178_i10492_i10829 = bits_i10176_i10490_i10827;
+                            return ($t15577_i10178_i10492_i10829 / 4.50359962737e+15);
                           }
                         })();
-                        return { _0: $t15578_i10177_i10480_i10817, _1: rng2_i10175_i10478_i10815 };
+                        return { _0: $t15578_i10179_i10493_i10830, _1: rng2_i10177_i10491_i10828 };
                       }
                     }
                   }
                 }
               })();
               {
-                const t_i10482_i10819 = $p29052_i10481_i10818._0;
+                const t_i10495_i10832 = $p29052_i10494_i10831._0;
                 {
-                  const rng2_i10483_i10820 = $p29052_i10481_i10818._1;
+                  const rng2_i10496_i10833 = $p29052_i10494_i10831._1;
                   {
-                    const out_i10484_i10821 = { _0: rng2_i10483_i10820, _1: t_i10482_i10819 };
-                    return out_i10484_i10821;
+                    const out_i10497_i10834 = { _0: rng2_i10496_i10833, _1: t_i10495_i10832 };
+                    return out_i10497_i10834;
                   }
                 }
               }
@@ -15172,18 +15235,18 @@ function Perihelion$Upgrades$milestone_pool(owned) {
                                             {
                                               const $t29240 = { $: "Cons", _0: $t29223, _1: $t29239 };
                                               {
-                                                const go_i10240 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                                                const go_i10242 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                                                 {
-                                                  const $t261_i10243 = (() => {
+                                                  const $t261_i10245 = (() => {
                                                     {
-                                                      const go_i4506_i10241 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                                                      const go_i4508_i10243 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                                                       {
-                                                        const $t253_i4507_i10242 = { $: "Nil" };
-                                                        return go$apply$5255(go_i4506_i10241, unowned_weapons, $t253_i4507_i10242);
+                                                        const $t253_i4509_i10244 = { $: "Nil" };
+                                                        return go$apply$5255(go_i4508_i10243, unowned_weapons, $t253_i4509_i10244);
                                                       }
                                                     }
                                                   })();
-                                                  return go$apply$4813(go_i10240, $t261_i10243, $t29240);
+                                                  return go$apply$4813(go_i10242, $t261_i10245, $t29240);
                                                 }
                                               }
                                             }
@@ -15227,18 +15290,18 @@ function Perihelion$Upgrades$remove_upgrade_at(xs, idx) {
       {
         const $t29243 = List$drop$List_UpgradeKind$Int(xs, $t29242);
         {
-          const go_i10246 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+          const go_i10248 = { $: "$Clo_go$4813", _0: go$apply$4813 };
           {
-            const $t261_i10249 = (() => {
+            const $t261_i10251 = (() => {
               {
-                const go_i4506_i10247 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                const go_i4508_i10249 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                 {
-                  const $t253_i4507_i10248 = { $: "Nil" };
-                  return go$apply$5255(go_i4506_i10247, $t29241, $t253_i4507_i10248);
+                  const $t253_i4509_i10250 = { $: "Nil" };
+                  return go$apply$5255(go_i4508_i10249, $t29241, $t253_i4509_i10250);
                 }
               }
             })();
-            return go$apply$4813(go_i10246, $t261_i10249, $t29243);
+            return go$apply$4813(go_i10248, $t261_i10251, $t29243);
           }
         }
       }
@@ -15251,34 +15314,34 @@ function Perihelion$Upgrades$pick_and_remove(rng, pool) {
   {
     const $p29247 = (() => {
       {
-        const $p29052_i10481_i10837_i11183 = (() => {
+        const $p29052_i10494_i10850_i11196 = (() => {
           {
-            const $p15579_i10173_i10476_i10832_i11178 = (() => {
+            const $p15579_i10175_i10489_i10845_i11191 = (() => {
               {
-                const $p15576_i1532_i10163_i10467_i10823_i11169 = Random$next_raw(rng);
+                const $p15576_i1532_i10165_i10480_i10836_i11182 = Random$next_raw(rng);
                 {
-                  const hi_i1533_i10164_i10468_i10824_i11170 = $p15576_i1532_i10163_i10467_i10823_i11169._0;
+                  const hi_i1533_i10166_i10481_i10837_i11183 = $p15576_i1532_i10165_i10480_i10836_i11182._0;
                   {
-                    const rng2_i1534_i10165_i10469_i10825_i11171 = $p15576_i1532_i10163_i10467_i10823_i11169._1;
+                    const rng2_i1534_i10167_i10482_i10838_i11184 = $p15576_i1532_i10165_i10480_i10836_i11182._1;
                     {
-                      const $p15575_i1535_i10166_i10470_i10826_i11172 = Random$next_raw(rng2_i1534_i10165_i10469_i10825_i11171);
+                      const $p15575_i1535_i10168_i10483_i10839_i11185 = Random$next_raw(rng2_i1534_i10167_i10482_i10838_i11184);
                       {
-                        const lo_i1536_i10167_i10471_i10827_i11173 = $p15575_i1535_i10166_i10470_i10826_i11172._0;
+                        const lo_i1536_i10169_i10484_i10840_i11186 = $p15575_i1535_i10168_i10483_i10839_i11185._0;
                         {
-                          const rng3_i1537_i10168_i10472_i10828_i11174 = $p15575_i1535_i10166_i10470_i10826_i11172._1;
+                          const rng3_i1537_i10170_i10485_i10841_i11187 = $p15575_i1535_i10168_i10483_i10839_i11185._1;
                           {
-                            const $t15574_i1541_i10172_i10475_i10831_i11177 = (() => {
+                            const $t15574_i1541_i10174_i10488_i10844_i11190 = (() => {
                               {
-                                const $t15573_i1540_i10171_i10474_i10830_i11176 = (() => {
+                                const $t15573_i1540_i10173_i10487_i10843_i11189 = (() => {
                                   {
-                                    const $t15571_i1538_i10169_i10473_i10829_i11175 = march_int_and(hi_i1533_i10164_i10468_i10824_i11170, 1048575);
-                                    return ($t15571_i1538_i10169_i10473_i10829_i11175 * 4294967296);
+                                    const $t15571_i1538_i10171_i10486_i10842_i11188 = march_int_and(hi_i1533_i10166_i10481_i10837_i11183, 1048575);
+                                    return ($t15571_i1538_i10171_i10486_i10842_i11188 * 4294967296);
                                   }
                                 })();
-                                return ($t15573_i1540_i10171_i10474_i10830_i11176 + lo_i1536_i10167_i10471_i10827_i11173);
+                                return ($t15573_i1540_i10173_i10487_i10843_i11189 + lo_i1536_i10169_i10484_i10840_i11186);
                               }
                             })();
-                            return { _0: $t15574_i1541_i10172_i10475_i10831_i11177, _1: rng3_i1537_i10168_i10472_i10828_i11174 };
+                            return { _0: $t15574_i1541_i10174_i10488_i10844_i11190, _1: rng3_i1537_i10170_i10485_i10841_i11187 };
                           }
                         }
                       }
@@ -15288,29 +15351,29 @@ function Perihelion$Upgrades$pick_and_remove(rng, pool) {
               }
             })();
             {
-              const bits_i10174_i10477_i10833_i11179 = $p15579_i10173_i10476_i10832_i11178._0;
+              const bits_i10176_i10490_i10846_i11192 = $p15579_i10175_i10489_i10845_i11191._0;
               {
-                const rng2_i10175_i10478_i10834_i11180 = $p15579_i10173_i10476_i10832_i11178._1;
+                const rng2_i10177_i10491_i10847_i11193 = $p15579_i10175_i10489_i10845_i11191._1;
                 {
-                  const $t15578_i10177_i10480_i10836_i11182 = (() => {
+                  const $t15578_i10179_i10493_i10849_i11195 = (() => {
                     {
-                      const $t15577_i10176_i10479_i10835_i11181 = bits_i10174_i10477_i10833_i11179;
-                      return ($t15577_i10176_i10479_i10835_i11181 / 4.50359962737e+15);
+                      const $t15577_i10178_i10492_i10848_i11194 = bits_i10176_i10490_i10846_i11192;
+                      return ($t15577_i10178_i10492_i10848_i11194 / 4.50359962737e+15);
                     }
                   })();
-                  return { _0: $t15578_i10177_i10480_i10836_i11182, _1: rng2_i10175_i10478_i10834_i11180 };
+                  return { _0: $t15578_i10179_i10493_i10849_i11195, _1: rng2_i10177_i10491_i10847_i11193 };
                 }
               }
             }
           }
         })();
         {
-          const t_i10482_i10838_i11184 = $p29052_i10481_i10837_i11183._0;
+          const t_i10495_i10851_i11197 = $p29052_i10494_i10850_i11196._0;
           {
-            const rng2_i10483_i10839_i11185 = $p29052_i10481_i10837_i11183._1;
+            const rng2_i10496_i10852_i11198 = $p29052_i10494_i10850_i11196._1;
             {
-              const out_i10484_i10840_i11186 = { _0: rng2_i10483_i10839_i11185, _1: t_i10482_i10838_i11184 };
-              return out_i10484_i10840_i11186;
+              const out_i10497_i10853_i11199 = { _0: rng2_i10496_i10852_i11198, _1: t_i10495_i10851_i11197 };
+              return out_i10497_i10853_i11199;
             }
           }
         }
@@ -15655,88 +15718,88 @@ function Perihelion$Upgrades$owned_upgrades(owned_weapons, fire_rate_stacks, bul
                 {
                   const $t29291 = (() => {
                     {
-                      const go_i10276 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                      const go_i10278 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                       {
-                        const $t261_i10279 = (() => {
+                        const $t261_i10281 = (() => {
                           {
-                            const go_i4506_i10277 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                            const go_i4508_i10279 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                             {
-                              const $t253_i4507_i10278 = { $: "Nil" };
-                              return go$apply$5255(go_i4506_i10277, shield, $t253_i4507_i10278);
+                              const $t253_i4509_i10280 = { $: "Nil" };
+                              return go$apply$5255(go_i4508_i10279, shield, $t253_i4509_i10280);
                             }
                           }
                         })();
-                        return go$apply$4813(go_i10276, $t261_i10279, spec);
+                        return go$apply$4813(go_i10278, $t261_i10281, spec);
                       }
                     }
                   })();
                   {
                     const $t29292 = (() => {
                       {
-                        const go_i10270 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                        const go_i10272 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                         {
-                          const $t261_i10273 = (() => {
+                          const $t261_i10275 = (() => {
                             {
-                              const go_i4506_i10271 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                              const go_i4508_i10273 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                               {
-                                const $t253_i4507_i10272 = { $: "Nil" };
-                                return go$apply$5255(go_i4506_i10271, deflect, $t253_i4507_i10272);
+                                const $t253_i4509_i10274 = { $: "Nil" };
+                                return go$apply$5255(go_i4508_i10273, deflect, $t253_i4509_i10274);
                               }
                             }
                           })();
-                          return go$apply$4813(go_i10270, $t261_i10273, $t29291);
+                          return go$apply$4813(go_i10272, $t261_i10275, $t29291);
                         }
                       }
                     })();
                     {
                       const $t29293 = (() => {
                         {
-                          const go_i10264 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                          const go_i10266 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                           {
-                            const $t261_i10267 = (() => {
+                            const $t261_i10269 = (() => {
                               {
-                                const go_i4506_i10265 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                                const go_i4508_i10267 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                                 {
-                                  const $t253_i4507_i10266 = { $: "Nil" };
-                                  return go$apply$5255(go_i4506_i10265, ward, $t253_i4507_i10266);
+                                  const $t253_i4509_i10268 = { $: "Nil" };
+                                  return go$apply$5255(go_i4508_i10267, ward, $t253_i4509_i10268);
                                 }
                               }
                             })();
-                            return go$apply$4813(go_i10264, $t261_i10267, $t29292);
+                            return go$apply$4813(go_i10266, $t261_i10269, $t29292);
                           }
                         }
                       })();
                       {
                         const $t29294 = (() => {
                           {
-                            const go_i10258 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                            const go_i10260 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                             {
-                              const $t261_i10261 = (() => {
+                              const $t261_i10263 = (() => {
                                 {
-                                  const go_i4506_i10259 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                                  const go_i4508_i10261 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                                   {
-                                    const $t253_i4507_i10260 = { $: "Nil" };
-                                    return go$apply$5255(go_i4506_i10259, fire_rate, $t253_i4507_i10260);
+                                    const $t253_i4509_i10262 = { $: "Nil" };
+                                    return go$apply$5255(go_i4508_i10261, fire_rate, $t253_i4509_i10262);
                                   }
                                 }
                               })();
-                              return go$apply$4813(go_i10258, $t261_i10261, $t29293);
+                              return go$apply$4813(go_i10260, $t261_i10263, $t29293);
                             }
                           }
                         })();
                         {
-                          const go_i10252 = { $: "$Clo_go$4813", _0: go$apply$4813 };
+                          const go_i10254 = { $: "$Clo_go$4813", _0: go$apply$4813 };
                           {
-                            const $t261_i10255 = (() => {
+                            const $t261_i10257 = (() => {
                               {
-                                const go_i4506_i10253 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+                                const go_i4508_i10255 = { $: "$Clo_go$5255", _0: go$apply$5255 };
                                 {
-                                  const $t253_i4507_i10254 = { $: "Nil" };
-                                  return go$apply$5255(go_i4506_i10253, weapons, $t253_i4507_i10254);
+                                  const $t253_i4509_i10256 = { $: "Nil" };
+                                  return go$apply$5255(go_i4508_i10255, weapons, $t253_i4509_i10256);
                                 }
                               }
                             })();
-                            return go$apply$4813(go_i10252, $t261_i10255, $t29294);
+                            return go$apply$4813(go_i10254, $t261_i10257, $t29294);
                           }
                         }
                       }
@@ -15809,177 +15872,177 @@ const boot_seed$clo = { _0: ($_) => boot_seed() };
 
 function spawn_burst_particles(x, y, t, i, acc) {
   {
-    const $t29317 = (i >= 10);
-    if ($t29317 === true) {
+    const $t29318 = (i >= 10);
+    if ($t29318 === true) {
       return acc;
     } else {
       return (() => {
         {
           const seed = (() => {
             {
-              const $t29319 = (() => {
+              const $t29320 = (() => {
                 {
-                  const $t29318 = i;
-                  return ($t29318 * 7.);
+                  const $t29319 = i;
+                  return ($t29319 * 7.);
                 }
               })();
-              return (t + $t29319);
+              return (t + $t29320);
             }
           })();
           {
             const a = (() => {
               {
-                const $t29320 = (() => {
+                const $t29321 = (() => {
                   {
-                    const x_i10304 = (() => {
+                    const x_i10306 = (() => {
                       {
-                        const $t29314_i10303 = (() => {
+                        const $t29315_i10305 = (() => {
                           {
-                            const $t29313_i10302 = (() => {
+                            const $t29314_i10304 = (() => {
                               {
-                                const $t29311_i10300 = (seed * 12.9898);
+                                const $t29312_i10302 = (seed * 12.9898);
                                 {
-                                  const $t29312_i10301 = (1. * 78.233);
-                                  return ($t29311_i10300 + $t29312_i10301);
+                                  const $t29313_i10303 = (1. * 78.233);
+                                  return ($t29312_i10302 + $t29313_i10303);
                                 }
                               }
                             })();
-                            return Math.sin($t29313_i10302);
+                            return Math.sin($t29314_i10304);
                           }
                         })();
-                        return ($t29314_i10303 * 43758.5453);
+                        return ($t29315_i10305 * 43758.5453);
                       }
                     })();
                     {
-                      const $t29315_i10306 = (() => {
+                      const $t29316_i10308 = (() => {
                         {
-                          const $t1582_i4063_i10305 = Math.floor(x_i10304);
-                          return $t1582_i4063_i10305;
+                          const $t1582_i4063_i10307 = Math.floor(x_i10306);
+                          return $t1582_i4063_i10307;
                         }
                       })();
-                      return (x_i10304 - $t29315_i10306);
+                      return (x_i10306 - $t29316_i10308);
                     }
                   }
                 })();
-                return ($t29320 * 6.28318530718);
+                return ($t29321 * 6.28318530718);
               }
             })();
             {
               const speed = (() => {
                 {
-                  const $t29323 = (() => {
+                  const $t29324 = (() => {
                     {
-                      const $t29322 = (() => {
+                      const $t29323 = (() => {
                         {
-                          const x_i10295 = (() => {
+                          const x_i10297 = (() => {
                             {
-                              const $t29314_i10294 = (() => {
+                              const $t29315_i10296 = (() => {
                                 {
-                                  const $t29313_i10293 = (() => {
+                                  const $t29314_i10295 = (() => {
                                     {
-                                      const $t29311_i10291 = (seed * 12.9898);
+                                      const $t29312_i10293 = (seed * 12.9898);
                                       {
-                                        const $t29312_i10292 = (2. * 78.233);
-                                        return ($t29311_i10291 + $t29312_i10292);
+                                        const $t29313_i10294 = (2. * 78.233);
+                                        return ($t29312_i10293 + $t29313_i10294);
                                       }
                                     }
                                   })();
-                                  return Math.sin($t29313_i10293);
+                                  return Math.sin($t29314_i10295);
                                 }
                               })();
-                              return ($t29314_i10294 * 43758.5453);
+                              return ($t29315_i10296 * 43758.5453);
                             }
                           })();
                           {
-                            const $t29315_i10297 = (() => {
+                            const $t29316_i10299 = (() => {
                               {
-                                const $t1582_i4063_i10296 = Math.floor(x_i10295);
-                                return $t1582_i4063_i10296;
+                                const $t1582_i4063_i10298 = Math.floor(x_i10297);
+                                return $t1582_i4063_i10298;
                               }
                             })();
-                            return (x_i10295 - $t29315_i10297);
+                            return (x_i10297 - $t29316_i10299);
                           }
                         }
                       })();
-                      return ($t29322 * 90.);
+                      return ($t29323 * 90.);
                     }
                   })();
-                  return (40. + $t29323);
+                  return (40. + $t29324);
                 }
               })();
               {
                 const life = (() => {
                   {
-                    const $t29327 = (() => {
+                    const $t29328 = (() => {
                       {
-                        const $t29326 = (() => {
+                        const $t29327 = (() => {
                           {
-                            const $t29325 = (() => {
+                            const $t29326 = (() => {
                               {
-                                const x_i10286 = (() => {
+                                const x_i10288 = (() => {
                                   {
-                                    const $t29314_i10285 = (() => {
+                                    const $t29315_i10287 = (() => {
                                       {
-                                        const $t29313_i10284 = (() => {
+                                        const $t29314_i10286 = (() => {
                                           {
-                                            const $t29311_i10282 = (seed * 12.9898);
+                                            const $t29312_i10284 = (seed * 12.9898);
                                             {
-                                              const $t29312_i10283 = (3. * 78.233);
-                                              return ($t29311_i10282 + $t29312_i10283);
+                                              const $t29313_i10285 = (3. * 78.233);
+                                              return ($t29312_i10284 + $t29313_i10285);
                                             }
                                           }
                                         })();
-                                        return Math.sin($t29313_i10284);
+                                        return Math.sin($t29314_i10286);
                                       }
                                     })();
-                                    return ($t29314_i10285 * 43758.5453);
+                                    return ($t29315_i10287 * 43758.5453);
                                   }
                                 })();
                                 {
-                                  const $t29315_i10288 = (() => {
+                                  const $t29316_i10290 = (() => {
                                     {
-                                      const $t1582_i4063_i10287 = Math.floor(x_i10286);
-                                      return $t1582_i4063_i10287;
+                                      const $t1582_i4063_i10289 = Math.floor(x_i10288);
+                                      return $t1582_i4063_i10289;
                                     }
                                   })();
-                                  return (x_i10286 - $t29315_i10288);
+                                  return (x_i10288 - $t29316_i10290);
                                 }
                               }
                             })();
-                            return (0.4 * $t29325);
+                            return (0.4 * $t29326);
                           }
                         })();
-                        return (0.6 + $t29326);
+                        return (0.6 + $t29327);
                       }
                     })();
-                    return (0.5 * $t29327);
+                    return (0.5 * $t29328);
                   }
                 })();
                 {
                   const p = (() => {
                     {
-                      const $t29329 = (() => {
+                      const $t29330 = (() => {
                         {
-                          const $t29328 = Math.cos(a);
-                          return ($t29328 * speed);
+                          const $t29329 = Math.cos(a);
+                          return ($t29329 * speed);
                         }
                       })();
                       {
-                        const $t29331 = (() => {
+                        const $t29332 = (() => {
                           {
-                            const $t29330 = Math.sin(a);
-                            return ($t29330 * speed);
+                            const $t29331 = Math.sin(a);
+                            return ($t29331 * speed);
                           }
                         })();
-                        return ({ x: x, y: y, vx: $t29329, vy: $t29331, life: life, max_life: life });
+                        return ({ x: x, y: y, vx: $t29330, vy: $t29332, life: life, max_life: life });
                       }
                     }
                   })();
                   {
-                    const $t29332 = (i + 1);
+                    const $t29333 = (i + 1);
                     {
-                      const $t29333 = { $: "Cons", _0: p, _1: acc };
-                      return spawn_burst_particles(x, y, t, $t29332, $t29333);
+                      const $t29334 = { $: "Cons", _0: p, _1: acc };
+                      return spawn_burst_particles(x, y, t, $t29333, $t29334);
                     }
                   }
                 }
@@ -16000,23 +16063,23 @@ function spawn_bursts(bursts, t, acc) {
       break;
     }
     case "Cons": {
-      const $f29336 = bursts._0;
-      const $f29337 = bursts._1;
+      const $f29337 = bursts._0;
+      const $f29338 = bursts._1;
       {
         const rest = (() => {
-          return $f29337;
+          return $f29338;
         })();
         {
           const pt = (() => {
-            return $f29336;
+            return $f29337;
           })();
           {
             const x = pt._0;
             {
               const y = pt._1;
               {
-                const $t29334 = spawn_burst_particles(x, y, t, 0, acc);
-                return spawn_bursts(rest, t, $t29334);
+                const $t29335 = spawn_burst_particles(x, y, t, 0, acc);
+                return spawn_bursts(rest, t, $t29335);
               }
             }
           }
@@ -16038,9 +16101,9 @@ function step_flash(flash, dt_s) {
       break;
     }
     case "Some": {
-      const $f29363 = flash._0;
+      const $f29364 = flash._0;
       {
-        const f = $f29363;
+        const f = $f29364;
         {
           const x = f._0;
           {
@@ -16050,12 +16113,12 @@ function step_flash(flash, dt_s) {
               {
                 const tr2 = (tr - dt_s);
                 {
-                  const $t29360 = (tr2 > 0.);
-                  if ($t29360 === true) {
+                  const $t29361 = (tr2 > 0.);
+                  if ($t29361 === true) {
                     return (() => {
                       {
-                        const $t29361 = { _0: x, _1: y, _2: tr2 };
-                        return { $: "Some", _0: $t29361 };
+                        const $t29362 = { _0: x, _1: y, _2: tr2 };
+                        return { $: "Some", _0: $t29362 };
                       }
                     })();
                   } else {
@@ -16080,15 +16143,15 @@ function step_fx(fx, game, dt_s) {
   {
     const t2 = (() => {
       {
-        const $t29364 = fx.t;
-        return ($t29364 + dt_s);
+        const $t29365 = fx.t;
+        return ($t29365 + dt_s);
       }
     })();
     {
-      const $t29365 = (() => {
+      const $t29366 = (() => {
         {
-          const $t29949_i4083 = game.phase;
-          switch ($t29949_i4083.$) {
+          const $t29961_i4083 = game.phase;
+          switch ($t29961_i4083.$) {
             case "Playing": {
               return true;
               break;
@@ -16101,27 +16164,27 @@ function step_fx(fx, game, dt_s) {
       })();
       {
         let trail2;
-        if ($t29365 === true) {
+        if ($t29366 === true) {
           trail2 = (() => {
             {
-              const $t29366 = fx.trail;
+              const $t29367 = fx.trail;
               {
-                const $t29369 = (() => {
+                const $t29370 = (() => {
                   {
-                    const $t29367 = game.ball_x;
+                    const $t29368 = game.ball_x;
                     {
-                      const $t29368 = game.ball_y;
-                      return { _0: $t29367, _1: $t29368 };
+                      const $t29369 = game.ball_y;
+                      return { _0: $t29368, _1: $t29369 };
                     }
                   }
                 })();
                 {
-                  const $t29358_i10320 = { $: "Cons", _0: $t29369, _1: $t29366 };
+                  const $t29359_i10322 = { $: "Cons", _0: $t29370, _1: $t29367 };
                   {
-                    const go_i4078_i10321 = { $: "$Clo_go$4827", _0: go$apply$4827 };
+                    const go_i4078_i10323 = { $: "$Clo_go$4827", _0: go$apply$4827 };
                     {
-                      const $t508_i4079_i10322 = { $: "Nil" };
-                      return go$apply$4827(go_i4078_i10321, $t29358_i10320, 22, $t508_i4079_i10322);
+                      const $t508_i4079_i10324 = { $: "Nil" };
+                      return go$apply$4827(go_i4078_i10323, $t29359_i10322, 22, $t508_i4079_i10324);
                     }
                   }
                 }
@@ -16132,39 +16195,39 @@ function step_fx(fx, game, dt_s) {
           trail2 = fx.trail;
         }
         {
-          const $t29370 = game.fx_bursts;
+          const $t29371 = game.fx_bursts;
           {
-            const $t29371 = fx.particles;
+            const $t29372 = fx.particles;
             {
-              const $t29372 = (() => {
-                return spawn_bursts($t29370, t2, $t29371);
+              const $t29373 = (() => {
+                return spawn_bursts($t29371, t2, $t29372);
               })();
               {
                 const particles2 = (() => {
                   {
-                    const $t29353_i10309 = { $: "$Clo_$lam29352$3788", _0: $lam29352$apply$3788, _1: dt_s };
+                    const $t29354_i10311 = { $: "$Clo_$lam29353$3788", _0: $lam29353$apply$3788, _1: dt_s };
                     {
-                      const $t29354_i10313 = (() => {
+                      const $t29355_i10315 = (() => {
                         {
-                          const f_i4073_i10310 = $t29353_i10309;
+                          const f_i4073_i10312 = $t29354_i10311;
                           {
-                            const go_i4074_i10311 = { $: "$Clo_go$4825", _0: go$apply$4825, _1: f_i4073_i10310 };
+                            const go_i4074_i10313 = { $: "$Clo_go$4825", _0: go$apply$4825, _1: f_i4073_i10312 };
                             {
-                              const $t270_i4075_i10312 = { $: "Nil" };
-                              return go$apply$4825(go_i4074_i10311, $t29372, $t270_i4075_i10312);
+                              const $t270_i4075_i10314 = { $: "Nil" };
+                              return go$apply$4825(go_i4074_i10313, $t29373, $t270_i4075_i10314);
                             }
                           }
                         }
                       })();
                       {
-                        const $t29357_i10314 = { $: "$Clo_$lam29355$3789", _0: $lam29355$apply$3789 };
+                        const $t29358_i10316 = { $: "$Clo_$lam29356$3789", _0: $lam29356$apply$3789 };
                         {
-                          const pred_i4069_i10315 = $t29357_i10314;
+                          const pred_i4069_i10317 = $t29358_i10316;
                           {
-                            const go_i4070_i10316 = { $: "$Clo_go$4823", _0: go$apply$4823, _1: pred_i4069_i10315 };
+                            const go_i4070_i10318 = { $: "$Clo_go$4823", _0: go$apply$4823, _1: pred_i4069_i10317 };
                             {
-                              const $t302_i4071_i10317 = { $: "Nil" };
-                              return go$apply$4823(go_i4070_i10316, $t29354_i10313, $t302_i4071_i10317);
+                              const $t302_i4071_i10319 = { $: "Nil" };
+                              return go$apply$4823(go_i4070_i10318, $t29355_i10315, $t302_i4071_i10319);
                             }
                           }
                         }
@@ -16175,32 +16238,32 @@ function step_fx(fx, game, dt_s) {
                 {
                   const flash1 = (() => {
                     {
-                      const $t29373 = fx.flash;
-                      return step_flash($t29373, dt_s);
+                      const $t29374 = fx.flash;
+                      return step_flash($t29374, dt_s);
                     }
                   })();
                   {
                     const flash2 = (() => {
                       {
-                        const $t29374 = game.capture_flash;
-                        switch ($t29374.$) {
+                        const $t29375 = game.capture_flash;
+                        switch ($t29375.$) {
                           case "None": {
                             return flash1;
                             break;
                           }
                           case "Some": {
-                            const $f29378 = $t29374._0;
+                            const $f29379 = $t29375._0;
                             {
                               const pt = (() => {
-                                return $f29378;
+                                return $f29379;
                               })();
                               {
                                 const x = pt._0;
                                 {
                                   const y = pt._1;
                                   {
-                                    const $t29376 = { _0: x, _1: y, _2: 0.45 };
-                                    return { $: "Some", _0: $t29376 };
+                                    const $t29377 = { _0: x, _1: y, _2: 0.45 };
+                                    return { $: "Some", _0: $t29377 };
                                   }
                                 }
                               }
@@ -16233,15 +16296,15 @@ function draw_trail(ctx, trail, i, n) {
       break;
     }
     case "Cons": {
-      const $f29388 = trail._0;
-      const $f29389 = trail._1;
+      const $f29389 = trail._0;
+      const $f29390 = trail._1;
       {
         const rest = (() => {
-          return $f29389;
+          return $f29390;
         })();
         {
           const pt = (() => {
-            return $f29388;
+            return $f29389;
           })();
           {
             const x = pt._0;
@@ -16250,22 +16313,22 @@ function draw_trail(ctx, trail, i, n) {
               {
                 const f = (() => {
                   {
-                    const $t29381 = (() => {
+                    const $t29382 = (() => {
                       {
-                        const $t29379 = i;
+                        const $t29380 = i;
                         {
-                          const $t29380 = n;
-                          return ($t29379 / $t29380);
+                          const $t29381 = n;
+                          return ($t29380 / $t29381);
                         }
                       }
                     })();
-                    return (1. - $t29381);
+                    return (1. - $t29382);
                   }
                 })();
                 (() => {
                   {
-                    const $t29382 = (f * 0.38);
-                    return Canvas$set_global_alpha(ctx, $t29382);
+                    const $t29383 = (f * 0.38);
+                    return Canvas$set_global_alpha(ctx, $t29383);
                   }
                 })();
                 (() => {
@@ -16276,21 +16339,21 @@ function draw_trail(ctx, trail, i, n) {
                 })();
                 (() => {
                   {
-                    const $t29384 = (() => {
+                    const $t29385 = (() => {
                       {
-                        const $t29383 = (2.6 * f);
-                        return (1.2 + $t29383);
+                        const $t29384 = (2.6 * f);
+                        return (1.2 + $t29384);
                       }
                     })();
-                    return Canvas$arc(ctx, x, y, $t29384, 0., 6.28318530718);
+                    return Canvas$arc(ctx, x, y, $t29385, 0., 6.28318530718);
                   }
                 })();
                 (() => {
                   return Canvas$fill(ctx);
                 })();
                 {
-                  const $t29386 = (i + 1);
-                  return draw_trail(ctx, rest, $t29386, n);
+                  const $t29387 = (i + 1);
+                  return draw_trail(ctx, rest, $t29387, n);
                 }
               }
             }
@@ -16313,23 +16376,23 @@ function draw_particles(ctx, particles) {
       break;
     }
     case "Cons": {
-      const $f29401 = particles._0;
-      const $f29402 = particles._1;
+      const $f29402 = particles._0;
+      const $f29403 = particles._1;
       {
         const rest = (() => {
-          return $f29402;
+          return $f29403;
         })();
         {
           const p = (() => {
-            return $f29401;
+            return $f29402;
           })();
           {
             const f = (() => {
               {
-                const $t29394 = p.life;
+                const $t29395 = p.life;
                 {
-                  const $t29395 = p.max_life;
-                  return ($t29394 / $t29395);
+                  const $t29396 = p.max_life;
+                  return ($t29395 / $t29396);
                 }
               }
             })();
@@ -16344,17 +16407,17 @@ function draw_particles(ctx, particles) {
             })();
             (() => {
               {
-                const $t29396 = p.x;
+                const $t29397 = p.x;
                 {
-                  const $t29397 = p.y;
+                  const $t29398 = p.y;
                   {
-                    const $t29399 = (() => {
+                    const $t29400 = (() => {
                       {
-                        const $t29398 = (1.5 * f);
-                        return (0.5 + $t29398);
+                        const $t29399 = (1.5 * f);
+                        return (0.5 + $t29399);
                       }
                     })();
-                    return Canvas$arc(ctx, $t29396, $t29397, $t29399, 0., 6.28318530718);
+                    return Canvas$arc(ctx, $t29397, $t29398, $t29400, 0., 6.28318530718);
                   }
                 }
               }
@@ -16382,10 +16445,10 @@ function draw_flash(ctx, flash) {
       break;
     }
     case "Some": {
-      const $f29417 = flash._0;
+      const $f29418 = flash._0;
       {
         const f = (() => {
-          return $f29417;
+          return $f29418;
         })();
         {
           const x = f._0;
@@ -16396,26 +16459,26 @@ function draw_flash(ctx, flash) {
               {
                 const prog = (() => {
                   {
-                    const $t29408 = (tr / 0.45);
-                    return (1. - $t29408);
+                    const $t29409 = (tr / 0.45);
+                    return (1. - $t29409);
                   }
                 })();
                 {
                   const r = (() => {
                     {
-                      const $t29409 = (prog * 60.);
-                      return (8. + $t29409);
+                      const $t29410 = (prog * 60.);
+                      return (8. + $t29410);
                     }
                   })();
                   (() => {
                     {
-                      const $t29411 = (() => {
+                      const $t29412 = (() => {
                         {
-                          const $t29410 = (1. - prog);
-                          return ($t29410 * 0.7);
+                          const $t29411 = (1. - prog);
+                          return ($t29411 * 0.7);
                         }
                       })();
-                      return Canvas$set_global_alpha(ctx, $t29411);
+                      return Canvas$set_global_alpha(ctx, $t29412);
                     }
                   })();
                   (() => {
@@ -16423,18 +16486,18 @@ function draw_flash(ctx, flash) {
                   })();
                   (() => {
                     {
-                      const $t29414 = (() => {
+                      const $t29415 = (() => {
                         {
-                          const $t29413 = (() => {
+                          const $t29414 = (() => {
                             {
-                              const $t29412 = (1. - prog);
-                              return (2.5 * $t29412);
+                              const $t29413 = (1. - prog);
+                              return (2.5 * $t29413);
                             }
                           })();
-                          return ($t29413 + 0.5);
+                          return ($t29414 + 0.5);
                         }
                       })();
-                      return Canvas$set_line_width(ctx, $t29414);
+                      return Canvas$set_line_width(ctx, $t29415);
                     }
                   })();
                   (() => {
@@ -16463,61 +16526,61 @@ function pulse_style(s) {
   {
     const r = (() => {
       {
-        const $t29422 = (() => {
+        const $t29423 = (() => {
           {
-            const $t29421 = s.x;
-            return ($t29421 + 1.);
+            const $t29422 = s.x;
+            return ($t29422 + 1.);
           }
         })();
         {
-          const $t29424 = (() => {
+          const $t29425 = (() => {
             {
-              const $t29423 = s.y;
-              return ($t29423 + 1.);
+              const $t29424 = s.y;
+              return ($t29424 + 1.);
             }
           })();
           {
-            const x_i10338 = (() => {
+            const x_i10340 = (() => {
               {
-                const $t29314_i10337 = (() => {
+                const $t29315_i10339 = (() => {
                   {
-                    const $t29313_i10336 = (() => {
+                    const $t29314_i10338 = (() => {
                       {
-                        const $t29311_i10334 = ($t29422 * 12.9898);
+                        const $t29312_i10336 = ($t29423 * 12.9898);
                         {
-                          const $t29312_i10335 = ($t29424 * 78.233);
-                          return ($t29311_i10334 + $t29312_i10335);
+                          const $t29313_i10337 = ($t29425 * 78.233);
+                          return ($t29312_i10336 + $t29313_i10337);
                         }
                       }
                     })();
-                    return Math.sin($t29313_i10336);
+                    return Math.sin($t29314_i10338);
                   }
                 })();
-                return ($t29314_i10337 * 43758.5453);
+                return ($t29315_i10339 * 43758.5453);
               }
             })();
             {
-              const $t29315_i10340 = (() => {
+              const $t29316_i10342 = (() => {
                 {
-                  const $t1582_i4063_i10339 = Math.floor(x_i10338);
-                  return $t1582_i4063_i10339;
+                  const $t1582_i4063_i10341 = Math.floor(x_i10340);
+                  return $t1582_i4063_i10341;
                 }
               })();
-              return (x_i10338 - $t29315_i10340);
+              return (x_i10340 - $t29316_i10342);
             }
           }
         }
       }
     })();
     {
-      const $t29425 = (r < 0.34);
-      if ($t29425 === true) {
+      const $t29426 = (r < 0.34);
+      if ($t29426 === true) {
         return 0;
       } else {
         return (() => {
           {
-            const $t29426 = (r < 0.67);
-            if ($t29426 === true) {
+            const $t29427 = (r < 0.67);
+            if ($t29427 === true) {
               return 1;
             } else {
               return 2;
@@ -16532,65 +16595,65 @@ const pulse_style$clo = { _0: ($_, s) => pulse_style(s) };
 
 function dot_count(s) {
   {
-    const $t29445 = (() => {
+    const $t29446 = (() => {
       {
-        const $t29444 = (() => {
+        const $t29445 = (() => {
           {
-            const $t29443 = (() => {
+            const $t29444 = (() => {
               {
-                const $t29440 = (() => {
+                const $t29441 = (() => {
                   {
-                    const $t29439 = s.x;
-                    return ($t29439 + 4.);
+                    const $t29440 = s.x;
+                    return ($t29440 + 4.);
                   }
                 })();
                 {
-                  const $t29442 = (() => {
+                  const $t29443 = (() => {
                     {
-                      const $t29441 = s.y;
-                      return ($t29441 + 4.);
+                      const $t29442 = s.y;
+                      return ($t29442 + 4.);
                     }
                   })();
                   {
-                    const x_i10365 = (() => {
+                    const x_i10367 = (() => {
                       {
-                        const $t29314_i10364 = (() => {
+                        const $t29315_i10366 = (() => {
                           {
-                            const $t29313_i10363 = (() => {
+                            const $t29314_i10365 = (() => {
                               {
-                                const $t29311_i10361 = ($t29440 * 12.9898);
+                                const $t29312_i10363 = ($t29441 * 12.9898);
                                 {
-                                  const $t29312_i10362 = ($t29442 * 78.233);
-                                  return ($t29311_i10361 + $t29312_i10362);
+                                  const $t29313_i10364 = ($t29443 * 78.233);
+                                  return ($t29312_i10363 + $t29313_i10364);
                                 }
                               }
                             })();
-                            return Math.sin($t29313_i10363);
+                            return Math.sin($t29314_i10365);
                           }
                         })();
-                        return ($t29314_i10364 * 43758.5453);
+                        return ($t29315_i10366 * 43758.5453);
                       }
                     })();
                     {
-                      const $t29315_i10367 = (() => {
+                      const $t29316_i10369 = (() => {
                         {
-                          const $t1582_i4063_i10366 = Math.floor(x_i10365);
-                          return $t1582_i4063_i10366;
+                          const $t1582_i4063_i10368 = Math.floor(x_i10367);
+                          return $t1582_i4063_i10368;
                         }
                       })();
-                      return (x_i10365 - $t29315_i10367);
+                      return (x_i10367 - $t29316_i10369);
                     }
                   }
                 }
               }
             })();
-            return ($t29443 * 4.);
+            return ($t29444 * 4.);
           }
         })();
-        return Math.trunc($t29444);
+        return Math.trunc($t29445);
       }
     })();
-    return (2 + $t29445);
+    return (2 + $t29446);
   }
 }
 const dot_count$clo = { _0: ($_, s) => dot_count(s) };
@@ -16598,8 +16661,8 @@ const dot_count$clo = { _0: ($_, s) => dot_count(s) };
 function draw_pulse_ring(ctx, s, pulse) {
   (() => {
     {
-      const $t29452 = (0.1 * pulse);
-      return Canvas$set_global_alpha(ctx, $t29452);
+      const $t29453 = (0.1 * pulse);
+      return Canvas$set_global_alpha(ctx, $t29453);
     }
   })();
   (() => {
@@ -16607,13 +16670,13 @@ function draw_pulse_ring(ctx, s, pulse) {
   })();
   (() => {
     {
-      const $t29454 = (() => {
+      const $t29455 = (() => {
         {
-          const $t29453 = (0.6 * pulse);
-          return (1. + $t29453);
+          const $t29454 = (0.6 * pulse);
+          return (1. + $t29454);
         }
       })();
-      return Canvas$set_line_width(ctx, $t29454);
+      return Canvas$set_line_width(ctx, $t29455);
     }
   })();
   (() => {
@@ -16621,12 +16684,12 @@ function draw_pulse_ring(ctx, s, pulse) {
   })();
   (() => {
     {
-      const $t29455 = s.x;
+      const $t29456 = s.x;
       {
-        const $t29456 = s.y;
+        const $t29457 = s.y;
         {
-          const $t29457 = s.capture_radius;
-          return Canvas$arc(ctx, $t29455, $t29456, $t29457, 0., 6.28318530718);
+          const $t29458 = s.capture_radius;
+          return Canvas$arc(ctx, $t29456, $t29457, $t29458, 0., 6.28318530718);
         }
       }
     }
@@ -16638,13 +16701,13 @@ const draw_pulse_ring$clo = { _0: ($_, ctx, s, pulse) => draw_pulse_ring(ctx, s,
 function draw_pulse_halo(ctx, s, pulse) {
   (() => {
     {
-      const $t29460 = (() => {
+      const $t29461 = (() => {
         {
-          const $t29459 = (0.035 * pulse);
-          return (0.025 + $t29459);
+          const $t29460 = (0.035 * pulse);
+          return (0.025 + $t29460);
         }
       })();
-      return Canvas$set_global_alpha(ctx, $t29460);
+      return Canvas$set_global_alpha(ctx, $t29461);
     }
   })();
   (() => {
@@ -16655,25 +16718,25 @@ function draw_pulse_halo(ctx, s, pulse) {
   })();
   (() => {
     {
-      const $t29461 = s.x;
+      const $t29462 = s.x;
       {
-        const $t29462 = s.y;
+        const $t29463 = s.y;
         {
-          const $t29466 = (() => {
+          const $t29467 = (() => {
             {
-              const $t29463 = s.radius;
+              const $t29464 = s.radius;
               {
-                const $t29465 = (() => {
+                const $t29466 = (() => {
                   {
-                    const $t29464 = (0.9 * pulse);
-                    return (1.6 + $t29464);
+                    const $t29465 = (0.9 * pulse);
+                    return (1.6 + $t29465);
                   }
                 })();
-                return ($t29463 * $t29465);
+                return ($t29464 * $t29466);
               }
             }
           })();
-          return Canvas$arc(ctx, $t29461, $t29462, $t29466, 0., 6.28318530718);
+          return Canvas$arc(ctx, $t29462, $t29463, $t29467, 0., 6.28318530718);
         }
       }
     }
@@ -16684,190 +16747,190 @@ const draw_pulse_halo$clo = { _0: ($_, ctx, s, pulse) => draw_pulse_halo(ctx, s,
 
 function draw_pulse_particle(ctx, s, t, n, i) {
   {
-    const $t29468 = (i >= n);
-    if ($t29468 === true) {
+    const $t29469 = (i >= n);
+    if ($t29469 === true) {
       return {  };
     } else {
       return (() => {
         {
           const a = (() => {
             {
-              const $t29472 = (() => {
+              const $t29473 = (() => {
                 {
-                  const $t29470 = (() => {
+                  const $t29471 = (() => {
                     {
-                      const $t29469 = (() => {
+                      const $t29470 = (() => {
                         {
-                          const $t29451_i10625 = (() => {
+                          const $t29452_i10638 = (() => {
                             {
-                              const $t29450_i10624 = (() => {
+                              const $t29451_i10637 = (() => {
                                 {
-                                  const $t29447_i10614 = (() => {
+                                  const $t29448_i10627 = (() => {
                                     {
-                                      const $t29446_i10613 = s.x;
-                                      return ($t29446_i10613 + 5.);
+                                      const $t29447_i10626 = s.x;
+                                      return ($t29447_i10626 + 5.);
                                     }
                                   })();
                                   {
-                                    const $t29449_i10616 = (() => {
+                                    const $t29450_i10629 = (() => {
                                       {
-                                        const $t29448_i10615 = s.y;
-                                        return ($t29448_i10615 + 5.);
+                                        const $t29449_i10628 = s.y;
+                                        return ($t29449_i10628 + 5.);
                                       }
                                     })();
                                     {
-                                      const x_i10374_i10621 = (() => {
+                                      const x_i10376_i10634 = (() => {
                                         {
-                                          const $t29314_i10373_i10620 = (() => {
+                                          const $t29315_i10375_i10633 = (() => {
                                             {
-                                              const $t29313_i10372_i10619 = (() => {
+                                              const $t29314_i10374_i10632 = (() => {
                                                 {
-                                                  const $t29311_i10370_i10617 = ($t29447_i10614 * 12.9898);
+                                                  const $t29312_i10372_i10630 = ($t29448_i10627 * 12.9898);
                                                   {
-                                                    const $t29312_i10371_i10618 = ($t29449_i10616 * 78.233);
-                                                    return ($t29311_i10370_i10617 + $t29312_i10371_i10618);
+                                                    const $t29313_i10373_i10631 = ($t29450_i10629 * 78.233);
+                                                    return ($t29312_i10372_i10630 + $t29313_i10373_i10631);
                                                   }
                                                 }
                                               })();
-                                              return Math.sin($t29313_i10372_i10619);
+                                              return Math.sin($t29314_i10374_i10632);
                                             }
                                           })();
-                                          return ($t29314_i10373_i10620 * 43758.5453);
+                                          return ($t29315_i10375_i10633 * 43758.5453);
                                         }
                                       })();
                                       {
-                                        const $t29315_i10376_i10623 = (() => {
+                                        const $t29316_i10378_i10636 = (() => {
                                           {
-                                            const $t1582_i4063_i10375_i10622 = Math.floor(x_i10374_i10621);
-                                            return $t1582_i4063_i10375_i10622;
+                                            const $t1582_i4063_i10377_i10635 = Math.floor(x_i10376_i10634);
+                                            return $t1582_i4063_i10377_i10635;
                                           }
                                         })();
-                                        return (x_i10374_i10621 - $t29315_i10376_i10623);
+                                        return (x_i10376_i10634 - $t29316_i10378_i10636);
                                       }
                                     }
                                   }
                                 }
                               })();
-                              return ($t29450_i10624 * 2.4);
+                              return ($t29451_i10637 * 2.4);
                             }
                           })();
-                          return (0.4 + $t29451_i10625);
+                          return (0.4 + $t29452_i10638);
                         }
                       })();
-                      return (t * $t29469);
+                      return (t * $t29470);
                     }
                   })();
                   {
-                    const $t29471 = (() => {
+                    const $t29472 = (() => {
                       {
-                        const $t29437_i10611 = (() => {
+                        const $t29438_i10624 = (() => {
                           {
-                            const $t29434_i10601 = (() => {
+                            const $t29435_i10614 = (() => {
                               {
-                                const $t29433_i10600 = s.x;
-                                return ($t29433_i10600 + 3.);
+                                const $t29434_i10613 = s.x;
+                                return ($t29434_i10613 + 3.);
                               }
                             })();
                             {
-                              const $t29436_i10603 = (() => {
+                              const $t29437_i10616 = (() => {
                                 {
-                                  const $t29435_i10602 = s.y;
-                                  return ($t29435_i10602 + 3.);
+                                  const $t29436_i10615 = s.y;
+                                  return ($t29436_i10615 + 3.);
                                 }
                               })();
                               {
-                                const x_i10356_i10608 = (() => {
+                                const x_i10358_i10621 = (() => {
                                   {
-                                    const $t29314_i10355_i10607 = (() => {
+                                    const $t29315_i10357_i10620 = (() => {
                                       {
-                                        const $t29313_i10354_i10606 = (() => {
+                                        const $t29314_i10356_i10619 = (() => {
                                           {
-                                            const $t29311_i10352_i10604 = ($t29434_i10601 * 12.9898);
+                                            const $t29312_i10354_i10617 = ($t29435_i10614 * 12.9898);
                                             {
-                                              const $t29312_i10353_i10605 = ($t29436_i10603 * 78.233);
-                                              return ($t29311_i10352_i10604 + $t29312_i10353_i10605);
+                                              const $t29313_i10355_i10618 = ($t29437_i10616 * 78.233);
+                                              return ($t29312_i10354_i10617 + $t29313_i10355_i10618);
                                             }
                                           }
                                         })();
-                                        return Math.sin($t29313_i10354_i10606);
+                                        return Math.sin($t29314_i10356_i10619);
                                       }
                                     })();
-                                    return ($t29314_i10355_i10607 * 43758.5453);
+                                    return ($t29315_i10357_i10620 * 43758.5453);
                                   }
                                 })();
                                 {
-                                  const $t29315_i10358_i10610 = (() => {
+                                  const $t29316_i10360_i10623 = (() => {
                                     {
-                                      const $t1582_i4063_i10357_i10609 = Math.floor(x_i10356_i10608);
-                                      return $t1582_i4063_i10357_i10609;
+                                      const $t1582_i4063_i10359_i10622 = Math.floor(x_i10358_i10621);
+                                      return $t1582_i4063_i10359_i10622;
                                     }
                                   })();
-                                  return (x_i10356_i10608 - $t29315_i10358_i10610);
+                                  return (x_i10358_i10621 - $t29316_i10360_i10623);
                                 }
                               }
                             }
                           }
                         })();
-                        return ($t29437_i10611 * 6.28318530718);
+                        return ($t29438_i10624 * 6.28318530718);
                       }
                     })();
-                    return ($t29470 + $t29471);
+                    return ($t29471 + $t29472);
                   }
                 }
               })();
               {
-                const $t29477 = (() => {
+                const $t29478 = (() => {
                   {
-                    const $t29473 = i;
+                    const $t29474 = i;
                     {
-                      const $t29476 = (() => {
+                      const $t29477 = (() => {
                         {
-                          const $t29475 = n;
-                          return (6.28318530718 / $t29475);
+                          const $t29476 = n;
+                          return (6.28318530718 / $t29476);
                         }
                       })();
-                      return ($t29473 * $t29476);
+                      return ($t29474 * $t29477);
                     }
                   }
                 })();
-                return ($t29472 + $t29477);
+                return ($t29473 + $t29478);
               }
             }
           })();
           {
             const r = (() => {
               {
-                const $t29478 = s.radius;
-                return ($t29478 * 1.8);
+                const $t29479 = s.radius;
+                return ($t29479 * 1.8);
               }
             })();
             {
               const px = (() => {
                 {
-                  const $t29479 = s.x;
+                  const $t29480 = s.x;
                   {
-                    const $t29481 = (() => {
+                    const $t29482 = (() => {
                       {
-                        const $t29480 = Math.cos(a);
-                        return ($t29480 * r);
+                        const $t29481 = Math.cos(a);
+                        return ($t29481 * r);
                       }
                     })();
-                    return ($t29479 + $t29481);
+                    return ($t29480 + $t29482);
                   }
                 }
               })();
               {
                 const py = (() => {
                   {
-                    const $t29482 = s.y;
+                    const $t29483 = s.y;
                     {
-                      const $t29484 = (() => {
+                      const $t29485 = (() => {
                         {
-                          const $t29483 = Math.sin(a);
-                          return ($t29483 * r);
+                          const $t29484 = Math.sin(a);
+                          return ($t29484 * r);
                         }
                       })();
-                      return ($t29482 + $t29484);
+                      return ($t29483 + $t29485);
                     }
                   }
                 })();
@@ -16887,8 +16950,8 @@ function draw_pulse_particle(ctx, s, t, n, i) {
                   return Canvas$fill(ctx);
                 })();
                 {
-                  const $t29486 = (i + 1);
-                  return draw_pulse_particle(ctx, s, t, n, $t29486);
+                  const $t29487 = (i + 1);
+                  return draw_pulse_particle(ctx, s, t, n, $t29487);
                 }
               }
             }
@@ -16907,16 +16970,16 @@ function draw_orbit_rings(ctx, s, orbits) {
       break;
     }
     case "Cons": {
-      const $f29495 = orbits._0;
-      const $f29496 = orbits._1;
+      const $f29496 = orbits._0;
+      const $f29497 = orbits._1;
       {
-        const $jp_clo29502 = (() => {
-          return { $: "$Clo_$jp29501$3792", _0: $jp29501$apply$3792, _1: $f29495, _2: $f29496, _3: ctx, _4: s };
+        const $jp_clo29503 = (() => {
+          return { $: "$Clo_$jp29502$3792", _0: $jp29502$apply$3792, _1: $f29496, _2: $f29497, _3: ctx, _4: s };
         })();
-        switch ($f29496.$) {
+        switch ($f29497.$) {
           case "Nil": {
             {
-              const o = $f29495;
+              const o = $f29496;
               (() => {
                 return Canvas$set_global_alpha(ctx, 0.28);
               })();
@@ -16931,12 +16994,12 @@ function draw_orbit_rings(ctx, s, orbits) {
               })();
               (() => {
                 {
-                  const $t29487 = s.x;
+                  const $t29488 = s.x;
                   {
-                    const $t29488 = s.y;
+                    const $t29489 = s.y;
                     {
-                      const $t29489 = o.radius;
-                      return Canvas$arc(ctx, $t29487, $t29488, $t29489, 0., 6.28318530718);
+                      const $t29490 = o.radius;
+                      return Canvas$arc(ctx, $t29488, $t29489, $t29490, 0., 6.28318530718);
                     }
                   }
                 }
@@ -16946,7 +17009,7 @@ function draw_orbit_rings(ctx, s, orbits) {
             break;
           }
           default: {
-            return $jp29501$apply$3792($jp_clo29502);
+            return $jp29502$apply$3792($jp_clo29503);
           }
         }
       }
@@ -16966,10 +17029,10 @@ function star_targeted(s, aim) {
       break;
     }
     case "Some": {
-      const $f29518 = aim._0;
+      const $f29519 = aim._0;
       {
         const a = (() => {
-          return $f29518;
+          return $f29519;
         })();
         {
           const px = a._0;
@@ -16982,58 +17045,58 @@ function star_targeted(s, aim) {
                 {
                   const dx = (() => {
                     {
-                      const $t29505 = s.x;
-                      return ($t29505 - px);
+                      const $t29506 = s.x;
+                      return ($t29506 - px);
                     }
                   })();
                   {
                     const dy = (() => {
                       {
-                        const $t29506 = s.y;
-                        return ($t29506 - py);
+                        const $t29507 = s.y;
+                        return ($t29507 - py);
                       }
                     })();
                     {
                       const range = (() => {
                         {
-                          const $t29507 = s.capture_radius;
-                          return ($t29507 * 4.);
+                          const $t29508 = s.capture_radius;
+                          return ($t29508 * 4.);
                         }
                       })();
                       {
-                        const $t29511 = (() => {
+                        const $t29512 = (() => {
                           {
-                            const $t29510 = (() => {
+                            const $t29511 = (() => {
                               {
-                                const $t29508 = (vx * dx);
+                                const $t29509 = (vx * dx);
                                 {
-                                  const $t29509 = (vy * dy);
-                                  return ($t29508 + $t29509);
+                                  const $t29510 = (vy * dy);
+                                  return ($t29509 + $t29510);
                                 }
                               }
                             })();
-                            return ($t29510 > 0.);
+                            return ($t29511 > 0.);
                           }
                         })();
                         {
-                          const $t29516 = (() => {
+                          const $t29517 = (() => {
                             {
-                              const $t29514 = (() => {
+                              const $t29515 = (() => {
                                 {
-                                  const $t29512 = (dx * dx);
+                                  const $t29513 = (dx * dx);
                                   {
-                                    const $t29513 = (dy * dy);
-                                    return ($t29512 + $t29513);
+                                    const $t29514 = (dy * dy);
+                                    return ($t29513 + $t29514);
                                   }
                                 }
                               })();
                               {
-                                const $t29515 = (range * range);
-                                return ($t29514 < $t29515);
+                                const $t29516 = (range * range);
+                                return ($t29515 < $t29516);
                               }
                             }
                           })();
-                          return ($t29511 && $t29516);
+                          return ($t29512 && $t29517);
                         }
                       }
                     }
@@ -17057,29 +17120,29 @@ function draw_target_pulse(ctx, s, t) {
   {
     const pulse = (() => {
       {
-        const $t29521 = (() => {
+        const $t29522 = (() => {
           {
-            const $t29520 = (() => {
+            const $t29521 = (() => {
               {
-                const $t29519 = (t * 6.);
-                return Math.sin($t29519);
+                const $t29520 = (t * 6.);
+                return Math.sin($t29520);
               }
             })();
-            return (0.5 * $t29520);
+            return (0.5 * $t29521);
           }
         })();
-        return (0.5 + $t29521);
+        return (0.5 + $t29522);
       }
     })();
     (() => {
       {
-        const $t29523 = (() => {
+        const $t29524 = (() => {
           {
-            const $t29522 = (0.45 * pulse);
-            return (0.3 + $t29522);
+            const $t29523 = (0.45 * pulse);
+            return (0.3 + $t29523);
           }
         })();
-        return Canvas$set_global_alpha(ctx, $t29523);
+        return Canvas$set_global_alpha(ctx, $t29524);
       }
     })();
     (() => {
@@ -17087,13 +17150,13 @@ function draw_target_pulse(ctx, s, t) {
     })();
     (() => {
       {
-        const $t29525 = (() => {
+        const $t29526 = (() => {
           {
-            const $t29524 = (1.6 * pulse);
-            return (1.2 + $t29524);
+            const $t29525 = (1.6 * pulse);
+            return (1.2 + $t29525);
           }
         })();
-        return Canvas$set_line_width(ctx, $t29525);
+        return Canvas$set_line_width(ctx, $t29526);
       }
     })();
     (() => {
@@ -17101,12 +17164,12 @@ function draw_target_pulse(ctx, s, t) {
     })();
     (() => {
       {
-        const $t29526 = s.x;
+        const $t29527 = s.x;
         {
-          const $t29527 = s.y;
+          const $t29528 = s.y;
           {
-            const $t29528 = s.capture_radius;
-            return Canvas$arc(ctx, $t29526, $t29527, $t29528, 0., 6.28318530718);
+            const $t29529 = s.capture_radius;
+            return Canvas$arc(ctx, $t29527, $t29528, $t29529, 0., 6.28318530718);
           }
         }
       }
@@ -17119,212 +17182,212 @@ const draw_target_pulse$clo = { _0: ($_, ctx, s, t) => draw_target_pulse(ctx, s,
 function draw_star(ctx, s, t, aim) {
   (() => {
     {
-      const $t29530 = s.orbits;
-      return draw_orbit_rings(ctx, s, $t29530);
+      const $t29531 = s.orbits;
+      return draw_orbit_rings(ctx, s, $t29531);
     }
   })();
   (() => {
     {
-      const $t29531 = (() => {
+      const $t29532 = (() => {
         {
-          const $t29420_i10663 = (() => {
+          const $t29421_i10676 = (() => {
             {
-              const $t29418_i10654 = s.x;
+              const $t29419_i10667 = s.x;
               {
-                const $t29419_i10655 = s.y;
+                const $t29420_i10668 = s.y;
                 {
-                  const x_i10329_i10660 = (() => {
+                  const x_i10331_i10673 = (() => {
                     {
-                      const $t29314_i10328_i10659 = (() => {
+                      const $t29315_i10330_i10672 = (() => {
                         {
-                          const $t29313_i10327_i10658 = (() => {
+                          const $t29314_i10329_i10671 = (() => {
                             {
-                              const $t29311_i10325_i10656 = ($t29418_i10654 * 12.9898);
+                              const $t29312_i10327_i10669 = ($t29419_i10667 * 12.9898);
                               {
-                                const $t29312_i10326_i10657 = ($t29419_i10655 * 78.233);
-                                return ($t29311_i10325_i10656 + $t29312_i10326_i10657);
+                                const $t29313_i10328_i10670 = ($t29420_i10668 * 78.233);
+                                return ($t29312_i10327_i10669 + $t29313_i10328_i10670);
                               }
                             }
                           })();
-                          return Math.sin($t29313_i10327_i10658);
+                          return Math.sin($t29314_i10329_i10671);
                         }
                       })();
-                      return ($t29314_i10328_i10659 * 43758.5453);
+                      return ($t29315_i10330_i10672 * 43758.5453);
                     }
                   })();
                   {
-                    const $t29315_i10331_i10662 = (() => {
+                    const $t29316_i10333_i10675 = (() => {
                       {
-                        const $t1582_i4063_i10330_i10661 = Math.floor(x_i10329_i10660);
-                        return $t1582_i4063_i10330_i10661;
+                        const $t1582_i4063_i10332_i10674 = Math.floor(x_i10331_i10673);
+                        return $t1582_i4063_i10332_i10674;
                       }
                     })();
-                    return (x_i10329_i10660 - $t29315_i10331_i10662);
+                    return (x_i10331_i10673 - $t29316_i10333_i10675);
                   }
                 }
               }
             }
           })();
-          return ($t29420_i10663 < 0.8);
+          return ($t29421_i10676 < 0.8);
         }
       })();
-      if ($t29531 === true) {
+      if ($t29532 === true) {
         return (() => {
           {
             const pulse = (() => {
               {
-                const $t29537 = (() => {
+                const $t29538 = (() => {
                   {
-                    const $t29536 = (() => {
+                    const $t29537 = (() => {
                       {
-                        const $t29535 = (() => {
+                        const $t29536 = (() => {
                           {
-                            const $t29533 = (() => {
+                            const $t29534 = (() => {
                               {
-                                const $t29532 = (() => {
+                                const $t29533 = (() => {
                                   {
-                                    const $t29432_i10652 = (() => {
+                                    const $t29433_i10665 = (() => {
                                       {
-                                        const $t29431_i10651 = (() => {
+                                        const $t29432_i10664 = (() => {
                                           {
-                                            const $t29428_i10641 = (() => {
+                                            const $t29429_i10654 = (() => {
                                               {
-                                                const $t29427_i10640 = s.x;
-                                                return ($t29427_i10640 + 2.);
+                                                const $t29428_i10653 = s.x;
+                                                return ($t29428_i10653 + 2.);
                                               }
                                             })();
                                             {
-                                              const $t29430_i10643 = (() => {
+                                              const $t29431_i10656 = (() => {
                                                 {
-                                                  const $t29429_i10642 = s.y;
-                                                  return ($t29429_i10642 + 2.);
+                                                  const $t29430_i10655 = s.y;
+                                                  return ($t29430_i10655 + 2.);
                                                 }
                                               })();
                                               {
-                                                const x_i10347_i10648 = (() => {
+                                                const x_i10349_i10661 = (() => {
                                                   {
-                                                    const $t29314_i10346_i10647 = (() => {
+                                                    const $t29315_i10348_i10660 = (() => {
                                                       {
-                                                        const $t29313_i10345_i10646 = (() => {
+                                                        const $t29314_i10347_i10659 = (() => {
                                                           {
-                                                            const $t29311_i10343_i10644 = ($t29428_i10641 * 12.9898);
+                                                            const $t29312_i10345_i10657 = ($t29429_i10654 * 12.9898);
                                                             {
-                                                              const $t29312_i10344_i10645 = ($t29430_i10643 * 78.233);
-                                                              return ($t29311_i10343_i10644 + $t29312_i10344_i10645);
+                                                              const $t29313_i10346_i10658 = ($t29431_i10656 * 78.233);
+                                                              return ($t29312_i10345_i10657 + $t29313_i10346_i10658);
                                                             }
                                                           }
                                                         })();
-                                                        return Math.sin($t29313_i10345_i10646);
+                                                        return Math.sin($t29314_i10347_i10659);
                                                       }
                                                     })();
-                                                    return ($t29314_i10346_i10647 * 43758.5453);
+                                                    return ($t29315_i10348_i10660 * 43758.5453);
                                                   }
                                                 })();
                                                 {
-                                                  const $t29315_i10349_i10650 = (() => {
+                                                  const $t29316_i10351_i10663 = (() => {
                                                     {
-                                                      const $t1582_i4063_i10348_i10649 = Math.floor(x_i10347_i10648);
-                                                      return $t1582_i4063_i10348_i10649;
+                                                      const $t1582_i4063_i10350_i10662 = Math.floor(x_i10349_i10661);
+                                                      return $t1582_i4063_i10350_i10662;
                                                     }
                                                   })();
-                                                  return (x_i10347_i10648 - $t29315_i10349_i10650);
+                                                  return (x_i10349_i10661 - $t29316_i10351_i10663);
                                                 }
                                               }
                                             }
                                           }
                                         })();
-                                        return ($t29431_i10651 * 1.8);
+                                        return ($t29432_i10664 * 1.8);
                                       }
                                     })();
-                                    return (0.6 + $t29432_i10652);
+                                    return (0.6 + $t29433_i10665);
                                   }
                                 })();
-                                return (t * $t29532);
+                                return (t * $t29533);
                               }
                             })();
                             {
-                              const $t29534 = (() => {
+                              const $t29535 = (() => {
                                 {
-                                  const $t29437_i10638 = (() => {
+                                  const $t29438_i10651 = (() => {
                                     {
-                                      const $t29434_i10628 = (() => {
+                                      const $t29435_i10641 = (() => {
                                         {
-                                          const $t29433_i10627 = s.x;
-                                          return ($t29433_i10627 + 3.);
+                                          const $t29434_i10640 = s.x;
+                                          return ($t29434_i10640 + 3.);
                                         }
                                       })();
                                       {
-                                        const $t29436_i10630 = (() => {
+                                        const $t29437_i10643 = (() => {
                                           {
-                                            const $t29435_i10629 = s.y;
-                                            return ($t29435_i10629 + 3.);
+                                            const $t29436_i10642 = s.y;
+                                            return ($t29436_i10642 + 3.);
                                           }
                                         })();
                                         {
-                                          const x_i10356_i10635 = (() => {
+                                          const x_i10358_i10648 = (() => {
                                             {
-                                              const $t29314_i10355_i10634 = (() => {
+                                              const $t29315_i10357_i10647 = (() => {
                                                 {
-                                                  const $t29313_i10354_i10633 = (() => {
+                                                  const $t29314_i10356_i10646 = (() => {
                                                     {
-                                                      const $t29311_i10352_i10631 = ($t29434_i10628 * 12.9898);
+                                                      const $t29312_i10354_i10644 = ($t29435_i10641 * 12.9898);
                                                       {
-                                                        const $t29312_i10353_i10632 = ($t29436_i10630 * 78.233);
-                                                        return ($t29311_i10352_i10631 + $t29312_i10353_i10632);
+                                                        const $t29313_i10355_i10645 = ($t29437_i10643 * 78.233);
+                                                        return ($t29312_i10354_i10644 + $t29313_i10355_i10645);
                                                       }
                                                     }
                                                   })();
-                                                  return Math.sin($t29313_i10354_i10633);
+                                                  return Math.sin($t29314_i10356_i10646);
                                                 }
                                               })();
-                                              return ($t29314_i10355_i10634 * 43758.5453);
+                                              return ($t29315_i10357_i10647 * 43758.5453);
                                             }
                                           })();
                                           {
-                                            const $t29315_i10358_i10637 = (() => {
+                                            const $t29316_i10360_i10650 = (() => {
                                               {
-                                                const $t1582_i4063_i10357_i10636 = Math.floor(x_i10356_i10635);
-                                                return $t1582_i4063_i10357_i10636;
+                                                const $t1582_i4063_i10359_i10649 = Math.floor(x_i10358_i10648);
+                                                return $t1582_i4063_i10359_i10649;
                                               }
                                             })();
-                                            return (x_i10356_i10635 - $t29315_i10358_i10637);
+                                            return (x_i10358_i10648 - $t29316_i10360_i10650);
                                           }
                                         }
                                       }
                                     }
                                   })();
-                                  return ($t29437_i10638 * 6.28318530718);
+                                  return ($t29438_i10651 * 6.28318530718);
                                 }
                               })();
-                              return ($t29533 + $t29534);
+                              return ($t29534 + $t29535);
                             }
                           }
                         })();
-                        return Math.sin($t29535);
+                        return Math.sin($t29536);
                       }
                     })();
-                    return (0.5 * $t29536);
+                    return (0.5 * $t29537);
                   }
                 })();
-                return (0.5 + $t29537);
+                return (0.5 + $t29538);
               }
             })();
             {
-              const $t29538 = pulse_style(s);
-              if ($t29538 === 0) {
+              const $t29539 = pulse_style(s);
+              if ($t29539 === 0) {
                 return (() => {
                   {
-                    const $jp_clo29541 = (() => {
-                      return { $: "$Clo_$jp29540$3795", _0: $jp29540$apply$3795, _1: ctx, _2: s, _3: t };
+                    const $jp_clo29542 = (() => {
+                      return { $: "$Clo_$jp29541$3795", _0: $jp29541$apply$3795, _1: ctx, _2: s, _3: t };
                     })();
                     return draw_pulse_ring(ctx, s, pulse);
                   }
                 })();
-              } else if ($t29538 === 1) {
+              } else if ($t29539 === 1) {
                 return (() => {
                   {
-                    const $jp_clo29543 = (() => {
-                      return { $: "$Clo_$jp29542$3796", _0: $jp29542$apply$3796, _1: ctx, _2: s, _3: t };
+                    const $jp_clo29544 = (() => {
+                      return { $: "$Clo_$jp29543$3796", _0: $jp29543$apply$3796, _1: ctx, _2: s, _3: t };
                     })();
                     return draw_pulse_halo(ctx, s, pulse);
                   }
@@ -17332,8 +17395,8 @@ function draw_star(ctx, s, t, aim) {
               } else {
                 return (() => {
                   {
-                    const $t29539 = dot_count(s);
-                    return draw_pulse_particle(ctx, s, t, $t29539, 0);
+                    const $t29540 = dot_count(s);
+                    return draw_pulse_particle(ctx, s, t, $t29540, 0);
                   }
                 })();
               }
@@ -17347,8 +17410,8 @@ function draw_star(ctx, s, t, aim) {
   })();
   (() => {
     {
-      const $t29544 = star_targeted(s, aim);
-      if ($t29544 === true) {
+      const $t29545 = star_targeted(s, aim);
+      if ($t29545 === true) {
         return (() => {
           return draw_target_pulse(ctx, s, t);
         })();
@@ -17368,12 +17431,12 @@ function draw_star(ctx, s, t, aim) {
   })();
   (() => {
     {
-      const $t29545 = s.x;
+      const $t29546 = s.x;
       {
-        const $t29546 = s.y;
+        const $t29547 = s.y;
         {
-          const $t29547 = s.radius;
-          return Canvas$arc(ctx, $t29545, $t29546, $t29547, 0., 6.28318530718);
+          const $t29548 = s.radius;
+          return Canvas$arc(ctx, $t29546, $t29547, $t29548, 0., 6.28318530718);
         }
       }
     }
@@ -17390,47 +17453,47 @@ function bg_hash(gx, gy, seed) {
       {
         const h1 = (() => {
           {
-            const $t29555 = (() => {
+            const $t29556 = (() => {
               {
-                const $t29554 = (seed * 37.719);
-                return (fx + $t29554);
+                const $t29555 = (seed * 37.719);
+                return (fx + $t29555);
               }
             })();
             {
-              const $t29557 = (() => {
+              const $t29558 = (() => {
                 {
-                  const $t29556 = (seed * 12.9898);
-                  return (fy - $t29556);
+                  const $t29557 = (seed * 12.9898);
+                  return (fy - $t29557);
                 }
               })();
               {
-                const x_i10401 = (() => {
+                const x_i10403 = (() => {
                   {
-                    const $t29552_i10400 = (() => {
+                    const $t29553_i10402 = (() => {
                       {
-                        const $t29551_i10399 = (() => {
+                        const $t29552_i10401 = (() => {
                           {
-                            const $t29549_i10397 = ($t29555 * 12.9898);
+                            const $t29550_i10399 = ($t29556 * 12.9898);
                             {
-                              const $t29550_i10398 = ($t29557 * 78.233);
-                              return ($t29549_i10397 + $t29550_i10398);
+                              const $t29551_i10400 = ($t29558 * 78.233);
+                              return ($t29550_i10399 + $t29551_i10400);
                             }
                           }
                         })();
-                        return Math.sin($t29551_i10399);
+                        return Math.sin($t29552_i10401);
                       }
                     })();
-                    return ($t29552_i10400 * 43758.5453);
+                    return ($t29553_i10402 * 43758.5453);
                   }
                 })();
                 {
-                  const $t29553_i10403 = (() => {
+                  const $t29554_i10405 = (() => {
                     {
-                      const $t1582_i4094_i10402 = Math.floor(x_i10401);
-                      return $t1582_i4094_i10402;
+                      const $t1582_i4094_i10404 = Math.floor(x_i10403);
+                      return $t1582_i4094_i10404;
                     }
                   })();
-                  return (x_i10401 - $t29553_i10403);
+                  return (x_i10403 - $t29554_i10405);
                 }
               }
             }
@@ -17439,111 +17502,111 @@ function bg_hash(gx, gy, seed) {
         {
           const h2 = (() => {
             {
-              const $t29560 = (() => {
+              const $t29561 = (() => {
                 {
-                  const $t29558 = (fy * 3.271);
+                  const $t29559 = (fy * 3.271);
                   {
-                    const $t29559 = (seed * 71.238);
-                    return ($t29558 - $t29559);
+                    const $t29560 = (seed * 71.238);
+                    return ($t29559 - $t29560);
                   }
                 }
               })();
               {
-                const $t29563 = (() => {
+                const $t29564 = (() => {
                   {
-                    const $t29561 = (fx * 1.373);
+                    const $t29562 = (fx * 1.373);
                     {
-                      const $t29562 = (seed * 5.113);
-                      return ($t29561 + $t29562);
+                      const $t29563 = (seed * 5.113);
+                      return ($t29562 + $t29563);
                     }
                   }
                 })();
                 {
-                  const x_i10392 = (() => {
+                  const x_i10394 = (() => {
                     {
-                      const $t29552_i10391 = (() => {
+                      const $t29553_i10393 = (() => {
                         {
-                          const $t29551_i10390 = (() => {
+                          const $t29552_i10392 = (() => {
                             {
-                              const $t29549_i10388 = ($t29560 * 12.9898);
+                              const $t29550_i10390 = ($t29561 * 12.9898);
                               {
-                                const $t29550_i10389 = ($t29563 * 78.233);
-                                return ($t29549_i10388 + $t29550_i10389);
+                                const $t29551_i10391 = ($t29564 * 78.233);
+                                return ($t29550_i10390 + $t29551_i10391);
                               }
                             }
                           })();
-                          return Math.sin($t29551_i10390);
+                          return Math.sin($t29552_i10392);
                         }
                       })();
-                      return ($t29552_i10391 * 43758.5453);
+                      return ($t29553_i10393 * 43758.5453);
                     }
                   })();
                   {
-                    const $t29553_i10394 = (() => {
+                    const $t29554_i10396 = (() => {
                       {
-                        const $t1582_i4094_i10393 = Math.floor(x_i10392);
-                        return $t1582_i4094_i10393;
+                        const $t1582_i4094_i10395 = Math.floor(x_i10394);
+                        return $t1582_i4094_i10395;
                       }
                     })();
-                    return (x_i10392 - $t29553_i10394);
+                    return (x_i10394 - $t29554_i10396);
                   }
                 }
               }
             }
           })();
           {
-            const $t29566 = (() => {
+            const $t29567 = (() => {
               {
-                const $t29564 = (h1 * 269.5);
+                const $t29565 = (h1 * 269.5);
                 {
-                  const $t29565 = (h2 * 183.3);
-                  return ($t29564 + $t29565);
+                  const $t29566 = (h2 * 183.3);
+                  return ($t29565 + $t29566);
                 }
               }
             })();
             {
-              const $t29570 = (() => {
+              const $t29571 = (() => {
                 {
-                  const $t29569 = (() => {
+                  const $t29570 = (() => {
                     {
-                      const $t29567 = (fx * 0.618);
+                      const $t29568 = (fx * 0.618);
                       {
-                        const $t29568 = (fy * 0.573);
-                        return ($t29567 + $t29568);
+                        const $t29569 = (fy * 0.573);
+                        return ($t29568 + $t29569);
                       }
                     }
                   })();
-                  return ($t29569 + seed);
+                  return ($t29570 + seed);
                 }
               })();
               {
-                const x_i10383 = (() => {
+                const x_i10385 = (() => {
                   {
-                    const $t29552_i10382 = (() => {
+                    const $t29553_i10384 = (() => {
                       {
-                        const $t29551_i10381 = (() => {
+                        const $t29552_i10383 = (() => {
                           {
-                            const $t29549_i10379 = ($t29566 * 12.9898);
+                            const $t29550_i10381 = ($t29567 * 12.9898);
                             {
-                              const $t29550_i10380 = ($t29570 * 78.233);
-                              return ($t29549_i10379 + $t29550_i10380);
+                              const $t29551_i10382 = ($t29571 * 78.233);
+                              return ($t29550_i10381 + $t29551_i10382);
                             }
                           }
                         })();
-                        return Math.sin($t29551_i10381);
+                        return Math.sin($t29552_i10383);
                       }
                     })();
-                    return ($t29552_i10382 * 43758.5453);
+                    return ($t29553_i10384 * 43758.5453);
                   }
                 })();
                 {
-                  const $t29553_i10385 = (() => {
+                  const $t29554_i10387 = (() => {
                     {
-                      const $t1582_i4094_i10384 = Math.floor(x_i10383);
-                      return $t1582_i4094_i10384;
+                      const $t1582_i4094_i10386 = Math.floor(x_i10385);
+                      return $t1582_i4094_i10386;
                     }
                   })();
-                  return (x_i10383 - $t29553_i10385);
+                  return (x_i10385 - $t29554_i10387);
                 }
               }
             }
@@ -17559,110 +17622,110 @@ function draw_bg_cell(ctx, gx, gy, cell, seed, t) {
   {
     const h = bg_hash(gx, gy, seed);
     {
-      const $t29572 = (h > 0.5);
-      if ($t29572 === true) {
+      const $t29573 = (h > 0.5);
+      if ($t29573 === true) {
         return {  };
       } else {
         return (() => {
           {
             const jx = (() => {
               {
-                const $t29573 = (gy + 1000);
-                return bg_hash(gx, $t29573, seed);
+                const $t29574 = (gy + 1000);
+                return bg_hash(gx, $t29574, seed);
               }
             })();
             {
               const jy = (() => {
                 {
-                  const $t29574 = (gx + 1000);
-                  return bg_hash($t29574, gy, seed);
+                  const $t29575 = (gx + 1000);
+                  return bg_hash($t29575, gy, seed);
                 }
               })();
               {
                 const x = (() => {
                   {
-                    const $t29576 = (() => {
+                    const $t29577 = (() => {
                       {
-                        const $t29575 = gx;
-                        return ($t29575 * cell);
+                        const $t29576 = gx;
+                        return ($t29576 * cell);
                       }
                     })();
                     {
-                      const $t29577 = (jx * cell);
-                      return ($t29576 + $t29577);
+                      const $t29578 = (jx * cell);
+                      return ($t29577 + $t29578);
                     }
                   }
                 })();
                 {
                   const y = (() => {
                     {
-                      const $t29579 = (() => {
+                      const $t29580 = (() => {
                         {
-                          const $t29578 = gy;
-                          return ($t29578 * cell);
+                          const $t29579 = gy;
+                          return ($t29579 * cell);
                         }
                       })();
                       {
-                        const $t29580 = (jy * cell);
-                        return ($t29579 + $t29580);
+                        const $t29581 = (jy * cell);
+                        return ($t29580 + $t29581);
                       }
                     }
                   })();
                   {
                     const br = (() => {
                       {
-                        const $t29584 = (() => {
+                        const $t29585 = (() => {
                           {
-                            const $t29583 = (() => {
+                            const $t29584 = (() => {
                               {
-                                const $t29581 = (gx + 2000);
+                                const $t29582 = (gx + 2000);
                                 {
-                                  const $t29582 = (gy + 2000);
-                                  return bg_hash($t29581, $t29582, seed);
+                                  const $t29583 = (gy + 2000);
+                                  return bg_hash($t29582, $t29583, seed);
                                 }
                               }
                             })();
-                            return (0.45 * $t29583);
+                            return (0.45 * $t29584);
                           }
                         })();
-                        return (0.12 + $t29584);
+                        return (0.12 + $t29585);
                       }
                     })();
                     {
                       const st = (() => {
                         {
-                          const $t29585 = (gx - 2000);
+                          const $t29586 = (gx - 2000);
                           {
-                            const $t29586 = (gy - 2000);
-                            return bg_hash($t29585, $t29586, seed);
+                            const $t29587 = (gy - 2000);
+                            return bg_hash($t29586, $t29587, seed);
                           }
                         }
                       })();
                       {
                         const sz = (() => {
                           {
-                            const $t29588 = (() => {
+                            const $t29589 = (() => {
                               {
-                                const $t29587 = (1.8 * st);
-                                return ($t29587 * st);
+                                const $t29588 = (1.8 * st);
+                                return ($t29588 * st);
                               }
                             })();
-                            return (1. + $t29588);
+                            return (1. + $t29589);
                           }
                         })();
                         {
                           const is_pulsing = (() => {
                             {
-                              const $t29591 = (() => {
+                              const $t29592 = (() => {
                                 {
-                                  const $t29589 = (gx + 3000);
+                                  const $t29590 = (gx + 3000);
                                   {
-                                    const $t29590 = (gy + 3000);
-                                    return bg_hash($t29589, $t29590, seed);
+                                    const $t29591 = (gy + 3000);
+                                    return bg_hash($t29590, $t29591, seed);
                                   }
                                 }
                               })();
-                              return ($t29591 < 0.04);
+                              return ($t29592 < 0.04);
                             }
                           })();
                           {
@@ -17672,50 +17735,50 @@ function draw_bg_cell(ctx, gx, gy, cell, seed, t) {
                                 {
                                   const speed = (() => {
                                     {
-                                      const $t29595 = (() => {
+                                      const $t29596 = (() => {
                                         {
-                                          const $t29594 = (() => {
+                                          const $t29595 = (() => {
                                             {
-                                              const $t29593 = (gx + 4000);
-                                              return bg_hash($t29593, gy, seed);
+                                              const $t29594 = (gx + 4000);
+                                              return bg_hash($t29594, gy, seed);
                                             }
                                           })();
-                                          return (0.45 * $t29594);
+                                          return (0.45 * $t29595);
                                         }
                                       })();
-                                      return (0.35 + $t29595);
+                                      return (0.35 + $t29596);
                                     }
                                   })();
                                   {
                                     const phase = (() => {
                                       {
-                                        const $t29597 = (() => {
+                                        const $t29598 = (() => {
                                           {
-                                            const $t29596 = (gy + 4000);
-                                            return bg_hash(gx, $t29596, seed);
+                                            const $t29597 = (gy + 4000);
+                                            return bg_hash(gx, $t29597, seed);
                                           }
                                         })();
-                                        return ($t29597 * 6.28318530718);
+                                        return ($t29598 * 6.28318530718);
                                       }
                                     })();
                                     {
-                                      const $t29602 = (() => {
+                                      const $t29603 = (() => {
                                         {
-                                          const $t29601 = (() => {
+                                          const $t29602 = (() => {
                                             {
-                                              const $t29600 = (() => {
+                                              const $t29601 = (() => {
                                                 {
-                                                  const $t29599 = (t * speed);
-                                                  return ($t29599 + phase);
+                                                  const $t29600 = (t * speed);
+                                                  return ($t29600 + phase);
                                                 }
                                               })();
-                                              return Math.sin($t29600);
+                                              return Math.sin($t29601);
                                             }
                                           })();
-                                          return (0.5 * $t29601);
+                                          return (0.5 * $t29602);
                                         }
                                       })();
-                                      return (0.5 + $t29602);
+                                      return (0.5 + $t29603);
                                     }
                                   }
                                 }
@@ -17728,18 +17791,18 @@ function draw_bg_cell(ctx, gx, gy, cell, seed, t) {
                               if (is_pulsing === true) {
                                 br2 = (() => {
                                   {
-                                    const $t29605 = (() => {
+                                    const $t29606 = (() => {
                                       {
-                                        const $t29604 = (() => {
+                                        const $t29605 = (() => {
                                           {
-                                            const $t29603 = (1. - br);
-                                            return ($t29603 * 0.6);
+                                            const $t29604 = (1. - br);
+                                            return ($t29604 * 0.6);
                                           }
                                         })();
-                                        return ($t29604 * pulse);
+                                        return ($t29605 * pulse);
                                       }
                                     })();
-                                    return (br + $t29605);
+                                    return (br + $t29606);
                                   }
                                 })();
                               } else {
@@ -17750,13 +17813,13 @@ function draw_bg_cell(ctx, gx, gy, cell, seed, t) {
                                 if (is_pulsing === true) {
                                   sz2 = (() => {
                                     {
-                                      const $t29607 = (() => {
+                                      const $t29608 = (() => {
                                         {
-                                          const $t29606 = (0.35 * pulse);
-                                          return (1. + $t29606);
+                                          const $t29607 = (0.35 * pulse);
+                                          return (1. + $t29607);
                                         }
                                       })();
-                                      return (sz * $t29607);
+                                      return (sz * $t29608);
                                     }
                                   })();
                                 } else {
@@ -17792,8 +17855,8 @@ const draw_bg_cell$clo = { _0: ($_, ctx, gx, gy, cell, seed, t) => draw_bg_cell(
 
 function draw_bg_row(ctx, gx, gx_max, gy, cell, seed, t) {
   {
-    const $t29609 = (gx > gx_max);
-    if ($t29609 === true) {
+    const $t29610 = (gx > gx_max);
+    if ($t29610 === true) {
       return {  };
     } else {
       return (() => {
@@ -17801,8 +17864,8 @@ function draw_bg_row(ctx, gx, gx_max, gy, cell, seed, t) {
           return draw_bg_cell(ctx, gx, gy, cell, seed, t);
         })();
         {
-          const $t29610 = (gx + 1);
-          return draw_bg_row(ctx, $t29610, gx_max, gy, cell, seed, t);
+          const $t29611 = (gx + 1);
+          return draw_bg_row(ctx, $t29611, gx_max, gy, cell, seed, t);
         }
       })();
     }
@@ -17812,8 +17875,8 @@ const draw_bg_row$clo = { _0: ($_, ctx, gx, gx_max, gy, cell, seed, t) => draw_b
 
 function draw_bg_rows(ctx, gx0, gx1, gy, gy_max, cell, seed, t) {
   {
-    const $t29611 = (gy > gy_max);
-    if ($t29611 === true) {
+    const $t29612 = (gy > gy_max);
+    if ($t29612 === true) {
       return {  };
     } else {
       return (() => {
@@ -17821,8 +17884,8 @@ function draw_bg_rows(ctx, gx0, gx1, gy, gy_max, cell, seed, t) {
           return draw_bg_row(ctx, gx0, gx1, gy, cell, seed, t);
         })();
         {
-          const $t29612 = (gy + 1);
-          return draw_bg_rows(ctx, gx0, gx1, $t29612, gy_max, cell, seed, t);
+          const $t29613 = (gy + 1);
+          return draw_bg_rows(ctx, gx0, gx1, $t29613, gy_max, cell, seed, t);
         }
       })();
     }
@@ -17834,91 +17897,91 @@ function draw_starfield(ctx, cam_x, cam, view_w, view_h, seed, t) {
   {
     const gx0 = (() => {
       {
-        const $t29615 = (() => {
+        const $t29616 = (() => {
           {
-            const $t29614 = (() => {
+            const $t29615 = (() => {
               {
-                const $t29613 = (cam_x / 70.);
+                const $t29614 = (cam_x / 70.);
                 {
-                  const $t1582_i4104 = Math.floor($t29613);
+                  const $t1582_i4104 = Math.floor($t29614);
                   return $t1582_i4104;
                 }
               }
             })();
-            return Math.trunc($t29614);
+            return Math.trunc($t29615);
           }
         })();
-        return ($t29615 - 1);
+        return ($t29616 - 1);
       }
     })();
     {
       const gx1 = (() => {
         {
-          const $t29619 = (() => {
+          const $t29620 = (() => {
             {
-              const $t29618 = (() => {
+              const $t29619 = (() => {
                 {
-                  const $t29617 = (() => {
+                  const $t29618 = (() => {
                     {
-                      const $t29616 = (cam_x + view_w);
-                      return ($t29616 / 70.);
+                      const $t29617 = (cam_x + view_w);
+                      return ($t29617 / 70.);
                     }
                   })();
                   {
-                    const $t1582_i4102 = Math.floor($t29617);
+                    const $t1582_i4102 = Math.floor($t29618);
                     return $t1582_i4102;
                   }
                 }
               })();
-              return Math.trunc($t29618);
+              return Math.trunc($t29619);
             }
           })();
-          return ($t29619 + 1);
+          return ($t29620 + 1);
         }
       })();
       {
         const gy0 = (() => {
           {
-            const $t29622 = (() => {
+            const $t29623 = (() => {
               {
-                const $t29621 = (() => {
+                const $t29622 = (() => {
                   {
-                    const $t29620 = (cam / 70.);
+                    const $t29621 = (cam / 70.);
                     {
-                      const $t1582_i4100 = Math.floor($t29620);
+                      const $t1582_i4100 = Math.floor($t29621);
                       return $t1582_i4100;
                     }
                   }
                 })();
-                return Math.trunc($t29621);
+                return Math.trunc($t29622);
               }
             })();
-            return ($t29622 - 1);
+            return ($t29623 - 1);
           }
         })();
         {
           const gy1 = (() => {
             {
-              const $t29626 = (() => {
+              const $t29627 = (() => {
                 {
-                  const $t29625 = (() => {
+                  const $t29626 = (() => {
                     {
-                      const $t29624 = (() => {
+                      const $t29625 = (() => {
                         {
-                          const $t29623 = (cam + view_h);
-                          return ($t29623 / 70.);
+                          const $t29624 = (cam + view_h);
+                          return ($t29624 / 70.);
                         }
                       })();
                       {
-                        const $t1582_i4098 = Math.floor($t29624);
+                        const $t1582_i4098 = Math.floor($t29625);
                         return $t1582_i4098;
                       }
                     }
                   })();
-                  return Math.trunc($t29625);
+                  return Math.trunc($t29626);
                 }
               })();
-              return ($t29626 + 1);
+              return ($t29627 + 1);
             }
           })();
           (() => {
@@ -17935,44 +17998,90 @@ function draw_starfield(ctx, cam_x, cam, view_w, view_h, seed, t) {
 }
 const draw_starfield$clo = { _0: ($_, ctx, cam_x, cam, view_w, view_h, seed, t) => draw_starfield(ctx, cam_x, cam, view_w, view_h, seed, t) };
 
-function draw_nebula_clouds(ctx, clouds) {
+function to_screen_clouds(clouds, cam_x, cam_y) {
   switch (clouds.$) {
     case "Nil": {
-      return {  };
+      return { $: "Nil" };
       break;
     }
     case "Cons": {
-      const $f29633 = clouds._0;
-      const $f29634 = clouds._1;
+      const $f29639 = clouds._0;
+      const $f29640 = clouds._1;
       {
-        const rest = (() => {
-          return $f29634;
-        })();
+        const rest = $f29640;
         {
-          const c = (() => {
-            return $f29633;
-          })();
-          (() => {
-            {
-              const $t29627 = c.x;
+          const c = $f29639;
+          {
+            const $t29637 = (() => {
               {
-                const $t29628 = c.y;
-                {
-                  const $t29629 = c.radius;
+                const $t29629 = (() => {
                   {
-                    const $t29632 = (() => {
+                    const $t29628 = c.x;
+                    return ($t29628 - cam_x);
+                  }
+                })();
+                {
+                  const $t29631 = (() => {
+                    {
+                      const $t29630 = c.y;
+                      return ($t29630 - cam_y);
+                    }
+                  })();
+                  {
+                    const $t29632 = c.radius;
+                    {
+                      const $t29633 = c.strength;
                       {
-                        const $t29631 = c.strength;
-                        return (0.16 * $t29631);
+                        const $t29636 = (() => {
+                          {
+                            const $t29634 = c.x;
+                            {
+                              const $t29635 = c.y;
+                              {
+                                const x_i10412 = (() => {
+                                  {
+                                    const $t29315_i10411 = (() => {
+                                      {
+                                        const $t29314_i10410 = (() => {
+                                          {
+                                            const $t29312_i10408 = ($t29634 * 12.9898);
+                                            {
+                                              const $t29313_i10409 = ($t29635 * 78.233);
+                                              return ($t29312_i10408 + $t29313_i10409);
+                                            }
+                                          }
+                                        })();
+                                        return Math.sin($t29314_i10410);
+                                      }
+                                    })();
+                                    return ($t29315_i10411 * 43758.5453);
+                                  }
+                                })();
+                                {
+                                  const $t29316_i10414 = (() => {
+                                    {
+                                      const $t1582_i4063_i10413 = Math.floor(x_i10412);
+                                      return $t1582_i4063_i10413;
+                                    }
+                                  })();
+                                  return (x_i10412 - $t29316_i10414);
+                                }
+                              }
+                            }
+                          }
+                        })();
+                        return ({ x: $t29629, y: $t29631, radius: $t29632, strength: $t29633, seed: $t29636 });
                       }
-                    })();
-                    return Canvas$fill_noise_circle(ctx, $t29627, $t29628, $t29629, $t29632);
+                    }
                   }
                 }
               }
+            })();
+            {
+              const $t29638 = to_screen_clouds(rest, cam_x, cam_y);
+              return { $: "Cons", _0: $t29637, _1: $t29638 };
             }
-          })();
-          return draw_nebula_clouds(ctx, rest);
+          }
         }
       }
       break;
@@ -17982,32 +18091,75 @@ function draw_nebula_clouds(ctx, clouds) {
     }
   }
 }
-const draw_nebula_clouds$clo = { _0: ($_, ctx, clouds) => draw_nebula_clouds(ctx, clouds) };
+const to_screen_clouds$clo = { _0: ($_, clouds, cam_x, cam_y) => to_screen_clouds(clouds, cam_x, cam_y) };
 
-function draw_nebula(ctx, stars, cam, view_h, seed) {
-  {
-    const $t29639 = (() => {
+function draw_nebula_gl(ctx, gl_opt, game, seed) {
+  switch (gl_opt.$) {
+    case "None": {
+      return {  };
+      break;
+    }
+    case "Some": {
+      const $f29653 = gl_opt._0;
       {
-        const margin_i10408 = (700. + 90.);
+        const gl = $f29653;
         {
-          const $t29200_i10409 = { $: "Nil" };
+          const $t29645 = game.stars;
           {
-            const $t29201_i10410 = Perihelion$Nebula$filter_visible(stars, cam, view_h, margin_i10408, $t29200_i10409);
+            const $t29646 = game.camera_y;
             {
-              const $t29202_i10411 = { $: "Nil" };
-              return Perihelion$Nebula$collect_star_clouds($t29201_i10410, seed, $t29202_i10411);
+              const $t29647 = game.view_h;
+              {
+                const clouds = (() => {
+                  {
+                    const margin_i10419 = (700. + 90.);
+                    {
+                      const $t29200_i10420 = { $: "Nil" };
+                      {
+                        const $t29201_i10421 = Perihelion$Nebula$filter_visible($t29645, $t29646, $t29647, margin_i10419, $t29200_i10420);
+                        {
+                          const $t29202_i10422 = { $: "Nil" };
+                          return Perihelion$Nebula$collect_star_clouds($t29201_i10421, seed, $t29202_i10422);
+                        }
+                      }
+                    }
+                  }
+                })();
+                {
+                  const $t29648 = game.camera_x;
+                  {
+                    const $t29649 = game.camera_y;
+                    {
+                      const screen_clouds = to_screen_clouds(clouds, $t29648, $t29649);
+                      (() => {
+                        {
+                          const $t29650 = game.view_w;
+                          {
+                            const $t29651 = game.view_h;
+                            return WebGL$draw_nebula(gl, screen_clouds, $t29650, $t29651, seed);
+                          }
+                        }
+                      })();
+                      {
+                        const $t29652 = WebGL$canvas_node(gl);
+                        return Canvas$draw_node(ctx, $t29652, 0., 0.);
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
-    })();
-    {
-      const $rc_837 = draw_nebula_clouds(ctx, $t29639);
-      return $rc_837;
+      break;
+    }
+    default: {
+      return (() => { throw new Error("non-exhaustive pattern match"); })();
     }
   }
 }
-const draw_nebula$clo = { _0: ($_, ctx, stars, cam, view_h, seed) => draw_nebula(ctx, stars, cam, view_h, seed) };
+const draw_nebula_gl$clo = { _0: ($_, ctx, gl_opt, game, seed) => draw_nebula_gl(ctx, gl_opt, game, seed) };
 
 function draw_stars(ctx, stars, cam, view_h, t, aim) {
   switch (stars.$) {
@@ -18016,45 +18168,45 @@ function draw_stars(ctx, stars, cam, view_h, t, aim) {
       break;
     }
     case "Cons": {
-      const $f29648 = stars._0;
-      const $f29649 = stars._1;
+      const $f29662 = stars._0;
+      const $f29663 = stars._1;
       {
-        const rest = $f29649;
+        const rest = $f29663;
         {
-          const s = $f29648;
+          const s = $f29662;
           (() => {
             {
-              const $t29647 = (() => {
+              const $t29661 = (() => {
                 {
-                  const $t29643 = (() => {
+                  const $t29657 = (() => {
                     {
-                      const $t29640 = s.y;
+                      const $t29654 = s.y;
                       {
-                        const $t29642 = (() => {
+                        const $t29656 = (() => {
                           {
-                            const $t29641 = (cam + view_h);
-                            return ($t29641 + 100.);
+                            const $t29655 = (cam + view_h);
+                            return ($t29655 + 100.);
                           }
                         })();
-                        return ($t29640 < $t29642);
+                        return ($t29654 < $t29656);
                       }
                     }
                   })();
                   {
-                    const $t29646 = (() => {
+                    const $t29660 = (() => {
                       {
-                        const $t29644 = s.y;
+                        const $t29658 = s.y;
                         {
-                          const $t29645 = (cam - 100.);
-                          return ($t29644 > $t29645);
+                          const $t29659 = (cam - 100.);
+                          return ($t29658 > $t29659);
                         }
                       }
                     })();
-                    return ($t29643 && $t29646);
+                    return ($t29657 && $t29660);
                   }
                 }
               })();
-              if ($t29647 === true) {
+              if ($t29661 === true) {
                 return (() => {
                   return draw_star(ctx, s, t, aim);
                 })();
@@ -18079,104 +18231,104 @@ function asteroid_vertex(a, i) {
   {
     const angle = (() => {
       {
-        const $t29660 = i;
+        const $t29674 = i;
         {
-          const $t29662 = (6.28318530718 / 8.);
-          return ($t29660 * $t29662);
+          const $t29676 = (6.28318530718 / 8.);
+          return ($t29674 * $t29676);
         }
       }
     })();
     {
       const jitter = (() => {
         {
-          const $t29665 = (() => {
+          const $t29679 = (() => {
             {
-              const $t29664 = (() => {
+              const $t29678 = (() => {
                 {
-                  const $t29663 = a.shape_seed;
+                  const $t29677 = a.shape_seed;
                   {
-                    const x_i10419 = (() => {
+                    const x_i10430 = (() => {
                       {
-                        const $t29658_i10418 = (() => {
+                        const $t29672_i10429 = (() => {
                           {
-                            const $t29657_i10417 = (() => {
+                            const $t29671_i10428 = (() => {
                               {
-                                const $t29654_i10414 = ($t29663 * 12.9898);
+                                const $t29668_i10425 = ($t29677 * 12.9898);
                                 {
-                                  const $t29656_i10416 = (() => {
+                                  const $t29670_i10427 = (() => {
                                     {
-                                      const $t29655_i10415 = i;
-                                      return ($t29655_i10415 * 78.233);
+                                      const $t29669_i10426 = i;
+                                      return ($t29669_i10426 * 78.233);
                                     }
                                   })();
-                                  return ($t29654_i10414 + $t29656_i10416);
+                                  return ($t29668_i10425 + $t29670_i10427);
                                 }
                               }
                             })();
-                            return Math.sin($t29657_i10417);
+                            return Math.sin($t29671_i10428);
                           }
                         })();
-                        return ($t29658_i10418 * 43758.5453);
+                        return ($t29672_i10429 * 43758.5453);
                       }
                     })();
                     {
-                      const $t29659_i10421 = (() => {
+                      const $t29673_i10432 = (() => {
                         {
-                          const $t1582_i4108_i10420 = Math.floor(x_i10419);
-                          return $t1582_i4108_i10420;
+                          const $t1582_i4109_i10431 = Math.floor(x_i10430);
+                          return $t1582_i4109_i10431;
                         }
                       })();
-                      return (x_i10419 - $t29659_i10421);
+                      return (x_i10430 - $t29673_i10432);
                     }
                   }
                 }
               })();
-              return (0.6 * $t29664);
+              return (0.6 * $t29678);
             }
           })();
-          return (0.7 + $t29665);
+          return (0.7 + $t29679);
         }
       })();
       {
         const r = (() => {
           {
-            const $t29666 = a.radius;
-            return ($t29666 * jitter);
+            const $t29680 = a.radius;
+            return ($t29680 * jitter);
           }
         })();
         {
           const pt = (() => {
             {
-              const $t29670 = (() => {
+              const $t29684 = (() => {
                 {
-                  const $t29667 = a.x;
+                  const $t29681 = a.x;
                   {
-                    const $t29669 = (() => {
+                    const $t29683 = (() => {
                       {
-                        const $t29668 = Math.cos(angle);
-                        return ($t29668 * r);
+                        const $t29682 = Math.cos(angle);
+                        return ($t29682 * r);
                       }
                     })();
-                    return ($t29667 + $t29669);
+                    return ($t29681 + $t29683);
                   }
                 }
               })();
               {
-                const $t29674 = (() => {
+                const $t29688 = (() => {
                   {
-                    const $t29671 = a.y;
+                    const $t29685 = a.y;
                     {
-                      const $t29673 = (() => {
+                      const $t29687 = (() => {
                         {
-                          const $t29672 = Math.sin(angle);
-                          return ($t29672 * r);
+                          const $t29686 = Math.sin(angle);
+                          return ($t29686 * r);
                         }
                       })();
-                      return ($t29671 + $t29673);
+                      return ($t29685 + $t29687);
                     }
                   }
                 })();
-                return { _0: $t29670, _1: $t29674 };
+                return { _0: $t29684, _1: $t29688 };
               }
             }
           })();
@@ -18190,8 +18342,8 @@ const asteroid_vertex$clo = { _0: ($_, a, i) => asteroid_vertex(a, i) };
 
 function draw_asteroid_edges(ctx, a, i) {
   {
-    const $t29675 = (i > 7);
-    if ($t29675 === true) {
+    const $t29689 = (i > 7);
+    if ($t29689 === true) {
       return (() => {
         (() => {
           return Canvas$close_path(ctx);
@@ -18210,8 +18362,8 @@ function draw_asteroid_edges(ctx, a, i) {
                 if (i === 0) {
                   return (() => {
                     {
-                      const $jp_clo29677 = (() => {
-                        return { $: "$Clo_$jp29676$3799", _0: $jp29676$apply$3799, _1: ctx, _2: px, _3: py };
+                      const $jp_clo29691 = (() => {
+                        return { $: "$Clo_$jp29690$3799", _0: $jp29690$apply$3799, _1: ctx, _2: px, _3: py };
                       })();
                       return Canvas$move_to(ctx, px, py);
                     }
@@ -18223,8 +18375,8 @@ function draw_asteroid_edges(ctx, a, i) {
                 }
               })();
               {
-                const $t29678 = (i + 1);
-                return draw_asteroid_edges(ctx, a, $t29678);
+                const $t29692 = (i + 1);
+                return draw_asteroid_edges(ctx, a, $t29692);
               }
             }
           }
@@ -18242,28 +18394,28 @@ function draw_asteroids(ctx, asteroids) {
       break;
     }
     case "Cons": {
-      const $f29687 = asteroids._0;
-      const $f29688 = asteroids._1;
+      const $f29701 = asteroids._0;
+      const $f29702 = asteroids._1;
       {
         const rest = (() => {
-          return $f29688;
+          return $f29702;
         })();
         {
           const a = (() => {
-            return $f29687;
+            return $f29701;
           })();
           {
             const color = (() => {
               {
-                const $t29680 = a.mode;
-                switch ($t29680.$) {
+                const $t29694 = a.mode;
+                switch ($t29694.$) {
                   case "AsteroidDrifting": {
                     return "#8a8a94";
                     break;
                   }
                   case "AsteroidOrbiting": {
-                    const $f29681 = $t29680._0;
-                    const $f29682 = $t29680._1;
+                    const $f29695 = $t29694._0;
+                    const $f29696 = $t29694._1;
                     return "#e8e8e8";
                     break;
                   }
@@ -18302,15 +18454,15 @@ function draw_shots(ctx, shots, color, r) {
       break;
     }
     case "Cons": {
-      const $f29696 = shots._0;
-      const $f29697 = shots._1;
+      const $f29710 = shots._0;
+      const $f29711 = shots._1;
       {
         const rest = (() => {
-          return $f29697;
+          return $f29711;
         })();
         {
           const s = (() => {
-            return $f29696;
+            return $f29710;
           })();
           (() => {
             return Canvas$set_fill_style(ctx, color);
@@ -18320,10 +18472,10 @@ function draw_shots(ctx, shots, color, r) {
           })();
           (() => {
             {
-              const $t29693 = s.x;
+              const $t29707 = s.x;
               {
-                const $t29694 = s.y;
-                return Canvas$arc(ctx, $t29693, $t29694, r, 0., 6.28318530718);
+                const $t29708 = s.y;
+                return Canvas$arc(ctx, $t29707, $t29708, r, 0., 6.28318530718);
               }
             }
           })();
@@ -18344,35 +18496,35 @@ const draw_shots$clo = { _0: ($_, ctx, shots, color, r) => draw_shots(ctx, shots
 
 function ship_heading(sh) {
   {
-    const $t29702 = sh.mode;
-    switch ($t29702.$) {
+    const $t29716 = sh.mode;
+    switch ($t29716.$) {
       case "ShipOrbiting": {
-        const $f29706 = $t29702._0;
-        const $f29707 = $t29702._1;
+        const $f29720 = $t29716._0;
+        const $f29721 = $t29716._1;
         {
           const angle = (() => {
-            return $f29707;
+            return $f29721;
           })();
           {
             const d = (0. - 1.);
             {
-              const $t29705 = (d * 1.5707963);
-              return (angle + $t29705);
+              const $t29719 = (d * 1.5707963);
+              return (angle + $t29719);
             }
           }
         }
         break;
       }
       case "ShipFlying": {
-        const $f29712 = $t29702._0;
-        const $f29713 = $t29702._1;
+        const $f29726 = $t29716._0;
+        const $f29727 = $t29716._1;
         {
           const vy = (() => {
-            return $f29713;
+            return $f29727;
           })();
           {
             const vx = (() => {
-              return $f29712;
+              return $f29726;
             })();
             return Math.atan2(vy, vx);
           }
@@ -18394,29 +18546,29 @@ function draw_ships(ctx, ships) {
       break;
     }
     case "Cons": {
-      const $f29722 = ships._0;
-      const $f29723 = ships._1;
+      const $f29736 = ships._0;
+      const $f29737 = ships._1;
       {
         const rest = (() => {
-          return $f29723;
+          return $f29737;
         })();
         {
           const sh = (() => {
-            return $f29722;
+            return $f29736;
           })();
           {
             const pos = (() => {
               {
-                const pos_i4123 = (() => {
+                const pos_i4124 = (() => {
                   {
-                    const $t27355_i4121 = sh.x;
+                    const $t27355_i4122 = sh.x;
                     {
-                      const $t27356_i4122 = sh.y;
-                      return { _0: $t27355_i4121, _1: $t27356_i4122 };
+                      const $t27356_i4123 = sh.y;
+                      return { _0: $t27355_i4122, _1: $t27356_i4123 };
                     }
                   }
                 })();
-                return pos_i4123;
+                return pos_i4124;
               }
             })();
             {
@@ -18451,16 +18603,16 @@ function draw_ships(ctx, ships) {
                   })();
                   (() => {
                     {
-                      const $t29718 = (0. - 6.);
-                      return Canvas$line_to(ctx, $t29718, 5.);
+                      const $t29732 = (0. - 6.);
+                      return Canvas$line_to(ctx, $t29732, 5.);
                     }
                   })();
                   (() => {
                     {
-                      const $t29719 = (0. - 6.);
+                      const $t29733 = (0. - 6.);
                       {
-                        const $t29720 = (0. - 5.);
-                        return Canvas$line_to(ctx, $t29719, $t29720);
+                        const $t29734 = (0. - 5.);
+                        return Canvas$line_to(ctx, $t29733, $t29734);
                       }
                     }
                   })();
@@ -18499,15 +18651,15 @@ function draw_pickups(ctx, pickups) {
       break;
     }
     case "Cons": {
-      const $f29731 = pickups._0;
-      const $f29732 = pickups._1;
+      const $f29745 = pickups._0;
+      const $f29746 = pickups._1;
       {
         const rest = (() => {
-          return $f29732;
+          return $f29746;
         })();
         {
           const pk = (() => {
-            return $f29731;
+            return $f29745;
           })();
           (() => {
             return Canvas$set_stroke_style(ctx, "#ffffff");
@@ -18520,10 +18672,10 @@ function draw_pickups(ctx, pickups) {
           })();
           (() => {
             {
-              const $t29728 = pk.x;
+              const $t29742 = pk.x;
               {
-                const $t29729 = pk.y;
-                return Canvas$arc(ctx, $t29728, $t29729, 8., 0., 6.28318530718);
+                const $t29743 = pk.y;
+                return Canvas$arc(ctx, $t29742, $t29743, 8., 0., 6.28318530718);
               }
             }
           })();
@@ -18544,8 +18696,8 @@ const draw_pickups$clo = { _0: ($_, ctx, pickups) => draw_pickups(ctx, pickups) 
 
 function draw_runs(ctx, runs, view_w, y, i) {
   {
-    const $t29737 = (i >= 5);
-    if ($t29737 === true) {
+    const $t29751 = (i >= 5);
+    if ($t29751 === true) {
       return {  };
     } else {
       return (() => {
@@ -18555,94 +18707,94 @@ function draw_runs(ctx, runs, view_w, y, i) {
             break;
           }
           case "Cons": {
-            const $f29752 = runs._0;
-            const $f29753 = runs._1;
+            const $f29766 = runs._0;
+            const $f29767 = runs._1;
             {
               const rest = (() => {
-                return $f29753;
+                return $f29767;
               })();
               {
                 const r = (() => {
-                  return $f29752;
+                  return $f29766;
                 })();
                 (() => {
                   return Canvas$set_font(ctx, "14px sans-serif");
                 })();
                 (() => {
                   {
-                    const $t29748 = (() => {
+                    const $t29762 = (() => {
                       {
-                        const $t29747 = (() => {
+                        const $t29761 = (() => {
                           {
-                            const $t29744 = (() => {
+                            const $t29758 = (() => {
                               {
-                                const $t29743 = (() => {
+                                const $t29757 = (() => {
                                   {
-                                    const $t29740 = (() => {
+                                    const $t29754 = (() => {
                                       {
-                                        const $t29739 = (() => {
+                                        const $t29753 = (() => {
                                           {
-                                            const $t29738 = r.score;
-                                            return String($t29738);
+                                            const $t29752 = r.score;
+                                            return String($t29752);
                                           }
                                         })();
                                         {
-                                          const $rc_842 = ($t29739 + " x");
-                                          return $rc_842;
+                                          const $rc_846 = ($t29753 + " x");
+                                          return $rc_846;
                                         }
                                       }
                                     })();
                                     {
-                                      const $t29742 = (() => {
+                                      const $t29756 = (() => {
                                         {
-                                          const $t29741 = r.max_mult;
-                                          return String($t29741);
+                                          const $t29755 = r.max_mult;
+                                          return String($t29755);
                                         }
                                       })();
                                       {
-                                        const $rc_841 = ($t29740 + $t29742);
-                                        return $rc_841;
+                                        const $rc_845 = ($t29754 + $t29756);
+                                        return $rc_845;
                                       }
                                     }
                                   }
                                 })();
                                 {
-                                  const $rc_840 = ($t29743 + " · ");
-                                  return $rc_840;
+                                  const $rc_844 = ($t29757 + " · ");
+                                  return $rc_844;
                                 }
                               }
                             })();
                             {
-                              const $t29746 = (() => {
+                              const $t29760 = (() => {
                                 {
-                                  const $t29745 = r.stars;
-                                  return String($t29745);
+                                  const $t29759 = r.stars;
+                                  return String($t29759);
                                 }
                               })();
                               {
-                                const $rc_839 = ($t29744 + $t29746);
-                                return $rc_839;
+                                const $rc_843 = ($t29758 + $t29760);
+                                return $rc_843;
                               }
                             }
                           }
                         })();
                         {
-                          const $rc_838 = ($t29747 + " stars");
-                          return $rc_838;
+                          const $rc_842 = ($t29761 + " stars");
+                          return $rc_842;
                         }
                       }
                     })();
                     {
-                      const $t29749 = (view_w / 2.);
-                      return Canvas$fill_text(ctx, $t29748, $t29749, y);
+                      const $t29763 = (view_w / 2.);
+                      return Canvas$fill_text(ctx, $t29762, $t29763, y);
                     }
                   }
                 })();
                 {
-                  const $t29750 = (y + 20.);
+                  const $t29764 = (y + 20.);
                   {
-                    const $t29751 = (i + 1);
-                    return draw_runs(ctx, rest, view_w, $t29750, $t29751);
+                    const $t29765 = (i + 1);
+                    return draw_runs(ctx, rest, view_w, $t29764, $t29765);
                   }
                 }
               }
@@ -18668,10 +18820,10 @@ function draw_ball(ctx, game) {
   })();
   (() => {
     {
-      const $t29758 = game.ball_x;
+      const $t29772 = game.ball_x;
       {
-        const $t29759 = game.ball_y;
-        return Canvas$arc(ctx, $t29758, $t29759, 6., 0., 6.28318530718);
+        const $t29773 = game.ball_y;
+        return Canvas$arc(ctx, $t29772, $t29773, 6., 0., 6.28318530718);
       }
     }
   })();
@@ -18679,13 +18831,13 @@ function draw_ball(ctx, game) {
     return Canvas$fill(ctx);
   })();
   {
-    const $t29762 = (() => {
+    const $t29776 = (() => {
       {
-        const $t29761 = game.shield;
-        return ($t29761 > 0);
+        const $t29775 = game.shield;
+        return ($t29775 > 0);
       }
     })();
-    if ($t29762 === true) {
+    if ($t29776 === true) {
       return (() => {
         (() => {
           return Canvas$set_stroke_style(ctx, "#cccccc");
@@ -18698,10 +18850,10 @@ function draw_ball(ctx, game) {
         })();
         (() => {
           {
-            const $t29763 = game.ball_x;
+            const $t29777 = game.ball_x;
             {
-              const $t29764 = game.ball_y;
-              return Canvas$arc(ctx, $t29763, $t29764, 10., 0., 6.28318530718);
+              const $t29778 = game.ball_y;
+              return Canvas$arc(ctx, $t29777, $t29778, 10., 0., 6.28318530718);
             }
           }
         })();
@@ -18725,15 +18877,15 @@ function draw_milestone_card(ctx, u, cx, view_h) {
   })();
   (() => {
     {
-      const $t29770 = (cx - 60.);
+      const $t29784 = (cx - 60.);
       {
-        const $t29772 = (() => {
+        const $t29786 = (() => {
           {
-            const $t29771 = (view_h / 2.);
-            return ($t29771 - 60.);
+            const $t29785 = (view_h / 2.);
+            return ($t29785 - 60.);
           }
         })();
-        return Canvas$stroke_rect(ctx, $t29770, $t29772, 120., 120.);
+        return Canvas$stroke_rect(ctx, $t29784, $t29786, 120., 120.);
       }
     }
   })();
@@ -18745,12 +18897,12 @@ function draw_milestone_card(ctx, u, cx, view_h) {
   })();
   (() => {
     {
-      let $t29773;
+      let $t29787;
       switch (u.$) {
         case "OffenseWeapon": {
-          const $f29766_i10426 = u._0;
-          $t29773 = (() => {
-            switch ($f29766_i10426.$) {
+          const $f29780_i10437 = u._0;
+          $t29787 = (() => {
+            switch ($f29780_i10437.$) {
               case "Homing": {
                 return "Homing Missiles";
                 break;
@@ -18775,25 +18927,25 @@ function draw_milestone_card(ctx, u, cx, view_h) {
           break;
         }
         case "OffenseFireRate": {
-          $t29773 = "Faster Fire";
+          $t29787 = "Faster Fire";
           break;
         }
         case "DefenseBulletWard": {
-          $t29773 = "Bullet Ward";
+          $t29787 = "Bullet Ward";
           break;
         }
         case "DefenseDeflector": {
-          $t29773 = "Deflector Plating";
+          $t29787 = "Deflector Plating";
           break;
         }
         case "DefenseShield": {
-          $t29773 = "Reinforced Shield";
+          $t29787 = "Reinforced Shield";
           break;
         }
         case "SpecialItem": {
-          const $f29767_i10427 = u._0;
-          $t29773 = (() => {
-            switch ($f29767_i10427.$) {
+          const $f29781_i10438 = u._0;
+          $t29787 = (() => {
+            switch ($f29781_i10438.$) {
               case "StarThrust": {
                 return "Star Thrust";
                 break;
@@ -18814,13 +18966,13 @@ function draw_milestone_card(ctx, u, cx, view_h) {
           break;
         }
         default: {
-          $t29773 = (() => { throw new Error("non-exhaustive pattern match"); })();
+          $t29787 = (() => { throw new Error("non-exhaustive pattern match"); })();
           break;
         }
       }
       {
-        const $t29774 = (view_h / 2.);
-        return Canvas$fill_text(ctx, $t29773, cx, $t29774);
+        const $t29788 = (view_h / 2.);
+        return Canvas$fill_text(ctx, $t29787, cx, $t29788);
       }
     }
   })();
@@ -18828,12 +18980,12 @@ function draw_milestone_card(ctx, u, cx, view_h) {
     return Canvas$set_font(ctx, "10px sans-serif");
   })();
   {
-    let $t29775;
+    let $t29789;
     switch (u.$) {
       case "OffenseWeapon": {
-        const $f29768_i10423 = u._0;
-        $t29775 = (() => {
-          switch ($f29768_i10423.$) {
+        const $f29782_i10434 = u._0;
+        $t29789 = (() => {
+          switch ($f29782_i10434.$) {
             case "Homing": {
               return "Curves toward threats";
               break;
@@ -18858,25 +19010,25 @@ function draw_milestone_card(ctx, u, cx, view_h) {
         break;
       }
       case "OffenseFireRate": {
-        $t29775 = "Faster shooting";
+        $t29789 = "Faster shooting";
         break;
       }
       case "DefenseBulletWard": {
-        $t29775 = "Blocks one enemy shot";
+        $t29789 = "Blocks one enemy shot";
         break;
       }
       case "DefenseDeflector": {
-        $t29775 = "Bounces asteroids";
+        $t29789 = "Bounces asteroids";
         break;
       }
       case "DefenseShield": {
-        $t29775 = "Adds a shield charge";
+        $t29789 = "Adds a shield charge";
         break;
       }
       case "SpecialItem": {
-        const $f29769_i10424 = u._0;
-        $t29775 = (() => {
-          switch ($f29769_i10424.$) {
+        const $f29783_i10435 = u._0;
+        $t29789 = (() => {
+          switch ($f29783_i10435.$) {
             case "StarThrust": {
               return "X: thrust to nearest star";
               break;
@@ -18897,18 +19049,18 @@ function draw_milestone_card(ctx, u, cx, view_h) {
         break;
       }
       default: {
-        $t29775 = (() => { throw new Error("non-exhaustive pattern match"); })();
+        $t29789 = (() => { throw new Error("non-exhaustive pattern match"); })();
         break;
       }
     }
     {
-      const $t29777 = (() => {
+      const $t29791 = (() => {
         {
-          const $t29776 = (view_h / 2.);
-          return ($t29776 + 20.);
+          const $t29790 = (view_h / 2.);
+          return ($t29790 + 20.);
         }
       })();
-      return Canvas$fill_text(ctx, $t29775, cx, $t29777);
+      return Canvas$fill_text(ctx, $t29789, cx, $t29791);
     }
   }
 }
@@ -18921,42 +19073,42 @@ function draw_milestone_cards(ctx, choices, view_w, view_h, i) {
       break;
     }
     case "Cons": {
-      const $f29782 = choices._0;
-      const $f29783 = choices._1;
+      const $f29796 = choices._0;
+      const $f29797 = choices._1;
       {
         const rest = (() => {
-          return $f29783;
+          return $f29797;
         })();
         {
           const u = (() => {
-            return $f29782;
+            return $f29796;
           })();
           {
             const col_w = (view_w / 3.);
             (() => {
               {
-                const $t29780 = (() => {
+                const $t29794 = (() => {
                   {
-                    const $t29779 = (() => {
+                    const $t29793 = (() => {
                       {
-                        const $t29778 = i;
-                        return ($t29778 + 0.5);
+                        const $t29792 = i;
+                        return ($t29792 + 0.5);
                       }
                     })();
-                    return (col_w * $t29779);
+                    return (col_w * $t29793);
                   }
                 })();
                 {
-                  const $rc_843 = (() => {
-                    return draw_milestone_card(ctx, u, $t29780, view_h);
+                  const $rc_847 = (() => {
+                    return draw_milestone_card(ctx, u, $t29794, view_h);
                   })();
-                  return $rc_843;
+                  return $rc_847;
                 }
               }
             })();
             {
-              const $t29781 = (i + 1);
-              return draw_milestone_cards(ctx, rest, view_w, view_h, $t29781);
+              const $t29795 = (i + 1);
+              return draw_milestone_cards(ctx, rest, view_w, view_h, $t29795);
             }
           }
         }
@@ -18982,13 +19134,13 @@ function draw_hud(ctx, game) {
   })();
   (() => {
     {
-      const $t29789 = (() => {
+      const $t29803 = (() => {
         {
-          const $t29788 = game.score;
-          return String($t29788);
+          const $t29802 = game.score;
+          return String($t29802);
         }
       })();
-      return Canvas$fill_text(ctx, $t29789, 14., 28.);
+      return Canvas$fill_text(ctx, $t29803, 14., 28.);
     }
   })();
   (() => {
@@ -18996,60 +19148,60 @@ function draw_hud(ctx, game) {
   })();
   (() => {
     {
-      const $t29792 = (() => {
+      const $t29806 = (() => {
         {
-          const $t29791 = (() => {
+          const $t29805 = (() => {
             {
-              const $t29790 = game.best;
-              return String($t29790);
+              const $t29804 = game.best;
+              return String($t29804);
             }
           })();
           {
-            const $rc_854 = ("best " + $t29791);
-            return $rc_854;
+            const $rc_858 = ("best " + $t29805);
+            return $rc_858;
           }
         }
       })();
       {
-        const $t29794 = (() => {
+        const $t29808 = (() => {
           {
-            const $t29793 = game.view_w;
-            return ($t29793 - 14.);
+            const $t29807 = game.view_w;
+            return ($t29807 - 14.);
           }
         })();
-        return Canvas$fill_text(ctx, $t29792, $t29794, 28.);
+        return Canvas$fill_text(ctx, $t29806, $t29808, 28.);
       }
     }
   })();
   (() => {
     {
-      const $t29796 = (() => {
+      const $t29810 = (() => {
         {
-          const $t29795 = game.multiplier;
-          return ($t29795 > 1);
+          const $t29809 = game.multiplier;
+          return ($t29809 > 1);
         }
       })();
-      if ($t29796 === true) {
+      if ($t29810 === true) {
         return (() => {
           (() => {
             return Canvas$set_text_align(ctx, "left");
           })();
           {
-            const $t29799 = (() => {
+            const $t29813 = (() => {
               {
-                const $t29798 = (() => {
+                const $t29812 = (() => {
                   {
-                    const $t29797 = game.multiplier;
-                    return String($t29797);
+                    const $t29811 = game.multiplier;
+                    return String($t29811);
                   }
                 })();
                 {
-                  const $rc_853 = ("x" + $t29798);
-                  return $rc_853;
+                  const $rc_857 = ("x" + $t29812);
+                  return $rc_857;
                 }
               }
             })();
-            return Canvas$fill_text(ctx, $t29799, 14., 52.);
+            return Canvas$fill_text(ctx, $t29813, 14., 52.);
           }
         })();
       } else {
@@ -19065,21 +19217,21 @@ function draw_hud(ctx, game) {
   })();
   (() => {
     {
-      const $t29802 = (() => {
+      const $t29816 = (() => {
         {
-          const $t29801 = (() => {
+          const $t29815 = (() => {
             {
-              const $t29800 = Perihelion$Core$active_weapon(game);
-              return { $: "OffenseWeapon", _0: $t29800 };
+              const $t29814 = Perihelion$Core$active_weapon(game);
+              return { $: "OffenseWeapon", _0: $t29814 };
             }
           })();
           {
-            let $rc_852;
-            switch ($t29801.$) {
+            let $rc_856;
+            switch ($t29815.$) {
               case "OffenseWeapon": {
-                const $f29766_i10432 = $t29801._0;
-                $rc_852 = (() => {
-                  switch ($f29766_i10432.$) {
+                const $f29780_i10443 = $t29815._0;
+                $rc_856 = (() => {
+                  switch ($f29780_i10443.$) {
                     case "Homing": {
                       return "Homing Missiles";
                       break;
@@ -19104,25 +19256,25 @@ function draw_hud(ctx, game) {
                 break;
               }
               case "OffenseFireRate": {
-                $rc_852 = "Faster Fire";
+                $rc_856 = "Faster Fire";
                 break;
               }
               case "DefenseBulletWard": {
-                $rc_852 = "Bullet Ward";
+                $rc_856 = "Bullet Ward";
                 break;
               }
               case "DefenseDeflector": {
-                $rc_852 = "Deflector Plating";
+                $rc_856 = "Deflector Plating";
                 break;
               }
               case "DefenseShield": {
-                $rc_852 = "Reinforced Shield";
+                $rc_856 = "Reinforced Shield";
                 break;
               }
               case "SpecialItem": {
-                const $f29767_i10433 = $t29801._0;
-                $rc_852 = (() => {
-                  switch ($f29767_i10433.$) {
+                const $f29781_i10444 = $t29815._0;
+                $rc_856 = (() => {
+                  switch ($f29781_i10444.$) {
                     case "StarThrust": {
                       return "Star Thrust";
                       break;
@@ -19143,54 +19295,54 @@ function draw_hud(ctx, game) {
                 break;
               }
               default: {
-                $rc_852 = (() => { throw new Error("non-exhaustive pattern match"); })();
+                $rc_856 = (() => { throw new Error("non-exhaustive pattern match"); })();
                 break;
               }
             }
-            return $rc_852;
+            return $rc_856;
           }
         }
       })();
       {
-        const $t29804 = (() => {
+        const $t29818 = (() => {
           {
-            const $t29803 = game.view_h;
-            return ($t29803 - 60.);
+            const $t29817 = game.view_h;
+            return ($t29817 - 60.);
           }
         })();
-        return Canvas$fill_text(ctx, $t29802, 14., $t29804);
+        return Canvas$fill_text(ctx, $t29816, 14., $t29818);
       }
     }
   })();
   (() => {
     {
-      const $t29805 = game.special;
-      switch ($t29805.$) {
+      const $t29819 = game.special;
+      switch ($t29819.$) {
         case "None": {
           return {  };
           break;
         }
         case "Some": {
-          const $f29814 = $t29805._0;
+          const $f29828 = $t29819._0;
           {
             const k = (() => {
-              return $f29814;
+              return $f29828;
             })();
             {
-              const $t29811 = (() => {
+              const $t29825 = (() => {
                 {
-                  const $t29808 = (() => {
+                  const $t29822 = (() => {
                     {
-                      const $t29807 = (() => {
+                      const $t29821 = (() => {
                         {
-                          const $t29806 = { $: "SpecialItem", _0: k };
+                          const $t29820 = { $: "SpecialItem", _0: k };
                           {
-                            let $rc_851;
-                            switch ($t29806.$) {
+                            let $rc_855;
+                            switch ($t29820.$) {
                               case "OffenseWeapon": {
-                                const $f29766_i10429 = $t29806._0;
-                                $rc_851 = (() => {
-                                  switch ($f29766_i10429.$) {
+                                const $f29780_i10440 = $t29820._0;
+                                $rc_855 = (() => {
+                                  switch ($f29780_i10440.$) {
                                     case "Homing": {
                                       return "Homing Missiles";
                                       break;
@@ -19215,25 +19367,25 @@ function draw_hud(ctx, game) {
                                 break;
                               }
                               case "OffenseFireRate": {
-                                $rc_851 = "Faster Fire";
+                                $rc_855 = "Faster Fire";
                                 break;
                               }
                               case "DefenseBulletWard": {
-                                $rc_851 = "Bullet Ward";
+                                $rc_855 = "Bullet Ward";
                                 break;
                               }
                               case "DefenseDeflector": {
-                                $rc_851 = "Deflector Plating";
+                                $rc_855 = "Deflector Plating";
                                 break;
                               }
                               case "DefenseShield": {
-                                $rc_851 = "Reinforced Shield";
+                                $rc_855 = "Reinforced Shield";
                                 break;
                               }
                               case "SpecialItem": {
-                                const $f29767_i10430 = $t29806._0;
-                                $rc_851 = (() => {
-                                  switch ($f29767_i10430.$) {
+                                const $f29781_i10441 = $t29820._0;
+                                $rc_855 = (() => {
+                                  switch ($f29781_i10441.$) {
                                     case "StarThrust": {
                                       return "Star Thrust";
                                       break;
@@ -19254,42 +19406,42 @@ function draw_hud(ctx, game) {
                                 break;
                               }
                               default: {
-                                $rc_851 = (() => { throw new Error("non-exhaustive pattern match"); })();
+                                $rc_855 = (() => { throw new Error("non-exhaustive pattern match"); })();
                                 break;
                               }
                             }
-                            return $rc_851;
+                            return $rc_855;
                           }
                         }
                       })();
                       {
-                        const $rc_850 = ($t29807 + " x");
-                        return $rc_850;
+                        const $rc_854 = ($t29821 + " x");
+                        return $rc_854;
                       }
                     }
                   })();
                   {
-                    const $t29810 = (() => {
+                    const $t29824 = (() => {
                       {
-                        const $t29809 = game.special_charges;
-                        return String($t29809);
+                        const $t29823 = game.special_charges;
+                        return String($t29823);
                       }
                     })();
                     {
-                      const $rc_849 = ($t29808 + $t29810);
-                      return $rc_849;
+                      const $rc_853 = ($t29822 + $t29824);
+                      return $rc_853;
                     }
                   }
                 }
               })();
               {
-                const $t29813 = (() => {
+                const $t29827 = (() => {
                   {
-                    const $t29812 = game.view_h;
-                    return ($t29812 - 40.);
+                    const $t29826 = game.view_h;
+                    return ($t29826 - 40.);
                   }
                 })();
-                return Canvas$fill_text(ctx, $t29811, 14., $t29813);
+                return Canvas$fill_text(ctx, $t29825, 14., $t29827);
               }
             }
           }
@@ -19304,12 +19456,12 @@ function draw_hud(ctx, game) {
   {
     const defense_tags = (() => {
       {
-        const $t29819 = (() => {
+        const $t29833 = (() => {
           {
-            const $t29816 = (() => {
+            const $t29830 = (() => {
               {
-                const $t29815 = game.bullet_ward;
-                if ($t29815 === true) {
+                const $t29829 = game.bullet_ward;
+                if ($t29829 === true) {
                   return "ward ";
                 } else {
                   return "";
@@ -19317,10 +19469,10 @@ function draw_hud(ctx, game) {
               }
             })();
             {
-              const $t29818 = (() => {
+              const $t29832 = (() => {
                 {
-                  const $t29817 = game.deflector_plating;
-                  if ($t29817 === true) {
+                  const $t29831 = game.deflector_plating;
+                  if ($t29831 === true) {
                     return "deflect ";
                   } else {
                     return "";
@@ -19328,33 +19480,33 @@ function draw_hud(ctx, game) {
                 }
               })();
               {
-                const $rc_848 = ($t29816 + $t29818);
-                return $rc_848;
+                const $rc_852 = ($t29830 + $t29832);
+                return $rc_852;
               }
             }
           }
         })();
         {
-          const $t29824 = (() => {
+          const $t29838 = (() => {
             {
-              const $t29821 = (() => {
+              const $t29835 = (() => {
                 {
-                  const $t29820 = game.shield;
-                  return ($t29820 > 0);
+                  const $t29834 = game.shield;
+                  return ($t29834 > 0);
                 }
               })();
-              if ($t29821 === true) {
+              if ($t29835 === true) {
                 return (() => {
                   {
-                    const $t29823 = (() => {
+                    const $t29837 = (() => {
                       {
-                        const $t29822 = game.shield;
-                        return String($t29822);
+                        const $t29836 = game.shield;
+                        return String($t29836);
                       }
                     })();
                     {
-                      const $rc_847 = ("shield x" + $t29823);
-                      return $rc_847;
+                      const $rc_851 = ("shield x" + $t29837);
+                      return $rc_851;
                     }
                   }
                 })();
@@ -19364,48 +19516,48 @@ function draw_hud(ctx, game) {
             }
           })();
           {
-            const $rc_846 = ($t29819 + $t29824);
-            return $rc_846;
+            const $rc_850 = ($t29833 + $t29838);
+            return $rc_850;
           }
         }
       }
     })();
     (() => {
       {
-        const $t29826 = (() => {
+        const $t29840 = (() => {
           {
-            const $t29825 = game.view_h;
-            return ($t29825 - 20.);
+            const $t29839 = game.view_h;
+            return ($t29839 - 20.);
           }
         })();
-        return Canvas$fill_text(ctx, defense_tags, 14., $t29826);
+        return Canvas$fill_text(ctx, defense_tags, 14., $t29840);
       }
     })();
     (() => {
       return Canvas$set_text_align(ctx, "center");
     })();
     {
-      const $t29827 = game.phase;
-      switch ($t29827.$) {
+      const $t29841 = game.phase;
+      switch ($t29841.$) {
         case "Ready": {
           (() => {
             return Canvas$set_font(ctx, "22px sans-serif");
           })();
           {
-            const $t29829 = (() => {
+            const $t29843 = (() => {
               {
-                const $t29828 = game.view_w;
-                return ($t29828 / 2.);
+                const $t29842 = game.view_w;
+                return ($t29842 / 2.);
               }
             })();
             {
-              const $t29831 = (() => {
+              const $t29845 = (() => {
                 {
-                  const $t29830 = game.view_h;
-                  return ($t29830 / 2.);
+                  const $t29844 = game.view_h;
+                  return ($t29844 / 2.);
                 }
               })();
-              return Canvas$fill_text(ctx, "tap to start", $t29829, $t29831);
+              return Canvas$fill_text(ctx, "tap to start", $t29843, $t29845);
             }
           }
           break;
@@ -19416,64 +19568,64 @@ function draw_hud(ctx, game) {
           })();
           (() => {
             {
-              const $t29835 = (() => {
+              const $t29849 = (() => {
                 {
-                  const $t29834 = (() => {
+                  const $t29848 = (() => {
                     {
-                      const $t29833 = (() => {
+                      const $t29847 = (() => {
                         {
-                          const $t29832 = game.score;
-                          return String($t29832);
+                          const $t29846 = game.score;
+                          return String($t29846);
                         }
                       })();
                       {
-                        const $rc_845 = ("score " + $t29833);
-                        return $rc_845;
+                        const $rc_849 = ("score " + $t29847);
+                        return $rc_849;
                       }
                     }
                   })();
                   {
-                    const $rc_844 = ($t29834 + " — tap to retry");
-                    return $rc_844;
+                    const $rc_848 = ($t29848 + " — tap to retry");
+                    return $rc_848;
                   }
                 }
               })();
               {
-                const $t29837 = (() => {
+                const $t29851 = (() => {
                   {
-                    const $t29836 = game.view_w;
-                    return ($t29836 / 2.);
+                    const $t29850 = game.view_w;
+                    return ($t29850 / 2.);
                   }
                 })();
                 {
-                  const $t29839 = (() => {
+                  const $t29853 = (() => {
                     {
-                      const $t29838 = game.view_h;
-                      return ($t29838 / 2.);
+                      const $t29852 = game.view_h;
+                      return ($t29852 / 2.);
                     }
                   })();
-                  return Canvas$fill_text(ctx, $t29835, $t29837, $t29839);
+                  return Canvas$fill_text(ctx, $t29849, $t29851, $t29853);
                 }
               }
             }
           })();
           {
-            const $t29840 = game.runs;
+            const $t29854 = game.runs;
             {
-              const $t29841 = game.view_w;
+              const $t29855 = game.view_w;
               {
-                const $t29844 = (() => {
+                const $t29858 = (() => {
                   {
-                    const $t29843 = (() => {
+                    const $t29857 = (() => {
                       {
-                        const $t29842 = game.view_h;
-                        return ($t29842 / 2.);
+                        const $t29856 = game.view_h;
+                        return ($t29856 / 2.);
                       }
                     })();
-                    return ($t29843 + 36.);
+                    return ($t29857 + 36.);
                   }
                 })();
-                return draw_runs(ctx, $t29840, $t29841, $t29844, 0);
+                return draw_runs(ctx, $t29854, $t29855, $t29858, 0);
               }
             }
           }
@@ -19489,35 +19641,35 @@ function draw_hud(ctx, game) {
           })();
           (() => {
             {
-              const $t29846 = (() => {
+              const $t29860 = (() => {
                 {
-                  const $t29845 = game.view_w;
-                  return ($t29845 / 2.);
+                  const $t29859 = game.view_w;
+                  return ($t29859 / 2.);
                 }
               })();
               {
-                const $t29849 = (() => {
+                const $t29863 = (() => {
                   {
-                    const $t29848 = (() => {
+                    const $t29862 = (() => {
                       {
-                        const $t29847 = game.view_h;
-                        return ($t29847 / 2.);
+                        const $t29861 = game.view_h;
+                        return ($t29861 / 2.);
                       }
                     })();
-                    return ($t29848 - 90.);
+                    return ($t29862 - 90.);
                   }
                 })();
-                return Canvas$fill_text(ctx, "Choose an upgrade", $t29846, $t29849);
+                return Canvas$fill_text(ctx, "Choose an upgrade", $t29860, $t29863);
               }
             }
           })();
           {
-            const $t29850 = game.milestone_choices;
+            const $t29864 = game.milestone_choices;
             {
-              const $t29851 = game.view_w;
+              const $t29865 = game.view_w;
               {
-                const $t29852 = game.view_h;
-                return draw_milestone_cards(ctx, $t29850, $t29851, $t29852, 0);
+                const $t29866 = game.view_h;
+                return draw_milestone_cards(ctx, $t29864, $t29865, $t29866, 0);
               }
             }
           }
@@ -19541,68 +19693,62 @@ function draw(ctx, game, fx) {
   })();
   (() => {
     {
-      const $t29853 = game.view_w;
+      const $t29867 = game.view_w;
       {
-        const $t29854 = game.view_h;
-        return Canvas$fill_rect(ctx, 0., 0., $t29853, $t29854);
-      }
-    }
-  })();
-  (() => {
-    return Canvas$save(ctx);
-  })();
-  (() => {
-    {
-      const $t29856 = (() => {
-        {
-          const $t29855 = game.camera_x;
-          return (0. - $t29855);
-        }
-      })();
-      {
-        const $t29858 = (() => {
-          {
-            const $t29857 = game.camera_y;
-            return (0. - $t29857);
-          }
-        })();
-        return Canvas$translate(ctx, $t29856, $t29858);
+        const $t29868 = game.view_h;
+        return Canvas$fill_rect(ctx, 0., 0., $t29867, $t29868);
       }
     }
   })();
   {
     const seedf = (() => {
       {
-        const $t29859 = game.seed;
-        return $t29859;
+        const $t29869 = game.seed;
+        return $t29869;
       }
     })();
     (() => {
       {
-        const $t29860 = game.camera_x;
-        {
-          const $t29861 = game.camera_y;
+        const $t29870 = fx.gl;
+        return draw_nebula_gl(ctx, $t29870, game, seedf);
+      }
+    })();
+    (() => {
+      return Canvas$save(ctx);
+    })();
+    (() => {
+      {
+        const $t29872 = (() => {
           {
-            const $t29862 = game.view_w;
-            {
-              const $t29863 = game.view_h;
-              {
-                const $t29864 = fx.t;
-                return draw_starfield(ctx, $t29860, $t29861, $t29862, $t29863, seedf, $t29864);
-              }
-            }
+            const $t29871 = game.camera_x;
+            return (0. - $t29871);
           }
+        })();
+        {
+          const $t29874 = (() => {
+            {
+              const $t29873 = game.camera_y;
+              return (0. - $t29873);
+            }
+          })();
+          return Canvas$translate(ctx, $t29872, $t29874);
         }
       }
     })();
     (() => {
       {
-        const $t29865 = game.stars;
+        const $t29875 = game.camera_x;
         {
-          const $t29866 = game.camera_y;
+          const $t29876 = game.camera_y;
           {
-            const $t29867 = game.view_h;
-            return draw_nebula(ctx, $t29865, $t29866, $t29867, seedf);
+            const $t29877 = game.view_w;
+            {
+              const $t29878 = game.view_h;
+              {
+                const $t29879 = fx.t;
+                return draw_starfield(ctx, $t29875, $t29876, $t29877, $t29878, seedf, $t29879);
+              }
+            }
           }
         }
       }
@@ -19610,39 +19756,39 @@ function draw(ctx, game, fx) {
     {
       const aim = (() => {
         {
-          const $t29868 = game.mode;
-          switch ($t29868.$) {
+          const $t29880 = game.mode;
+          switch ($t29880.$) {
             case "Flying": {
-              const $f29872 = $t29868._0;
-              const $f29873 = $t29868._1;
+              const $f29884 = $t29880._0;
+              const $f29885 = $t29880._1;
               {
                 const vy = (() => {
-                  return $f29873;
+                  return $f29885;
                 })();
                 {
                   const vx = (() => {
-                    return $f29872;
+                    return $f29884;
                   })();
                   {
-                    const $t29871 = (() => {
+                    const $t29883 = (() => {
                       {
-                        const $t29869 = game.ball_x;
+                        const $t29881 = game.ball_x;
                         {
-                          const $t29870 = game.ball_y;
-                          return { _0: $t29869, _1: $t29870, _2: vx, _3: vy };
+                          const $t29882 = game.ball_y;
+                          return { _0: $t29881, _1: $t29882, _2: vx, _3: vy };
                         }
                       }
                     })();
-                    return { $: "Some", _0: $t29871 };
+                    return { $: "Some", _0: $t29883 };
                   }
                 }
               }
               break;
             }
             case "Orbiting": {
-              const $f29878 = $t29868._0;
-              const $f29879 = $t29868._1;
-              const $f29880 = $t29868._2;
+              const $f29890 = $t29880._0;
+              const $f29891 = $t29880._1;
+              const $f29892 = $t29880._2;
               return { $: "None" };
               break;
             }
@@ -19654,18 +19800,18 @@ function draw(ctx, game, fx) {
       })();
       (() => {
         {
-          const $t29889 = game.stars;
+          const $t29901 = game.stars;
           {
-            const $t29890 = game.camera_y;
+            const $t29902 = game.camera_y;
             {
-              const $t29891 = game.view_h;
+              const $t29903 = game.view_h;
               {
-                const $t29892 = fx.t;
+                const $t29904 = fx.t;
                 {
-                  const $rc_856 = (() => {
-                    return draw_stars(ctx, $t29889, $t29890, $t29891, $t29892, aim);
+                  const $rc_860 = (() => {
+                    return draw_stars(ctx, $t29901, $t29902, $t29903, $t29904, aim);
                   })();
-                  return $rc_856;
+                  return $rc_860;
                 }
               }
             }
@@ -19674,8 +19820,8 @@ function draw(ctx, game, fx) {
       })();
       (() => {
         {
-          const $t29893 = Perihelion$Core$active_weapon(game);
-          switch ($t29893.$) {
+          const $t29905 = Perihelion$Core$active_weapon(game);
+          switch ($t29905.$) {
             case "StarKiller": {
               return draw_starkiller_reticle(ctx, game);
               break;
@@ -19688,38 +19834,38 @@ function draw(ctx, game, fx) {
       })();
       (() => {
         {
-          const $t29896 = game.mode;
-          switch ($t29896.$) {
+          const $t29908 = game.mode;
+          switch ($t29908.$) {
             case "Orbiting": {
-              const $f29904 = $t29896._0;
-              const $f29905 = $t29896._1;
-              const $f29906 = $t29896._2;
+              const $f29916 = $t29908._0;
+              const $f29917 = $t29908._1;
+              const $f29918 = $t29908._2;
               {
                 const angle = (() => {
-                  return $f29906;
+                  return $f29918;
                 })();
                 {
                   const ring = (() => {
-                    return $f29905;
+                    return $f29917;
                   })();
                   {
                     const idx = (() => {
-                      return $f29904;
+                      return $f29916;
                     })();
                     {
-                      const $t29897 = game.special;
-                      switch ($t29897.$) {
+                      const $t29909 = game.special;
+                      switch ($t29909.$) {
                         case "Some": {
-                          const $f29899 = $t29897._0;
-                          switch ($f29899.$) {
+                          const $f29911 = $t29909._0;
+                          switch ($f29911.$) {
                             case "TrajectoryPreview": {
                               {
-                                const $t29898 = Perihelion$Core$predict_trajectory(game, idx, ring, angle);
+                                const $t29910 = Perihelion$Core$predict_trajectory(game, idx, ring, angle);
                                 {
-                                  const $rc_855 = (() => {
-                                    return draw_trajectory_preview(ctx, $t29898);
+                                  const $rc_859 = (() => {
+                                    return draw_trajectory_preview(ctx, $t29910);
                                   })();
-                                  return $rc_855;
+                                  return $rc_859;
                                 }
                               }
                               break;
@@ -19741,8 +19887,8 @@ function draw(ctx, game, fx) {
               break;
             }
             case "Flying": {
-              const $f29915 = $t29896._0;
-              const $f29916 = $t29896._1;
+              const $f29927 = $t29908._0;
+              const $f29928 = $t29908._1;
               return {  };
               break;
             }
@@ -19754,50 +19900,50 @@ function draw(ctx, game, fx) {
       })();
       (() => {
         {
-          const $t29921 = fx.flash;
-          return draw_flash(ctx, $t29921);
+          const $t29933 = fx.flash;
+          return draw_flash(ctx, $t29933);
         }
       })();
       (() => {
         {
-          const $t29922 = game.asteroids;
-          return draw_asteroids(ctx, $t29922);
+          const $t29934 = game.asteroids;
+          return draw_asteroids(ctx, $t29934);
         }
       })();
       (() => {
         {
-          const $t29923 = game.ships;
-          return draw_ships(ctx, $t29923);
+          const $t29935 = game.ships;
+          return draw_ships(ctx, $t29935);
         }
       })();
       (() => {
         {
-          const $t29924 = game.player_shots;
-          return draw_shots(ctx, $t29924, "#ffffff", 3.);
+          const $t29936 = game.player_shots;
+          return draw_shots(ctx, $t29936, "#ffffff", 3.);
         }
       })();
       (() => {
         {
-          const $t29925 = game.enemy_shots;
-          return draw_shots(ctx, $t29925, "#8a8a94", 2.5);
+          const $t29937 = game.enemy_shots;
+          return draw_shots(ctx, $t29937, "#8a8a94", 2.5);
         }
       })();
       (() => {
         {
-          const $t29926 = game.pickups;
-          return draw_pickups(ctx, $t29926);
+          const $t29938 = game.pickups;
+          return draw_pickups(ctx, $t29938);
         }
       })();
       (() => {
         {
-          const $t29927 = fx.trail;
-          return draw_trail(ctx, $t29927, 0, 22);
+          const $t29939 = fx.trail;
+          return draw_trail(ctx, $t29939, 0, 22);
         }
       })();
       (() => {
         {
-          const $t29929 = fx.particles;
-          return draw_particles(ctx, $t29929);
+          const $t29941 = fx.particles;
+          return draw_particles(ctx, $t29941);
         }
       })();
       (() => {
@@ -19817,21 +19963,21 @@ const draw$clo = { _0: ($_, ctx, game, fx) => draw(ctx, game, fx) };
 
 function draw_starkiller_reticle(ctx, game) {
   {
-    const $t29931 = (() => {
+    const $t29943 = (() => {
       {
-        const $t29930 = Perihelion$Combat$starkiller_target_idx(game);
-        return Perihelion$Core$star_at(game, $t29930);
+        const $t29942 = Perihelion$Combat$starkiller_target_idx(game);
+        return Perihelion$Core$star_at(game, $t29942);
       }
     })();
-    switch ($t29931.$) {
+    switch ($t29943.$) {
       case "None": {
         return {  };
         break;
       }
       case "Some": {
-        const $f29937 = $t29931._0;
+        const $f29949 = $t29943._0;
         {
-          const s = $f29937;
+          const s = $f29949;
           (() => {
             return Canvas$set_stroke_style(ctx, "#ff5555");
           })();
@@ -19843,17 +19989,17 @@ function draw_starkiller_reticle(ctx, game) {
           })();
           (() => {
             {
-              const $t29932 = s.x;
+              const $t29944 = s.x;
               {
-                const $t29933 = s.y;
+                const $t29945 = s.y;
                 {
-                  const $t29935 = (() => {
+                  const $t29947 = (() => {
                     {
-                      const $t29934 = s.capture_radius;
-                      return ($t29934 + 12.);
+                      const $t29946 = s.capture_radius;
+                      return ($t29946 + 12.);
                     }
                   })();
-                  return Canvas$arc(ctx, $t29932, $t29933, $t29935, 0., 6.28318530718);
+                  return Canvas$arc(ctx, $t29944, $t29945, $t29947, 0., 6.28318530718);
                 }
               }
             }
@@ -19885,15 +20031,15 @@ function draw_trajectory_dots(ctx, points, i) {
       break;
     }
     case "Cons": {
-      const $f29943 = points._0;
-      const $f29944 = points._1;
+      const $f29955 = points._0;
+      const $f29956 = points._1;
       {
         const rest = (() => {
-          return $f29944;
+          return $f29956;
         })();
         {
           const pt = (() => {
-            return $f29943;
+            return $f29955;
           })();
           {
             const x = pt._0;
@@ -19901,13 +20047,13 @@ function draw_trajectory_dots(ctx, points, i) {
               const y = pt._1;
               (() => {
                 {
-                  const $t29939 = (() => {
+                  const $t29951 = (() => {
                     {
-                      const $t29938 = march_int_mod(i, 3);
-                      return ($t29938 === 0);
+                      const $t29950 = march_int_mod(i, 3);
+                      return ($t29950 === 0);
                     }
                   })();
-                  if ($t29939 === true) {
+                  if ($t29951 === true) {
                     return (() => {
                       (() => {
                         return Canvas$begin_path(ctx);
@@ -19923,8 +20069,8 @@ function draw_trajectory_dots(ctx, points, i) {
                 }
               })();
               {
-                const $t29941 = (i + 1);
-                return draw_trajectory_dots(ctx, rest, $t29941);
+                const $t29953 = (i + 1);
+                return draw_trajectory_dots(ctx, rest, $t29953);
               }
             }
           }
@@ -19941,54 +20087,75 @@ const draw_trajectory_dots$clo = { _0: ($_, ctx, points, i) => draw_trajectory_d
 
 function resize_canvas(el, game, w, h) {
   {
-    const $t29955 = (() => {
+    const $t29967 = (() => {
       {
-        const $t29952 = (() => {
+        const $t29964 = (() => {
           {
-            const $t29951 = game.view_w;
-            return (w === $t29951);
+            const $t29963 = game.view_w;
+            return (w === $t29963);
           }
         })();
         {
-          const $t29954 = (() => {
+          const $t29966 = (() => {
             {
-              const $t29953 = game.view_h;
-              return (h === $t29953);
+              const $t29965 = game.view_h;
+              return (h === $t29965);
             }
           })();
-          return ($t29952 && $t29954);
+          return ($t29964 && $t29966);
         }
       }
     })();
-    if ($t29955 === true) {
+    if ($t29967 === true) {
       return {  };
     } else {
       return (() => {
         (() => {
           {
-            const $t29957 = (() => {
+            const $t29969 = (() => {
               {
-                const $t29956 = Math.trunc(w);
-                return String($t29956);
+                const $t29968 = Math.trunc(w);
+                return String($t29968);
               }
             })();
-            return Dom$set_attr(el, "width", $t29957);
+            return Dom$set_attr(el, "width", $t29969);
           }
         })();
         {
-          const $t29959 = (() => {
+          const $t29971 = (() => {
             {
-              const $t29958 = Math.trunc(h);
-              return String($t29958);
+              const $t29970 = Math.trunc(h);
+              return String($t29970);
             }
           })();
-          return Dom$set_attr(el, "height", $t29959);
+          return Dom$set_attr(el, "height", $t29971);
         }
       })();
     }
   }
 }
 const resize_canvas$clo = { _0: ($_, el, game, w, h) => resize_canvas(el, game, w, h) };
+
+function resize_gl(gl_opt, w, h) {
+  switch (gl_opt.$) {
+    case "None": {
+      return {  };
+      break;
+    }
+    case "Some": {
+      const $f29972 = gl_opt._0;
+      {
+        const gl = $f29972;
+        return WebGL$resize(gl, w, h);
+      }
+      break;
+    }
+    default: {
+      return (() => { throw new Error("non-exhaustive pattern match"); })();
+    }
+  }
+}
+const resize_gl$clo = { _0: ($_, gl_opt, w, h) => resize_gl(gl_opt, w, h) };
 
 function play_sfx(actx, muted, game, g2) {
   if (muted === true) {
@@ -19997,12 +20164,12 @@ function play_sfx(actx, muted, game, g2) {
     return (() => {
       (() => {
         {
-          const $t29973 = (() => {
+          const $t29986 = (() => {
             {
-              const $t29971 = (() => {
+              const $t29984 = (() => {
                 {
-                  const $t29970 = game.phase;
-                  switch ($t29970.$) {
+                  const $t29983 = game.phase;
+                  switch ($t29983.$) {
                     case "Ready": {
                       return true;
                       break;
@@ -20014,10 +20181,10 @@ function play_sfx(actx, muted, game, g2) {
                 }
               })();
               {
-                const $t29972 = (() => {
+                const $t29985 = (() => {
                   {
-                    const $t29949_i4166 = g2.phase;
-                    switch ($t29949_i4166.$) {
+                    const $t29961_i4168 = g2.phase;
+                    switch ($t29961_i4168.$) {
                       case "Playing": {
                         return true;
                         break;
@@ -20028,11 +20195,11 @@ function play_sfx(actx, muted, game, g2) {
                     }
                   }
                 })();
-                return ($t29971 && $t29972);
+                return ($t29984 && $t29985);
               }
             }
           })();
-          if ($t29973 === true) {
+          if ($t29986 === true) {
             return (() => {
               return Audio$resume(actx);
             })();
@@ -20043,16 +20210,16 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t29978 = (() => {
+          const $t29991 = (() => {
             {
-              const $t29975 = (() => {
+              const $t29988 = (() => {
                 {
-                  const $t29974 = game.mode;
-                  switch ($t29974.$) {
+                  const $t29987 = game.mode;
+                  switch ($t29987.$) {
                     case "Orbiting": {
-                      const $f29960_i4162 = $t29974._0;
-                      const $f29961_i4163 = $t29974._1;
-                      const $f29962_i4164 = $t29974._2;
+                      const $f29973_i4164 = $t29987._0;
+                      const $f29974_i4165 = $t29987._1;
+                      const $f29975_i4166 = $t29987._2;
                       return true;
                       break;
                     }
@@ -20063,13 +20230,13 @@ function play_sfx(actx, muted, game, g2) {
                 }
               })();
               {
-                const $t29977 = (() => {
+                const $t29990 = (() => {
                   {
-                    const $t29976 = g2.mode;
-                    switch ($t29976.$) {
+                    const $t29989 = g2.mode;
+                    switch ($t29989.$) {
                       case "Flying": {
-                        const $f29963_i4159 = $t29976._0;
-                        const $f29964_i4160 = $t29976._1;
+                        const $f29976_i4161 = $t29989._0;
+                        const $f29977_i4162 = $t29989._1;
                         return true;
                         break;
                       }
@@ -20079,11 +20246,11 @@ function play_sfx(actx, muted, game, g2) {
                     }
                   }
                 })();
-                return ($t29975 && $t29977);
+                return ($t29988 && $t29990);
               }
             }
           })();
-          if ($t29978 === true) {
+          if ($t29991 === true) {
             return (() => {
               return Audio$beep(actx, 500., 0.04, "square");
             })();
@@ -20094,14 +20261,14 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t29979 = g2.capture_flash;
-          switch ($t29979.$) {
+          const $t29992 = g2.capture_flash;
+          switch ($t29992.$) {
             case "None": {
               return {  };
               break;
             }
             case "Some": {
-              const $f29980 = $t29979._0;
+              const $f29993 = $t29992._0;
               return Audio$sweep(actx, 400., 900., 0.12, "sine");
               break;
             }
@@ -20113,136 +20280,34 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t29985 = (() => {
-            {
-              const $t29982 = (() => {
-                {
-                  const $t29981 = g2.player_shots;
-                  {
-                    const go_i4156 = { $: "$Clo_go$4829", _0: go$apply$4829 };
-                    return go$apply$4829(go_i4156, $t29981, 0);
-                  }
-                }
-              })();
-              {
-                const $t29984 = (() => {
-                  {
-                    const $t29983 = game.player_shots;
-                    {
-                      const go_i4154 = { $: "$Clo_go$4829", _0: go$apply$4829 };
-                      return go$apply$4829(go_i4154, $t29983, 0);
-                    }
-                  }
-                })();
-                return ($t29982 > $t29984);
-              }
-            }
-          })();
-          if ($t29985 === true) {
-            return (() => {
-              return Audio$beep(actx, 900., 0.05, "square");
-            })();
-          } else {
-            return {  };
-          }
-        }
-      })();
-      (() => {
-        {
-          const $t29990 = (() => {
-            {
-              const $t29987 = (() => {
-                {
-                  const $t29986 = g2.enemy_shots;
-                  {
-                    const go_i4152 = { $: "$Clo_go$4829", _0: go$apply$4829 };
-                    return go$apply$4829(go_i4152, $t29986, 0);
-                  }
-                }
-              })();
-              {
-                const $t29989 = (() => {
-                  {
-                    const $t29988 = game.enemy_shots;
-                    {
-                      const go_i4150 = { $: "$Clo_go$4829", _0: go$apply$4829 };
-                      return go$apply$4829(go_i4150, $t29988, 0);
-                    }
-                  }
-                })();
-                return ($t29987 > $t29989);
-              }
-            }
-          })();
-          if ($t29990 === true) {
-            return (() => {
-              return Audio$beep(actx, 500., 0.05, "sawtooth");
-            })();
-          } else {
-            return {  };
-          }
-        }
-      })();
-      (() => {
-        {
-          const $t29993 = (() => {
-            {
-              const $t29992 = (() => {
-                {
-                  const $t29991 = g2.fx_bursts;
-                  switch ($t29991.$) {
-                    case "Nil": {
-                      return true;
-                      break;
-                    }
-                    default: {
-                      return false;
-                    }
-                  }
-                }
-              })();
-              return (!$t29992);
-            }
-          })();
-          if ($t29993 === true) {
-            return (() => {
-              return Audio$noise_burst(actx, 0.2, 900.);
-            })();
-          } else {
-            return {  };
-          }
-        }
-      })();
-      (() => {
-        {
           const $t29998 = (() => {
             {
               const $t29995 = (() => {
                 {
-                  const $t29994 = g2.ships;
+                  const $t29994 = g2.player_shots;
                   {
-                    const go_i4147 = { $: "$Clo_go$4781", _0: go$apply$4781 };
-                    return go$apply$4781(go_i4147, $t29994, 0);
+                    const go_i4158 = { $: "$Clo_go$4829", _0: go$apply$4829 };
+                    return go$apply$4829(go_i4158, $t29994, 0);
                   }
                 }
               })();
               {
                 const $t29997 = (() => {
                   {
-                    const $t29996 = game.ships;
+                    const $t29996 = game.player_shots;
                     {
-                      const go_i4145 = { $: "$Clo_go$4781", _0: go$apply$4781 };
-                      return go$apply$4781(go_i4145, $t29996, 0);
+                      const go_i4156 = { $: "$Clo_go$4829", _0: go$apply$4829 };
+                      return go$apply$4829(go_i4156, $t29996, 0);
                     }
                   }
                 })();
-                return ($t29995 < $t29997);
+                return ($t29995 > $t29997);
               }
             }
           })();
           if ($t29998 === true) {
             return (() => {
-              return Audio$noise_burst(actx, 0.3, 400.);
+              return Audio$beep(actx, 900., 0.05, "square");
             })();
           } else {
             return {  };
@@ -20255,22 +20320,124 @@ function play_sfx(actx, muted, game, g2) {
             {
               const $t30000 = (() => {
                 {
-                  const $t29999 = game.shield;
-                  return ($t29999 === 0);
+                  const $t29999 = g2.enemy_shots;
+                  {
+                    const go_i4154 = { $: "$Clo_go$4829", _0: go$apply$4829 };
+                    return go$apply$4829(go_i4154, $t29999, 0);
+                  }
                 }
               })();
               {
                 const $t30002 = (() => {
                   {
-                    const $t30001 = g2.shield;
-                    return ($t30001 > 0);
+                    const $t30001 = game.enemy_shots;
+                    {
+                      const go_i4152 = { $: "$Clo_go$4829", _0: go$apply$4829 };
+                      return go$apply$4829(go_i4152, $t30001, 0);
+                    }
                   }
                 })();
-                return ($t30000 && $t30002);
+                return ($t30000 > $t30002);
               }
             }
           })();
           if ($t30003 === true) {
+            return (() => {
+              return Audio$beep(actx, 500., 0.05, "sawtooth");
+            })();
+          } else {
+            return {  };
+          }
+        }
+      })();
+      (() => {
+        {
+          const $t30006 = (() => {
+            {
+              const $t30005 = (() => {
+                {
+                  const $t30004 = g2.fx_bursts;
+                  switch ($t30004.$) {
+                    case "Nil": {
+                      return true;
+                      break;
+                    }
+                    default: {
+                      return false;
+                    }
+                  }
+                }
+              })();
+              return (!$t30005);
+            }
+          })();
+          if ($t30006 === true) {
+            return (() => {
+              return Audio$noise_burst(actx, 0.2, 900.);
+            })();
+          } else {
+            return {  };
+          }
+        }
+      })();
+      (() => {
+        {
+          const $t30011 = (() => {
+            {
+              const $t30008 = (() => {
+                {
+                  const $t30007 = g2.ships;
+                  {
+                    const go_i4149 = { $: "$Clo_go$4781", _0: go$apply$4781 };
+                    return go$apply$4781(go_i4149, $t30007, 0);
+                  }
+                }
+              })();
+              {
+                const $t30010 = (() => {
+                  {
+                    const $t30009 = game.ships;
+                    {
+                      const go_i4147 = { $: "$Clo_go$4781", _0: go$apply$4781 };
+                      return go$apply$4781(go_i4147, $t30009, 0);
+                    }
+                  }
+                })();
+                return ($t30008 < $t30010);
+              }
+            }
+          })();
+          if ($t30011 === true) {
+            return (() => {
+              return Audio$noise_burst(actx, 0.3, 400.);
+            })();
+          } else {
+            return {  };
+          }
+        }
+      })();
+      (() => {
+        {
+          const $t30016 = (() => {
+            {
+              const $t30013 = (() => {
+                {
+                  const $t30012 = game.shield;
+                  return ($t30012 === 0);
+                }
+              })();
+              {
+                const $t30015 = (() => {
+                  {
+                    const $t30014 = g2.shield;
+                    return ($t30014 > 0);
+                  }
+                })();
+                return ($t30013 && $t30015);
+              }
+            }
+          })();
+          if ($t30016 === true) {
             return (() => {
               return Audio$beep(actx, 700., 0.06, "sine");
             })();
@@ -20280,12 +20447,12 @@ function play_sfx(actx, muted, game, g2) {
         }
       })();
       {
-        const $t30006 = (() => {
+        const $t30019 = (() => {
           {
-            const $t30004 = (() => {
+            const $t30017 = (() => {
               {
-                const $t29949_i4143 = game.phase;
-                switch ($t29949_i4143.$) {
+                const $t29961_i4145 = game.phase;
+                switch ($t29961_i4145.$) {
                   case "Playing": {
                     return true;
                     break;
@@ -20297,10 +20464,10 @@ function play_sfx(actx, muted, game, g2) {
               }
             })();
             {
-              const $t30005 = (() => {
+              const $t30018 = (() => {
                 {
-                  const $t29950_i4141 = g2.phase;
-                  switch ($t29950_i4141.$) {
+                  const $t29962_i4143 = g2.phase;
+                  switch ($t29962_i4143.$) {
                     case "Over": {
                       return true;
                       break;
@@ -20311,11 +20478,11 @@ function play_sfx(actx, muted, game, g2) {
                   }
                 }
               })();
-              return ($t30004 && $t30005);
+              return ($t30017 && $t30018);
             }
           }
         })();
-        if ($t30006 === true) {
+        if ($t30019 === true) {
           return Audio$sweep(actx, 300., 60., 0.5, "sawtooth");
         } else {
           return (() => {
@@ -20335,11 +20502,11 @@ function milestone_tap_choice(taps, view_w, _view_h) {
       break;
     }
     case "Cons": {
-      const $f30012 = taps._0;
-      const $f30013 = taps._1;
+      const $f30025 = taps._0;
+      const $f30026 = taps._1;
       {
         const tap = (() => {
-          return $f30012;
+          return $f30025;
         })();
         {
           const tx = tap._0;
@@ -20348,27 +20515,27 @@ function milestone_tap_choice(taps, view_w, _view_h) {
             {
               const idx = (() => {
                 {
-                  const $t30008 = (() => {
+                  const $t30021 = (() => {
                     {
-                      const $t30007 = tx;
-                      return ($t30007 / col_w);
+                      const $t30020 = tx;
+                      return ($t30020 / col_w);
                     }
                   })();
-                  return Math.trunc($t30008);
+                  return Math.trunc($t30021);
                 }
               })();
               {
-                const $t30010 = (() => {
+                const $t30023 = (() => {
                   {
-                    const $t30009 = (idx > 2);
-                    if ($t30009 === true) {
+                    const $t30022 = (idx > 2);
+                    if ($t30022 === true) {
                       return 2;
                     } else {
                       return idx;
                     }
                   }
                 })();
-                return { $: "Some", _0: $t30010 };
+                return { $: "Some", _0: $t30023 };
               }
             }
           }
@@ -20395,11 +20562,11 @@ function tick(ctx, el, game, fx) {
           return Dom$pointer_pos(el);
         })();
         {
-          const $p30036 = dom_window_size();
+          const $p30050 = dom_window_size();
           {
-            const win_w = $p30036._0;
+            const win_w = $p30050._0;
             {
-              const win_h = $p30036._1;
+              const win_h = $p30050._1;
               {
                 const view_w = win_w;
                 {
@@ -20407,42 +20574,48 @@ function tick(ctx, el, game, fx) {
                   (() => {
                     return resize_canvas(el, game, view_w, view_h);
                   })();
+                  (() => {
+                    {
+                      const $t30031 = fx.gl;
+                      return resize_gl($t30031, view_w, view_h);
+                    }
+                  })();
                   {
                     const g2 = (() => {
                       {
-                        const $t30018 = game.phase;
-                        switch ($t30018.$) {
+                        const $t30032 = game.phase;
+                        switch ($t30032.$) {
                           case "Milestone": {
                             {
-                              const $jp_clo30024 = (() => {
-                                return { $: "$Clo_$jp30023$3823", _0: $jp30023$apply$3823, _1: cursor, _2: game, _3: keys, _4: taps, _5: view_h, _6: view_w };
+                              const $jp_clo30038 = (() => {
+                                return { $: "$Clo_$jp30037$3823", _0: $jp30037$apply$3823, _1: cursor, _2: game, _3: keys, _4: taps, _5: view_h, _6: view_w };
                               })();
                               {
-                                const $t30019 = (() => {
+                                const $t30033 = (() => {
                                   {
-                                    const $t28462_i4178 = { $: "$Clo_$lam28459$3739", _0: $lam28459$apply$3739 };
-                                    return List$any$List_String$Fn_String_Bool(keys, $t28462_i4178);
+                                    const $t28462_i4180 = { $: "$Clo_$lam28459$3739", _0: $lam28459$apply$3739 };
+                                    return List$any$List_String$Fn_String_Bool(keys, $t28462_i4180);
                                   }
                                 })();
-                                if ($t30019 === true) {
+                                if ($t30033 === true) {
                                   return (() => {
                                     {
-                                      const $rc_857 = (() => {
+                                      const $rc_861 = (() => {
                                         return Perihelion$Core$update(game, taps, keys, cursor, view_w, view_h, 0.0166667);
                                       })();
-                                      return $rc_857;
+                                      return $rc_861;
                                     }
                                   })();
                                 } else {
                                   return (() => {
                                     {
-                                      const $t30021 = (() => {
+                                      const $t30035 = (() => {
                                         {
-                                          const $rc_858 = milestone_tap_choice(taps, view_w, view_h);
-                                          return $rc_858;
+                                          const $rc_862 = milestone_tap_choice(taps, view_w, view_h);
+                                          return $rc_862;
                                         }
                                       })();
-                                      return Perihelion$Core$pick_milestone(game, $t30021);
+                                      return Perihelion$Core$pick_milestone(game, $t30035);
                                     }
                                   })();
                                 }
@@ -20452,10 +20625,10 @@ function tick(ctx, el, game, fx) {
                           }
                           default: {
                             {
-                              const $rc_859 = (() => {
+                              const $rc_863 = (() => {
                                 return Perihelion$Core$update(game, taps, keys, cursor, view_w, view_h, 0.0166667);
                               })();
-                              return $rc_859;
+                              return $rc_863;
                             }
                           }
                         }
@@ -20464,26 +20637,26 @@ function tick(ctx, el, game, fx) {
                     {
                       const muted2 = (() => {
                         {
-                          const $t30025 = fx.muted;
+                          const $t30039 = fx.muted;
                           {
-                            const $t29969_i4176 = (() => {
+                            const $t29982_i4178 = (() => {
                               {
-                                const $t29968_i4175 = { $: "$Clo_$lam29965$3821", _0: $lam29965$apply$3821 };
-                                return List$any$List_String$Fn_String_Bool(keys, $t29968_i4175);
+                                const $t29981_i4177 = { $: "$Clo_$lam29978$3821", _0: $lam29978$apply$3821 };
+                                return List$any$List_String$Fn_String_Bool(keys, $t29981_i4177);
                               }
                             })();
-                            if ($t29969_i4176 === true) {
-                              return (!$t30025);
+                            if ($t29982_i4178 === true) {
+                              return (!$t30039);
                             } else {
-                              return $t30025;
+                              return $t30039;
                             }
                           }
                         }
                       })();
                       (() => {
                         {
-                          const $t30026 = fx.actx;
-                          return play_sfx($t30026, muted2, game, g2);
+                          const $t30040 = fx.actx;
+                          return play_sfx($t30040, muted2, game, g2);
                         }
                       })();
                       {
@@ -20492,12 +20665,12 @@ function tick(ctx, el, game, fx) {
                           const fx2 = ({ ...fx1, muted: muted2 });
                           (() => {
                             {
-                              const $t30030 = (() => {
+                              const $t30044 = (() => {
                                 {
-                                  const $t30028 = (() => {
+                                  const $t30042 = (() => {
                                     {
-                                      const $t29949_i4172 = game.phase;
-                                      switch ($t29949_i4172.$) {
+                                      const $t29961_i4174 = game.phase;
+                                      switch ($t29961_i4174.$) {
                                         case "Playing": {
                                           return true;
                                           break;
@@ -20509,10 +20682,10 @@ function tick(ctx, el, game, fx) {
                                     }
                                   })();
                                   {
-                                    const $t30029 = (() => {
+                                    const $t30043 = (() => {
                                       {
-                                        const $t29950_i4170 = g2.phase;
-                                        switch ($t29950_i4170.$) {
+                                        const $t29962_i4172 = g2.phase;
+                                        switch ($t29962_i4172.$) {
                                           case "Over": {
                                             return true;
                                             break;
@@ -20523,23 +20696,23 @@ function tick(ctx, el, game, fx) {
                                         }
                                       }
                                     })();
-                                    return ($t30028 && $t30029);
+                                    return ($t30042 && $t30043);
                                   }
                                 }
                               })();
-                              if ($t30030 === true) {
+                              if ($t30044 === true) {
                                 return (() => {
                                   {
-                                    const $t30033 = (() => {
+                                    const $t30047 = (() => {
                                       {
-                                        const $t30031 = g2.best;
+                                        const $t30045 = g2.best;
                                         {
-                                          const $t30032 = g2.runs;
-                                          return Perihelion$Core$encode_save($t30031, $t30032);
+                                          const $t30046 = g2.runs;
+                                          return Perihelion$Core$encode_save($t30045, $t30046);
                                         }
                                       }
                                     })();
-                                    return Dom$store_set("perihelion.v1", $t30033);
+                                    return Dom$store_set("perihelion.v1", $t30047);
                                   }
                                 })();
                               } else {
@@ -20551,8 +20724,8 @@ function tick(ctx, el, game, fx) {
                             return draw(ctx, g2, fx2);
                           })();
                           {
-                            const $t30035 = { $: "$Clo_$lam30034$3824", _0: $lam30034$apply$3824, _1: ctx, _2: el, _3: fx2, _4: g2 };
-                            return Dom$on_frame($t30035);
+                            const $t30049 = { $: "$Clo_$lam30048$3824", _0: $lam30048$apply$3824, _1: ctx, _2: el, _3: fx2, _4: g2 };
+                            return Dom$on_frame($t30049);
                           }
                         }
                       }
@@ -20571,51 +20744,57 @@ const tick$clo = { _0: ($_, ctx, el, game, fx) => tick(ctx, el, game, fx) };
 
 function boot(ctx, node, best, runs) {
   {
-    const $p30042 = dom_window_size();
+    const $p30056 = dom_window_size();
     {
-      const win_w = $p30042._0;
+      const win_w = $p30056._0;
       {
-        const win_h = $p30042._1;
+        const win_h = $p30056._1;
         {
           const view_w = win_w;
           {
             const view_h = win_h;
             (() => {
               {
-                const $t30037 = String(win_w);
-                return Dom$set_attr(node, "width", $t30037);
+                const $t30051 = String(win_w);
+                return Dom$set_attr(node, "width", $t30051);
               }
             })();
             (() => {
               {
-                const $t30038 = String(win_h);
-                return Dom$set_attr(node, "height", $t30038);
+                const $t30052 = String(win_h);
+                return Dom$set_attr(node, "height", $t30052);
               }
             })();
             {
-              const $t30040 = (() => {
+              const $t30054 = (() => {
                 {
-                  const $t30039 = boot_seed();
-                  return Perihelion$Core$fresh_run($t30039, best, runs, view_w, view_h);
+                  const $t30053 = boot_seed();
+                  return Perihelion$Core$fresh_run($t30053, best, runs, view_w, view_h);
                 }
               })();
               {
-                const $t30041 = (() => {
+                const $t30055 = (() => {
                   {
-                    const $t29307_i10434 = { $: "Nil" };
+                    const gl_node_i10445 = Dom$create("canvas");
                     {
-                      const $t29308_i10435 = { $: "Nil" };
+                      const $t29307_i10446 = { $: "Nil" };
                       {
-                        const $t29309_i10436 = { $: "None" };
+                        const $t29308_i10447 = { $: "Nil" };
                         {
-                          const $t29310_i10437 = audio_create();
-                          return ({ trail: $t29307_i10434, t: 0., particles: $t29308_i10435, flash: $t29309_i10436, actx: $t29310_i10437, muted: false });
+                          const $t29309_i10448 = { $: "None" };
+                          {
+                            const $t29310_i10449 = audio_create();
+                            {
+                              const $t29311_i10450 = WebGL$get_context(gl_node_i10445);
+                              return ({ trail: $t29307_i10446, t: 0., particles: $t29308_i10447, flash: $t29309_i10448, actx: $t29310_i10449, muted: false, gl: $t29311_i10450 });
+                            }
+                          }
                         }
                       }
                     }
                   }
                 })();
-                return tick(ctx, node, $t30040, $t30041);
+                return tick(ctx, node, $t30054, $t30055);
               }
             }
           }
@@ -20628,42 +20807,42 @@ const boot$clo = { _0: ($_, ctx, node, best, runs) => boot(ctx, node, best, runs
 
 function main() {
   {
-    const $t30043 = Dom$find("game-canvas");
-    switch ($t30043.$) {
+    const $t30057 = Dom$find("game-canvas");
+    switch ($t30057.$) {
       case "None": {
         return println$String("no #game-canvas found");
         break;
       }
       case "Some": {
-        const $f30051 = $t30043._0;
+        const $f30065 = $t30057._0;
         {
-          const node = $f30051;
+          const node = $f30065;
           {
-            const $t30044 = (() => {
+            const $t30058 = (() => {
               return Canvas$get_context(node);
             })();
-            switch ($t30044.$) {
+            switch ($t30058.$) {
               case "None": {
                 return println$String("2d context unavailable");
                 break;
               }
               case "Some": {
-                const $f30050 = $t30044._0;
+                const $f30064 = $t30058._0;
                 {
-                  const ctx = $f30050;
+                  const ctx = $f30064;
                   {
                     const saved = (() => {
                       {
-                        const $t30045 = Dom$store_get("perihelion.v1");
-                        switch ($t30045.$) {
+                        const $t30059 = Dom$store_get("perihelion.v1");
+                        switch ($t30059.$) {
                           case "None": {
                             return "";
                             break;
                           }
                           case "Some": {
-                            const $f30046 = $t30045._0;
+                            const $f30060 = $t30059._0;
                             {
-                              const sv = $f30046;
+                              const sv = $f30060;
                               return sv;
                             }
                             break;
@@ -20675,21 +20854,21 @@ function main() {
                       }
                     })();
                     {
-                      const $p30049 = (() => {
+                      const $p30063 = (() => {
                         {
-                          const $rc_860 = Perihelion$Core$decode_save(saved);
-                          return $rc_860;
+                          const $rc_864 = Perihelion$Core$decode_save(saved);
+                          return $rc_864;
                         }
                       })();
                       {
-                        const best = $p30049._0;
+                        const best = $p30063._0;
                         {
-                          const runs = $p30049._1;
+                          const runs = $p30063._1;
                           {
-                            const $t30048 = (() => {
-                              return { $: "$Clo_$lam30047$3825", _0: $lam30047$apply$3825, _1: best, _2: ctx, _3: node, _4: runs };
+                            const $t30062 = (() => {
+                              return { $: "$Clo_$lam30061$3825", _0: $lam30061$apply$3825, _1: best, _2: ctx, _3: node, _4: runs };
                             })();
-                            return Dom$on_frame($t30048);
+                            return Dom$on_frame($t30062);
                           }
                         }
                       }
@@ -20719,8 +20898,8 @@ function println$String(x) {
     {
       const $t107 = x;
       {
-        const $rc_867 = march_print(x);
-        return $rc_867;
+        const $rc_871 = march_print(x);
+        return $rc_871;
       }
     }
   })();
@@ -21421,36 +21600,36 @@ function $lam28064$apply$3706($clo, s) {
         {
           const $t28067 = a.radius;
           {
-            const $t28050_i10668 = s.x;
+            const $t28050_i10681 = s.x;
             {
-              const $t28051_i10669 = s.y;
+              const $t28051_i10682 = s.y;
               {
-                const $t27359_i10016_i10674 = (() => {
+                const $t27359_i10018_i10687 = (() => {
                   {
-                    const dx_i3632_i10012_i10670 = ($t28065 - $t28050_i10668);
+                    const dx_i3632_i10014_i10683 = ($t28065 - $t28050_i10681);
                     {
-                      const dy_i3633_i10013_i10671 = ($t28066 - $t28051_i10669);
+                      const dy_i3633_i10015_i10684 = ($t28066 - $t28051_i10682);
                       {
-                        const $t27357_i3634_i10014_i10672 = (dx_i3632_i10012_i10670 * dx_i3632_i10012_i10670);
+                        const $t27357_i3634_i10016_i10685 = (dx_i3632_i10014_i10683 * dx_i3632_i10014_i10683);
                         {
-                          const $t27358_i3635_i10015_i10673 = (dy_i3633_i10013_i10671 * dy_i3633_i10013_i10671);
-                          return ($t27357_i3634_i10014_i10672 + $t27358_i3635_i10015_i10673);
+                          const $t27358_i3635_i10017_i10686 = (dy_i3633_i10015_i10684 * dy_i3633_i10015_i10684);
+                          return ($t27357_i3634_i10016_i10685 + $t27358_i3635_i10017_i10686);
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const $t27362_i10019_i10677 = (() => {
+                  const $t27362_i10021_i10690 = (() => {
                     {
-                      const $t27360_i10017_i10675 = (3. + $t28067);
+                      const $t27360_i10019_i10688 = (3. + $t28067);
                       {
-                        const $t27361_i10018_i10676 = (3. + $t28067);
-                        return ($t27360_i10017_i10675 * $t27361_i10018_i10676);
+                        const $t27361_i10020_i10689 = (3. + $t28067);
+                        return ($t27360_i10019_i10688 * $t27361_i10020_i10689);
                       }
                     }
                   })();
-                  return ($t27359_i10016_i10674 <= $t27362_i10019_i10677);
+                  return ($t27359_i10018_i10687 <= $t27362_i10021_i10690);
                 }
               }
             }
@@ -21495,36 +21674,36 @@ function $lam28073$apply$3708($clo, a) {
         {
           const $t28076 = a.radius;
           {
-            const $t28050_i10682 = s.x;
+            const $t28050_i10695 = s.x;
             {
-              const $t28051_i10683 = s.y;
+              const $t28051_i10696 = s.y;
               {
-                const $t27359_i10016_i10688 = (() => {
+                const $t27359_i10018_i10701 = (() => {
                   {
-                    const dx_i3632_i10012_i10684 = ($t28074 - $t28050_i10682);
+                    const dx_i3632_i10014_i10697 = ($t28074 - $t28050_i10695);
                     {
-                      const dy_i3633_i10013_i10685 = ($t28075 - $t28051_i10683);
+                      const dy_i3633_i10015_i10698 = ($t28075 - $t28051_i10696);
                       {
-                        const $t27357_i3634_i10014_i10686 = (dx_i3632_i10012_i10684 * dx_i3632_i10012_i10684);
+                        const $t27357_i3634_i10016_i10699 = (dx_i3632_i10014_i10697 * dx_i3632_i10014_i10697);
                         {
-                          const $t27358_i3635_i10015_i10687 = (dy_i3633_i10013_i10685 * dy_i3633_i10013_i10685);
-                          return ($t27357_i3634_i10014_i10686 + $t27358_i3635_i10015_i10687);
+                          const $t27358_i3635_i10017_i10700 = (dy_i3633_i10015_i10698 * dy_i3633_i10015_i10698);
+                          return ($t27357_i3634_i10016_i10699 + $t27358_i3635_i10017_i10700);
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const $t27362_i10019_i10691 = (() => {
+                  const $t27362_i10021_i10704 = (() => {
                     {
-                      const $t27360_i10017_i10689 = (3. + $t28076);
+                      const $t27360_i10019_i10702 = (3. + $t28076);
                       {
-                        const $t27361_i10018_i10690 = (3. + $t28076);
-                        return ($t27360_i10017_i10689 * $t27361_i10018_i10690);
+                        const $t27361_i10020_i10703 = (3. + $t28076);
+                        return ($t27360_i10019_i10702 * $t27361_i10020_i10703);
                       }
                     }
                   })();
-                  return ($t27359_i10016_i10688 <= $t27362_i10019_i10691);
+                  return ($t27359_i10018_i10701 <= $t27362_i10021_i10704);
                 }
               }
             }
@@ -21599,40 +21778,40 @@ function $lam28160$apply$3714($clo, p) {
       return $clo._1;
     })();
     {
-      const $t28153_i10694 = p.x;
+      const $t28153_i10707 = p.x;
       {
-        const $t28154_i10695 = p.y;
+        const $t28154_i10708 = p.y;
         {
-          const $t28156_i10696 = game.ball_x;
+          const $t28156_i10709 = game.ball_x;
           {
-            const $t28157_i10697 = game.ball_y;
+            const $t28157_i10710 = game.ball_y;
             {
-              const $t27359_i10048_i10702 = (() => {
+              const $t27359_i10050_i10715 = (() => {
                 {
-                  const dx_i3632_i10044_i10698 = ($t28156_i10696 - $t28153_i10694);
+                  const dx_i3632_i10046_i10711 = ($t28156_i10709 - $t28153_i10707);
                   {
-                    const dy_i3633_i10045_i10699 = ($t28157_i10697 - $t28154_i10695);
+                    const dy_i3633_i10047_i10712 = ($t28157_i10710 - $t28154_i10708);
                     {
-                      const $t27357_i3634_i10046_i10700 = (dx_i3632_i10044_i10698 * dx_i3632_i10044_i10698);
+                      const $t27357_i3634_i10048_i10713 = (dx_i3632_i10046_i10711 * dx_i3632_i10046_i10711);
                       {
-                        const $t27358_i3635_i10047_i10701 = (dy_i3633_i10045_i10699 * dy_i3633_i10045_i10699);
-                        return ($t27357_i3634_i10046_i10700 + $t27358_i3635_i10047_i10701);
+                        const $t27358_i3635_i10049_i10714 = (dy_i3633_i10047_i10712 * dy_i3633_i10047_i10712);
+                        return ($t27357_i3634_i10048_i10713 + $t27358_i3635_i10049_i10714);
                       }
                     }
                   }
                 }
               })();
               {
-                const $t27362_i10051_i10705 = (() => {
+                const $t27362_i10053_i10718 = (() => {
                   {
-                    const $t27360_i10049_i10703 = (12. + 6.);
+                    const $t27360_i10051_i10716 = (12. + 6.);
                     {
-                      const $t27361_i10050_i10704 = (12. + 6.);
-                      return ($t27360_i10049_i10703 * $t27361_i10050_i10704);
+                      const $t27361_i10052_i10717 = (12. + 6.);
+                      return ($t27360_i10051_i10716 * $t27361_i10052_i10717);
                     }
                   }
                 })();
-                return ($t27359_i10048_i10702 <= $t27362_i10051_i10705);
+                return ($t27359_i10050_i10715 <= $t27362_i10053_i10718);
               }
             }
           }
@@ -21651,40 +21830,40 @@ function $lam28164$apply$3715($clo, q) {
     {
       const $t28165 = (() => {
         {
-          const $t28153_i10708 = q.x;
+          const $t28153_i10721 = q.x;
           {
-            const $t28154_i10709 = q.y;
+            const $t28154_i10722 = q.y;
             {
-              const $t28156_i10710 = game.ball_x;
+              const $t28156_i10723 = game.ball_x;
               {
-                const $t28157_i10711 = game.ball_y;
+                const $t28157_i10724 = game.ball_y;
                 {
-                  const $t27359_i10048_i10716 = (() => {
+                  const $t27359_i10050_i10729 = (() => {
                     {
-                      const dx_i3632_i10044_i10712 = ($t28156_i10710 - $t28153_i10708);
+                      const dx_i3632_i10046_i10725 = ($t28156_i10723 - $t28153_i10721);
                       {
-                        const dy_i3633_i10045_i10713 = ($t28157_i10711 - $t28154_i10709);
+                        const dy_i3633_i10047_i10726 = ($t28157_i10724 - $t28154_i10722);
                         {
-                          const $t27357_i3634_i10046_i10714 = (dx_i3632_i10044_i10712 * dx_i3632_i10044_i10712);
+                          const $t27357_i3634_i10048_i10727 = (dx_i3632_i10046_i10725 * dx_i3632_i10046_i10725);
                           {
-                            const $t27358_i3635_i10047_i10715 = (dy_i3633_i10045_i10713 * dy_i3633_i10045_i10713);
-                            return ($t27357_i3634_i10046_i10714 + $t27358_i3635_i10047_i10715);
+                            const $t27358_i3635_i10049_i10728 = (dy_i3633_i10047_i10726 * dy_i3633_i10047_i10726);
+                            return ($t27357_i3634_i10048_i10727 + $t27358_i3635_i10049_i10728);
                           }
                         }
                       }
                     }
                   })();
                   {
-                    const $t27362_i10051_i10719 = (() => {
+                    const $t27362_i10053_i10732 = (() => {
                       {
-                        const $t27360_i10049_i10717 = (12. + 6.);
+                        const $t27360_i10051_i10730 = (12. + 6.);
                         {
-                          const $t27361_i10050_i10718 = (12. + 6.);
-                          return ($t27360_i10049_i10717 * $t27361_i10050_i10718);
+                          const $t27361_i10052_i10731 = (12. + 6.);
+                          return ($t27360_i10051_i10730 * $t27361_i10052_i10731);
                         }
                       }
                     })();
-                    return ($t27359_i10048_i10716 <= $t27362_i10051_i10719);
+                    return ($t27359_i10050_i10729 <= $t27362_i10053_i10732);
                   }
                 }
               }
@@ -21760,40 +21939,40 @@ function $lam28207$apply$3718($clo, s) {
       return $clo._1;
     })();
     {
-      const $t28200_i10843 = game.ball_x;
+      const $t28200_i10856 = game.ball_x;
       {
-        const $t28201_i10844 = game.ball_y;
+        const $t28201_i10857 = game.ball_y;
         {
-          const $t28050_i10456_i10845 = s.x;
+          const $t28050_i10469_i10858 = s.x;
           {
-            const $t28051_i10457_i10846 = s.y;
+            const $t28051_i10470_i10859 = s.y;
             {
-              const $t27359_i10016_i10462_i10851 = (() => {
+              const $t27359_i10018_i10475_i10864 = (() => {
                 {
-                  const dx_i3632_i10012_i10458_i10847 = ($t28200_i10843 - $t28050_i10456_i10845);
+                  const dx_i3632_i10014_i10471_i10860 = ($t28200_i10856 - $t28050_i10469_i10858);
                   {
-                    const dy_i3633_i10013_i10459_i10848 = ($t28201_i10844 - $t28051_i10457_i10846);
+                    const dy_i3633_i10015_i10472_i10861 = ($t28201_i10857 - $t28051_i10470_i10859);
                     {
-                      const $t27357_i3634_i10014_i10460_i10849 = (dx_i3632_i10012_i10458_i10847 * dx_i3632_i10012_i10458_i10847);
+                      const $t27357_i3634_i10016_i10473_i10862 = (dx_i3632_i10014_i10471_i10860 * dx_i3632_i10014_i10471_i10860);
                       {
-                        const $t27358_i3635_i10015_i10461_i10850 = (dy_i3633_i10013_i10459_i10848 * dy_i3633_i10013_i10459_i10848);
-                        return ($t27357_i3634_i10014_i10460_i10849 + $t27358_i3635_i10015_i10461_i10850);
+                        const $t27358_i3635_i10017_i10474_i10863 = (dy_i3633_i10015_i10472_i10861 * dy_i3633_i10015_i10472_i10861);
+                        return ($t27357_i3634_i10016_i10473_i10862 + $t27358_i3635_i10017_i10474_i10863);
                       }
                     }
                   }
                 }
               })();
               {
-                const $t27362_i10019_i10465_i10854 = (() => {
+                const $t27362_i10021_i10478_i10867 = (() => {
                   {
-                    const $t27360_i10017_i10463_i10852 = (3. + 6.);
+                    const $t27360_i10019_i10476_i10865 = (3. + 6.);
                     {
-                      const $t27361_i10018_i10464_i10853 = (3. + 6.);
-                      return ($t27360_i10017_i10463_i10852 * $t27361_i10018_i10464_i10853);
+                      const $t27361_i10020_i10477_i10866 = (3. + 6.);
+                      return ($t27360_i10019_i10476_i10865 * $t27361_i10020_i10477_i10866);
                     }
                   }
                 })();
-                return ($t27359_i10016_i10462_i10851 <= $t27362_i10019_i10465_i10854);
+                return ($t27359_i10018_i10475_i10864 <= $t27362_i10021_i10478_i10867);
               }
             }
           }
@@ -21812,40 +21991,40 @@ function $lam28212$apply$3719($clo, s) {
     {
       const $t28213 = (() => {
         {
-          const $t28200_i10857 = game.ball_x;
+          const $t28200_i10870 = game.ball_x;
           {
-            const $t28201_i10858 = game.ball_y;
+            const $t28201_i10871 = game.ball_y;
             {
-              const $t28050_i10456_i10859 = s.x;
+              const $t28050_i10469_i10872 = s.x;
               {
-                const $t28051_i10457_i10860 = s.y;
+                const $t28051_i10470_i10873 = s.y;
                 {
-                  const $t27359_i10016_i10462_i10865 = (() => {
+                  const $t27359_i10018_i10475_i10878 = (() => {
                     {
-                      const dx_i3632_i10012_i10458_i10861 = ($t28200_i10857 - $t28050_i10456_i10859);
+                      const dx_i3632_i10014_i10471_i10874 = ($t28200_i10870 - $t28050_i10469_i10872);
                       {
-                        const dy_i3633_i10013_i10459_i10862 = ($t28201_i10858 - $t28051_i10457_i10860);
+                        const dy_i3633_i10015_i10472_i10875 = ($t28201_i10871 - $t28051_i10470_i10873);
                         {
-                          const $t27357_i3634_i10014_i10460_i10863 = (dx_i3632_i10012_i10458_i10861 * dx_i3632_i10012_i10458_i10861);
+                          const $t27357_i3634_i10016_i10473_i10876 = (dx_i3632_i10014_i10471_i10874 * dx_i3632_i10014_i10471_i10874);
                           {
-                            const $t27358_i3635_i10015_i10461_i10864 = (dy_i3633_i10013_i10459_i10862 * dy_i3633_i10013_i10459_i10862);
-                            return ($t27357_i3634_i10014_i10460_i10863 + $t27358_i3635_i10015_i10461_i10864);
+                            const $t27358_i3635_i10017_i10474_i10877 = (dy_i3633_i10015_i10472_i10875 * dy_i3633_i10015_i10472_i10875);
+                            return ($t27357_i3634_i10016_i10473_i10876 + $t27358_i3635_i10017_i10474_i10877);
                           }
                         }
                       }
                     }
                   })();
                   {
-                    const $t27362_i10019_i10465_i10868 = (() => {
+                    const $t27362_i10021_i10478_i10881 = (() => {
                       {
-                        const $t27360_i10017_i10463_i10866 = (3. + 6.);
+                        const $t27360_i10019_i10476_i10879 = (3. + 6.);
                         {
-                          const $t27361_i10018_i10464_i10867 = (3. + 6.);
-                          return ($t27360_i10017_i10463_i10866 * $t27361_i10018_i10464_i10867);
+                          const $t27361_i10020_i10477_i10880 = (3. + 6.);
+                          return ($t27360_i10019_i10476_i10879 * $t27361_i10020_i10477_i10880);
                         }
                       }
                     })();
-                    return ($t27359_i10016_i10462_i10865 <= $t27362_i10019_i10465_i10868);
+                    return ($t27359_i10018_i10475_i10878 <= $t27362_i10021_i10478_i10881);
                   }
                 }
               }
@@ -21865,42 +22044,42 @@ function $lam28217$apply$3720($clo, a) {
       return $clo._1;
     })();
     {
-      const $t28194_i10722 = a.x;
+      const $t28194_i10735 = a.x;
       {
-        const $t28195_i10723 = a.y;
+        const $t28195_i10736 = a.y;
         {
-          const $t28196_i10724 = a.radius;
+          const $t28196_i10737 = a.radius;
           {
-            const $t28197_i10725 = game.ball_x;
+            const $t28197_i10738 = game.ball_x;
             {
-              const $t28198_i10726 = game.ball_y;
+              const $t28198_i10739 = game.ball_y;
               {
-                const $t27359_i10076_i10731 = (() => {
+                const $t27359_i10078_i10744 = (() => {
                   {
-                    const dx_i3632_i10072_i10727 = ($t28197_i10725 - $t28194_i10722);
+                    const dx_i3632_i10074_i10740 = ($t28197_i10738 - $t28194_i10735);
                     {
-                      const dy_i3633_i10073_i10728 = ($t28198_i10726 - $t28195_i10723);
+                      const dy_i3633_i10075_i10741 = ($t28198_i10739 - $t28195_i10736);
                       {
-                        const $t27357_i3634_i10074_i10729 = (dx_i3632_i10072_i10727 * dx_i3632_i10072_i10727);
+                        const $t27357_i3634_i10076_i10742 = (dx_i3632_i10074_i10740 * dx_i3632_i10074_i10740);
                         {
-                          const $t27358_i3635_i10075_i10730 = (dy_i3633_i10073_i10728 * dy_i3633_i10073_i10728);
-                          return ($t27357_i3634_i10074_i10729 + $t27358_i3635_i10075_i10730);
+                          const $t27358_i3635_i10077_i10743 = (dy_i3633_i10075_i10741 * dy_i3633_i10075_i10741);
+                          return ($t27357_i3634_i10076_i10742 + $t27358_i3635_i10077_i10743);
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const $t27362_i10079_i10734 = (() => {
+                  const $t27362_i10081_i10747 = (() => {
                     {
-                      const $t27360_i10077_i10732 = ($t28196_i10724 + 6.);
+                      const $t27360_i10079_i10745 = ($t28196_i10737 + 6.);
                       {
-                        const $t27361_i10078_i10733 = ($t28196_i10724 + 6.);
-                        return ($t27360_i10077_i10732 * $t27361_i10078_i10733);
+                        const $t27361_i10080_i10746 = ($t28196_i10737 + 6.);
+                        return ($t27360_i10079_i10745 * $t27361_i10080_i10746);
                       }
                     }
                   })();
-                  return ($t27359_i10076_i10731 <= $t27362_i10079_i10734);
+                  return ($t27359_i10078_i10744 <= $t27362_i10081_i10747);
                 }
               }
             }
@@ -21928,42 +22107,42 @@ function $lam28236$apply$3722($clo, a) {
       return $clo._1;
     })();
     {
-      const $t28194_i10737 = a.x;
+      const $t28194_i10750 = a.x;
       {
-        const $t28195_i10738 = a.y;
+        const $t28195_i10751 = a.y;
         {
-          const $t28196_i10739 = a.radius;
+          const $t28196_i10752 = a.radius;
           {
-            const $t28197_i10740 = game.ball_x;
+            const $t28197_i10753 = game.ball_x;
             {
-              const $t28198_i10741 = game.ball_y;
+              const $t28198_i10754 = game.ball_y;
               {
-                const $t27359_i10076_i10746 = (() => {
+                const $t27359_i10078_i10759 = (() => {
                   {
-                    const dx_i3632_i10072_i10742 = ($t28197_i10740 - $t28194_i10737);
+                    const dx_i3632_i10074_i10755 = ($t28197_i10753 - $t28194_i10750);
                     {
-                      const dy_i3633_i10073_i10743 = ($t28198_i10741 - $t28195_i10738);
+                      const dy_i3633_i10075_i10756 = ($t28198_i10754 - $t28195_i10751);
                       {
-                        const $t27357_i3634_i10074_i10744 = (dx_i3632_i10072_i10742 * dx_i3632_i10072_i10742);
+                        const $t27357_i3634_i10076_i10757 = (dx_i3632_i10074_i10755 * dx_i3632_i10074_i10755);
                         {
-                          const $t27358_i3635_i10075_i10745 = (dy_i3633_i10073_i10743 * dy_i3633_i10073_i10743);
-                          return ($t27357_i3634_i10074_i10744 + $t27358_i3635_i10075_i10745);
+                          const $t27358_i3635_i10077_i10758 = (dy_i3633_i10075_i10756 * dy_i3633_i10075_i10756);
+                          return ($t27357_i3634_i10076_i10757 + $t27358_i3635_i10077_i10758);
                         }
                       }
                     }
                   }
                 })();
                 {
-                  const $t27362_i10079_i10749 = (() => {
+                  const $t27362_i10081_i10762 = (() => {
                     {
-                      const $t27360_i10077_i10747 = ($t28196_i10739 + 6.);
+                      const $t27360_i10079_i10760 = ($t28196_i10752 + 6.);
                       {
-                        const $t27361_i10078_i10748 = ($t28196_i10739 + 6.);
-                        return ($t27360_i10077_i10747 * $t27361_i10078_i10748);
+                        const $t27361_i10080_i10761 = ($t28196_i10752 + 6.);
+                        return ($t27360_i10079_i10760 * $t27361_i10080_i10761);
                       }
                     }
                   })();
-                  return ($t27359_i10076_i10746 <= $t27362_i10079_i10749);
+                  return ($t27359_i10078_i10759 <= $t27362_i10081_i10762);
                 }
               }
             }
@@ -21983,42 +22162,42 @@ function $lam28241$apply$3723($clo, a) {
     {
       const $t28242 = (() => {
         {
-          const $t28194_i10752 = a.x;
+          const $t28194_i10765 = a.x;
           {
-            const $t28195_i10753 = a.y;
+            const $t28195_i10766 = a.y;
             {
-              const $t28196_i10754 = a.radius;
+              const $t28196_i10767 = a.radius;
               {
-                const $t28197_i10755 = game.ball_x;
+                const $t28197_i10768 = game.ball_x;
                 {
-                  const $t28198_i10756 = game.ball_y;
+                  const $t28198_i10769 = game.ball_y;
                   {
-                    const $t27359_i10076_i10761 = (() => {
+                    const $t27359_i10078_i10774 = (() => {
                       {
-                        const dx_i3632_i10072_i10757 = ($t28197_i10755 - $t28194_i10752);
+                        const dx_i3632_i10074_i10770 = ($t28197_i10768 - $t28194_i10765);
                         {
-                          const dy_i3633_i10073_i10758 = ($t28198_i10756 - $t28195_i10753);
+                          const dy_i3633_i10075_i10771 = ($t28198_i10769 - $t28195_i10766);
                           {
-                            const $t27357_i3634_i10074_i10759 = (dx_i3632_i10072_i10757 * dx_i3632_i10072_i10757);
+                            const $t27357_i3634_i10076_i10772 = (dx_i3632_i10074_i10770 * dx_i3632_i10074_i10770);
                             {
-                              const $t27358_i3635_i10075_i10760 = (dy_i3633_i10073_i10758 * dy_i3633_i10073_i10758);
-                              return ($t27357_i3634_i10074_i10759 + $t27358_i3635_i10075_i10760);
+                              const $t27358_i3635_i10077_i10773 = (dy_i3633_i10075_i10771 * dy_i3633_i10075_i10771);
+                              return ($t27357_i3634_i10076_i10772 + $t27358_i3635_i10077_i10773);
                             }
                           }
                         }
                       }
                     })();
                     {
-                      const $t27362_i10079_i10764 = (() => {
+                      const $t27362_i10081_i10777 = (() => {
                         {
-                          const $t27360_i10077_i10762 = ($t28196_i10754 + 6.);
+                          const $t27360_i10079_i10775 = ($t28196_i10767 + 6.);
                           {
-                            const $t27361_i10078_i10763 = ($t28196_i10754 + 6.);
-                            return ($t27360_i10077_i10762 * $t27361_i10078_i10763);
+                            const $t27361_i10080_i10776 = ($t28196_i10767 + 6.);
+                            return ($t27360_i10079_i10775 * $t27361_i10080_i10776);
                           }
                         }
                       })();
-                      return ($t27359_i10076_i10761 <= $t27362_i10079_i10764);
+                      return ($t27359_i10078_i10774 <= $t27362_i10081_i10777);
                     }
                   }
                 }
@@ -22041,40 +22220,40 @@ function $lam28246$apply$3724($clo, s) {
     {
       const $t28247 = (() => {
         {
-          const $t28200_i10871 = game.ball_x;
+          const $t28200_i10884 = game.ball_x;
           {
-            const $t28201_i10872 = game.ball_y;
+            const $t28201_i10885 = game.ball_y;
             {
-              const $t28050_i10456_i10873 = s.x;
+              const $t28050_i10469_i10886 = s.x;
               {
-                const $t28051_i10457_i10874 = s.y;
+                const $t28051_i10470_i10887 = s.y;
                 {
-                  const $t27359_i10016_i10462_i10879 = (() => {
+                  const $t27359_i10018_i10475_i10892 = (() => {
                     {
-                      const dx_i3632_i10012_i10458_i10875 = ($t28200_i10871 - $t28050_i10456_i10873);
+                      const dx_i3632_i10014_i10471_i10888 = ($t28200_i10884 - $t28050_i10469_i10886);
                       {
-                        const dy_i3633_i10013_i10459_i10876 = ($t28201_i10872 - $t28051_i10457_i10874);
+                        const dy_i3633_i10015_i10472_i10889 = ($t28201_i10885 - $t28051_i10470_i10887);
                         {
-                          const $t27357_i3634_i10014_i10460_i10877 = (dx_i3632_i10012_i10458_i10875 * dx_i3632_i10012_i10458_i10875);
+                          const $t27357_i3634_i10016_i10473_i10890 = (dx_i3632_i10014_i10471_i10888 * dx_i3632_i10014_i10471_i10888);
                           {
-                            const $t27358_i3635_i10015_i10461_i10878 = (dy_i3633_i10013_i10459_i10876 * dy_i3633_i10013_i10459_i10876);
-                            return ($t27357_i3634_i10014_i10460_i10877 + $t27358_i3635_i10015_i10461_i10878);
+                            const $t27358_i3635_i10017_i10474_i10891 = (dy_i3633_i10015_i10472_i10889 * dy_i3633_i10015_i10472_i10889);
+                            return ($t27357_i3634_i10016_i10473_i10890 + $t27358_i3635_i10017_i10474_i10891);
                           }
                         }
                       }
                     }
                   })();
                   {
-                    const $t27362_i10019_i10465_i10882 = (() => {
+                    const $t27362_i10021_i10478_i10895 = (() => {
                       {
-                        const $t27360_i10017_i10463_i10880 = (3. + 6.);
+                        const $t27360_i10019_i10476_i10893 = (3. + 6.);
                         {
-                          const $t27361_i10018_i10464_i10881 = (3. + 6.);
-                          return ($t27360_i10017_i10463_i10880 * $t27361_i10018_i10464_i10881);
+                          const $t27361_i10020_i10477_i10894 = (3. + 6.);
+                          return ($t27360_i10019_i10476_i10893 * $t27361_i10020_i10477_i10894);
                         }
                       }
                     })();
-                    return ($t27359_i10016_i10462_i10879 <= $t27362_i10019_i10465_i10882);
+                    return ($t27359_i10018_i10475_i10892 <= $t27362_i10021_i10478_i10895);
                   }
                 }
               }
@@ -22343,8 +22522,8 @@ function $lam29219$apply$3781($clo, u) {
           {
             const $t29220 = (() => {
               {
-                const $t669_i7724 = { $: "$Clo_$lam668$4786", _0: $lam668$apply$4786, _1: k };
-                return List$any$List_WeaponKind$Fn_WeaponKind_Bool(owned, $t669_i7724);
+                const $t669_i7726 = { $: "$Clo_$lam668$4786", _0: $lam668$apply$4786, _1: k };
+                return List$any$List_WeaponKind$Fn_WeaponKind_Bool(owned, $t669_i7726);
               }
             })();
             return (!$t29220);
@@ -22413,71 +22592,71 @@ function $jp29275$apply$3783($clo) {
 }
 const $jp29275$apply$3783$clo = { _0: ($_, $clo) => $jp29275$apply$3783($clo) };
 
-function $lam29352$apply$3788($clo, p) {
+function $lam29353$apply$3788($clo, p) {
   {
     const dt_s = (() => {
       return $clo._1;
     })();
     {
-      const $t29345_i7734 = (() => {
+      const $t29346_i7736 = (() => {
         {
-          const $t29342_i7731 = p.x;
+          const $t29343_i7733 = p.x;
           {
-            const $t29344_i7733 = (() => {
+            const $t29345_i7735 = (() => {
               {
-                const $t29343_i7732 = p.vx;
-                return ($t29343_i7732 * dt_s);
+                const $t29344_i7734 = p.vx;
+                return ($t29344_i7734 * dt_s);
               }
             })();
-            return ($t29342_i7731 + $t29344_i7733);
+            return ($t29343_i7733 + $t29345_i7735);
           }
         }
       })();
       {
-        const $t29349_i7738 = (() => {
+        const $t29350_i7740 = (() => {
           {
-            const $t29346_i7735 = p.y;
+            const $t29347_i7737 = p.y;
             {
-              const $t29348_i7737 = (() => {
+              const $t29349_i7739 = (() => {
                 {
-                  const $t29347_i7736 = p.vy;
-                  return ($t29347_i7736 * dt_s);
+                  const $t29348_i7738 = p.vy;
+                  return ($t29348_i7738 * dt_s);
                 }
               })();
-              return ($t29346_i7735 + $t29348_i7737);
+              return ($t29347_i7737 + $t29349_i7739);
             }
           }
         })();
         {
-          const $t29351_i7740 = (() => {
+          const $t29352_i7742 = (() => {
             {
-              const $t29350_i7739 = p.life;
-              return ($t29350_i7739 - dt_s);
+              const $t29351_i7741 = p.life;
+              return ($t29351_i7741 - dt_s);
             }
           })();
-          return ({ ...p, x: $t29345_i7734, y: $t29349_i7738, life: $t29351_i7740 });
+          return ({ ...p, x: $t29346_i7736, y: $t29350_i7740, life: $t29352_i7742 });
         }
       }
     }
   }
 }
-const $lam29352$apply$3788$clo = { _0: ($_, $clo, p) => $lam29352$apply$3788($clo, p) };
+const $lam29353$apply$3788$clo = { _0: ($_, $clo, p) => $lam29353$apply$3788($clo, p) };
 
-function $lam29355$apply$3789($clo, p) {
+function $lam29356$apply$3789($clo, p) {
   {
-    const $t29356 = p.life;
-    return ($t29356 > 0.);
+    const $t29357 = p.life;
+    return ($t29357 > 0.);
   }
 }
-const $lam29355$apply$3789$clo = { _0: ($_, $clo, p) => $lam29355$apply$3789($clo, p) };
+const $lam29356$apply$3789$clo = { _0: ($_, $clo, p) => $lam29356$apply$3789($clo, p) };
 
-function $jp29501$apply$3792($clo) {
+function $jp29502$apply$3792($clo) {
   {
-    const $f29495 = (() => {
+    const $f29496 = (() => {
       return $clo._1;
     })();
     {
-      const $f29496 = (() => {
+      const $f29497 = (() => {
         return $clo._2;
       })();
       {
@@ -22490,11 +22669,11 @@ function $jp29501$apply$3792($clo) {
           })();
           {
             const rest = (() => {
-              return $f29496;
+              return $f29497;
             })();
             {
               const o = (() => {
-                return $f29495;
+                return $f29496;
               })();
               (() => {
                 return Canvas$set_global_alpha(ctx, 0.16);
@@ -22510,12 +22689,12 @@ function $jp29501$apply$3792($clo) {
               })();
               (() => {
                 {
-                  const $t29491 = s.x;
+                  const $t29492 = s.x;
                   {
-                    const $t29492 = s.y;
+                    const $t29493 = s.y;
                     {
-                      const $t29493 = o.radius;
-                      return Canvas$arc(ctx, $t29491, $t29492, $t29493, 0., 6.28318530718);
+                      const $t29494 = o.radius;
+                      return Canvas$arc(ctx, $t29492, $t29493, $t29494, 0., 6.28318530718);
                     }
                   }
                 }
@@ -22531,9 +22710,9 @@ function $jp29501$apply$3792($clo) {
     }
   }
 }
-const $jp29501$apply$3792$clo = { _0: ($_, $clo) => $jp29501$apply$3792($clo) };
+const $jp29502$apply$3792$clo = { _0: ($_, $clo) => $jp29502$apply$3792($clo) };
 
-function $jp29540$apply$3795($clo) {
+function $jp29541$apply$3795($clo) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -22547,16 +22726,16 @@ function $jp29540$apply$3795($clo) {
           return $clo._3;
         })();
         {
-          const $t29539 = dot_count(s);
-          return draw_pulse_particle(ctx, s, t, $t29539, 0);
+          const $t29540 = dot_count(s);
+          return draw_pulse_particle(ctx, s, t, $t29540, 0);
         }
       }
     }
   }
 }
-const $jp29540$apply$3795$clo = { _0: ($_, $clo) => $jp29540$apply$3795($clo) };
+const $jp29541$apply$3795$clo = { _0: ($_, $clo) => $jp29541$apply$3795($clo) };
 
-function $jp29542$apply$3796($clo) {
+function $jp29543$apply$3796($clo) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -22570,16 +22749,16 @@ function $jp29542$apply$3796($clo) {
           return $clo._3;
         })();
         {
-          const $t29539 = dot_count(s);
-          return draw_pulse_particle(ctx, s, t, $t29539, 0);
+          const $t29540 = dot_count(s);
+          return draw_pulse_particle(ctx, s, t, $t29540, 0);
         }
       }
     }
   }
 }
-const $jp29542$apply$3796$clo = { _0: ($_, $clo) => $jp29542$apply$3796($clo) };
+const $jp29543$apply$3796$clo = { _0: ($_, $clo) => $jp29543$apply$3796($clo) };
 
-function $jp29676$apply$3799($clo) {
+function $jp29690$apply$3799($clo) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -22597,22 +22776,22 @@ function $jp29676$apply$3799($clo) {
     }
   }
 }
-const $jp29676$apply$3799$clo = { _0: ($_, $clo) => $jp29676$apply$3799($clo) };
+const $jp29690$apply$3799$clo = { _0: ($_, $clo) => $jp29690$apply$3799($clo) };
 
-function $lam29965$apply$3821($clo, k) {
+function $lam29978$apply$3821($clo, k) {
   {
-    const $t29966 = (() => {
+    const $t29979 = (() => {
       return (k === "m");
     })();
     {
-      const $t29967 = (k === "M");
-      return ($t29966 || $t29967);
+      const $t29980 = (k === "M");
+      return ($t29979 || $t29980);
     }
   }
 }
-const $lam29965$apply$3821$clo = { _0: ($_, $clo, k) => $lam29965$apply$3821($clo, k) };
+const $lam29978$apply$3821$clo = { _0: ($_, $clo, k) => $lam29978$apply$3821($clo, k) };
 
-function $jp30023$apply$3823($clo) {
+function $jp30037$apply$3823($clo) {
   {
     const cursor = (() => {
       return $clo._1;
@@ -22645,9 +22824,9 @@ function $jp30023$apply$3823($clo) {
     }
   }
 }
-const $jp30023$apply$3823$clo = { _0: ($_, $clo) => $jp30023$apply$3823($clo) };
+const $jp30037$apply$3823$clo = { _0: ($_, $clo) => $jp30037$apply$3823($clo) };
 
-function $lam30034$apply$3824($clo, _) {
+function $lam30048$apply$3824($clo, _) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -22670,9 +22849,9 @@ function $lam30034$apply$3824($clo, _) {
     }
   }
 }
-const $lam30034$apply$3824$clo = { _0: ($_, $clo, _) => $lam30034$apply$3824($clo, _) };
+const $lam30048$apply$3824$clo = { _0: ($_, $clo, _) => $lam30048$apply$3824($clo, _) };
 
-function $lam30047$apply$3825($clo, _) {
+function $lam30061$apply$3825($clo, _) {
   {
     const best = (() => {
       return $clo._1;
@@ -22695,7 +22874,7 @@ function $lam30047$apply$3825($clo, _) {
     }
   }
 }
-const $lam30047$apply$3825$clo = { _0: ($_, $clo, _) => $lam30047$apply$3825($clo, _) };
+const $lam30061$apply$3825$clo = { _0: ($_, $clo, _) => $lam30061$apply$3825($clo, _) };
 
 function go$apply$4086($clo, lst, acc) {
   {
@@ -22797,10 +22976,10 @@ function go$apply$4755($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8784 = { $: "$Clo_go$5246", _0: go$apply$5246 };
+            const go_i8786 = { $: "$Clo_go$5246", _0: go$apply$5246 };
             {
-              const $t253_i8785 = { $: "Nil" };
-              return go$apply$5246(go_i8784, acc, $t253_i8785);
+              const $t253_i8787 = { $: "Nil" };
+              return go$apply$5246(go_i8786, acc, $t253_i8787);
             }
           }
           break;
@@ -22850,10 +23029,10 @@ function go$apply$4757($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8789 = { $: "$Clo_go$5246", _0: go$apply$5246 };
+            const go_i8791 = { $: "$Clo_go$5246", _0: go$apply$5246 };
             {
-              const $t253_i8790 = { $: "Nil" };
-              return go$apply$5246(go_i8789, acc, $t253_i8790);
+              const $t253_i8792 = { $: "Nil" };
+              return go$apply$5246(go_i8791, acc, $t253_i8792);
             }
           }
           break;
@@ -22897,10 +23076,10 @@ function go$apply$4759($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8794 = { $: "$Clo_go$5248", _0: go$apply$5248 };
+            const go_i8796 = { $: "$Clo_go$5248", _0: go$apply$5248 };
             {
-              const $t253_i8795 = { $: "Nil" };
-              return go$apply$5248(go_i8794, acc, $t253_i8795);
+              const $t253_i8797 = { $: "Nil" };
+              return go$apply$5248(go_i8796, acc, $t253_i8797);
             }
           }
           break;
@@ -22950,10 +23129,10 @@ function go$apply$4761($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8799 = { $: "$Clo_go$5248", _0: go$apply$5248 };
+            const go_i8801 = { $: "$Clo_go$5248", _0: go$apply$5248 };
             {
-              const $t253_i8800 = { $: "Nil" };
-              return go$apply$5248(go_i8799, acc, $t253_i8800);
+              const $t253_i8802 = { $: "Nil" };
+              return go$apply$5248(go_i8801, acc, $t253_i8802);
             }
           }
           break;
@@ -23090,10 +23269,10 @@ function go$apply$4769($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8810 = { $: "$Clo_go$4767", _0: go$apply$4767 };
+            const go_i8812 = { $: "$Clo_go$4767", _0: go$apply$4767 };
             {
-              const $t253_i8811 = { $: "Nil" };
-              return go$apply$4767(go_i8810, acc, $t253_i8811);
+              const $t253_i8813 = { $: "Nil" };
+              return go$apply$4767(go_i8812, acc, $t253_i8813);
             }
           }
           break;
@@ -23137,10 +23316,10 @@ function go$apply$4771($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8815 = { $: "$Clo_go$4767", _0: go$apply$4767 };
+            const go_i8817 = { $: "$Clo_go$4767", _0: go$apply$4767 };
             {
-              const $t253_i8816 = { $: "Nil" };
-              return go$apply$4767(go_i8815, acc, $t253_i8816);
+              const $t253_i8818 = { $: "Nil" };
+              return go$apply$4767(go_i8817, acc, $t253_i8818);
             }
           }
           break;
@@ -23190,10 +23369,10 @@ function go$apply$4773($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8820 = { $: "$Clo_go$4313", _0: go$apply$4313 };
+            const go_i8822 = { $: "$Clo_go$4313", _0: go$apply$4313 };
             {
-              const $t253_i8821 = { $: "Nil" };
-              return go$apply$4313(go_i8820, acc, $t253_i8821);
+              const $t253_i8823 = { $: "Nil" };
+              return go$apply$4313(go_i8822, acc, $t253_i8823);
             }
           }
           break;
@@ -23267,20 +23446,20 @@ function go$apply$4778($clo, lst, yes, no) {
           {
             const $t546 = (() => {
               {
-                const go_i8831 = { $: "$Clo_go$4763", _0: go$apply$4763 };
+                const go_i8833 = { $: "$Clo_go$4763", _0: go$apply$4763 };
                 {
-                  const $t253_i8832 = { $: "Nil" };
-                  return go$apply$4763(go_i8831, yes, $t253_i8832);
+                  const $t253_i8834 = { $: "Nil" };
+                  return go$apply$4763(go_i8833, yes, $t253_i8834);
                 }
               }
             })();
             {
               const $t547 = (() => {
                 {
-                  const go_i8828 = { $: "$Clo_go$4763", _0: go$apply$4763 };
+                  const go_i8830 = { $: "$Clo_go$4763", _0: go$apply$4763 };
                   {
-                    const $t253_i8829 = { $: "Nil" };
-                    return go$apply$4763(go_i8828, no, $t253_i8829);
+                    const $t253_i8831 = { $: "Nil" };
+                    return go$apply$4763(go_i8830, no, $t253_i8831);
                   }
                 }
               })();
@@ -23369,20 +23548,20 @@ function go$apply$4784($clo, lst, yes, no) {
           {
             const $t546 = (() => {
               {
-                const go_i8843 = { $: "$Clo_go$4767", _0: go$apply$4767 };
+                const go_i8845 = { $: "$Clo_go$4767", _0: go$apply$4767 };
                 {
-                  const $t253_i8844 = { $: "Nil" };
-                  return go$apply$4767(go_i8843, yes, $t253_i8844);
+                  const $t253_i8846 = { $: "Nil" };
+                  return go$apply$4767(go_i8845, yes, $t253_i8846);
                 }
               }
             })();
             {
               const $t547 = (() => {
                 {
-                  const go_i8840 = { $: "$Clo_go$4767", _0: go$apply$4767 };
+                  const go_i8842 = { $: "$Clo_go$4767", _0: go$apply$4767 };
                   {
-                    const $t253_i8841 = { $: "Nil" };
-                    return go$apply$4767(go_i8840, no, $t253_i8841);
+                    const $t253_i8843 = { $: "Nil" };
+                    return go$apply$4767(go_i8842, no, $t253_i8843);
                   }
                 }
               })();
@@ -23482,10 +23661,10 @@ function go$apply$4790($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8851 = { $: "$Clo_go$4763", _0: go$apply$4763 };
+            const go_i8853 = { $: "$Clo_go$4763", _0: go$apply$4763 };
             {
-              const $t253_i8852 = { $: "Nil" };
-              return go$apply$4763(go_i8851, acc, $t253_i8852);
+              const $t253_i8854 = { $: "Nil" };
+              return go$apply$4763(go_i8853, acc, $t253_i8854);
             }
           }
           break;
@@ -23564,10 +23743,10 @@ function go$apply$4796($clo, lst, k, acc) {
       if ($t499 === true) {
         return (() => {
           {
-            const go_i8863 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+            const go_i8865 = { $: "$Clo_go$5095", _0: go$apply$5095 };
             {
-              const $t253_i8864 = { $: "Nil" };
-              return go$apply$5095(go_i8863, acc, $t253_i8864);
+              const $t253_i8866 = { $: "Nil" };
+              return go$apply$5095(go_i8865, acc, $t253_i8866);
             }
           }
         })();
@@ -23576,10 +23755,10 @@ function go$apply$4796($clo, lst, k, acc) {
           switch (lst.$) {
             case "Nil": {
               {
-                const go_i8860 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+                const go_i8862 = { $: "$Clo_go$5095", _0: go$apply$5095 };
                 {
-                  const $t253_i8861 = { $: "Nil" };
-                  return go$apply$5095(go_i8860, acc, $t253_i8861);
+                  const $t253_i8863 = { $: "Nil" };
+                  return go$apply$5095(go_i8862, acc, $t253_i8863);
                 }
               }
               break;
@@ -23708,10 +23887,10 @@ function go$apply$4807($clo, lst, k, acc) {
       if ($t499 === true) {
         return (() => {
           {
-            const go_i8880 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+            const go_i8882 = { $: "$Clo_go$5095", _0: go$apply$5095 };
             {
-              const $t253_i8881 = { $: "Nil" };
-              return go$apply$5095(go_i8880, acc, $t253_i8881);
+              const $t253_i8883 = { $: "Nil" };
+              return go$apply$5095(go_i8882, acc, $t253_i8883);
             }
           }
         })();
@@ -23720,10 +23899,10 @@ function go$apply$4807($clo, lst, k, acc) {
           switch (lst.$) {
             case "Nil": {
               {
-                const go_i8877 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+                const go_i8879 = { $: "$Clo_go$5095", _0: go$apply$5095 };
                 {
-                  const $t253_i8878 = { $: "Nil" };
-                  return go$apply$5095(go_i8877, acc, $t253_i8878);
+                  const $t253_i8880 = { $: "Nil" };
+                  return go$apply$5095(go_i8879, acc, $t253_i8880);
                 }
               }
               break;
@@ -23767,10 +23946,10 @@ function go$apply$4809($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8885 = { $: "$Clo_go$4086", _0: go$apply$4086 };
+            const go_i8887 = { $: "$Clo_go$4086", _0: go$apply$4086 };
             {
-              const $t253_i8886 = { $: "Nil" };
-              return go$apply$4086(go_i8885, acc, $t253_i8886);
+              const $t253_i8888 = { $: "Nil" };
+              return go$apply$4086(go_i8887, acc, $t253_i8888);
             }
           }
           break;
@@ -23876,10 +24055,10 @@ function go$apply$4815($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8894 = { $: "$Clo_go$5255", _0: go$apply$5255 };
+            const go_i8896 = { $: "$Clo_go$5255", _0: go$apply$5255 };
             {
-              const $t253_i8895 = { $: "Nil" };
-              return go$apply$5255(go_i8894, acc, $t253_i8895);
+              const $t253_i8897 = { $: "Nil" };
+              return go$apply$5255(go_i8896, acc, $t253_i8897);
             }
           }
           break;
@@ -23929,10 +24108,10 @@ function go$apply$4818($clo, lst, k, acc) {
       if ($t499 === true) {
         return (() => {
           {
-            const go_i8903 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+            const go_i8905 = { $: "$Clo_go$5095", _0: go$apply$5095 };
             {
-              const $t253_i8904 = { $: "Nil" };
-              return go$apply$5095(go_i8903, acc, $t253_i8904);
+              const $t253_i8906 = { $: "Nil" };
+              return go$apply$5095(go_i8905, acc, $t253_i8906);
             }
           }
         })();
@@ -23941,10 +24120,10 @@ function go$apply$4818($clo, lst, k, acc) {
           switch (lst.$) {
             case "Nil": {
               {
-                const go_i8900 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+                const go_i8902 = { $: "$Clo_go$5095", _0: go$apply$5095 };
                 {
-                  const $t253_i8901 = { $: "Nil" };
-                  return go$apply$5095(go_i8900, acc, $t253_i8901);
+                  const $t253_i8903 = { $: "Nil" };
+                  return go$apply$5095(go_i8902, acc, $t253_i8903);
                 }
               }
               break;
@@ -24016,10 +24195,10 @@ function go$apply$4823($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8911 = { $: "$Clo_go$5257", _0: go$apply$5257 };
+            const go_i8913 = { $: "$Clo_go$5257", _0: go$apply$5257 };
             {
-              const $t253_i8912 = { $: "Nil" };
-              return go$apply$5257(go_i8911, acc, $t253_i8912);
+              const $t253_i8914 = { $: "Nil" };
+              return go$apply$5257(go_i8913, acc, $t253_i8914);
             }
           }
           break;
@@ -24069,10 +24248,10 @@ function go$apply$4825($clo, lst, acc) {
       switch (lst.$) {
         case "Nil": {
           {
-            const go_i8916 = { $: "$Clo_go$5257", _0: go$apply$5257 };
+            const go_i8918 = { $: "$Clo_go$5257", _0: go$apply$5257 };
             {
-              const $t253_i8917 = { $: "Nil" };
-              return go$apply$5257(go_i8916, acc, $t253_i8917);
+              const $t253_i8919 = { $: "Nil" };
+              return go$apply$5257(go_i8918, acc, $t253_i8919);
             }
           }
           break;
@@ -24114,10 +24293,10 @@ function go$apply$4827($clo, lst, k, acc) {
       if ($t499 === true) {
         return (() => {
           {
-            const go_i8924 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+            const go_i8926 = { $: "$Clo_go$5095", _0: go$apply$5095 };
             {
-              const $t253_i8925 = { $: "Nil" };
-              return go$apply$5095(go_i8924, acc, $t253_i8925);
+              const $t253_i8927 = { $: "Nil" };
+              return go$apply$5095(go_i8926, acc, $t253_i8927);
             }
           }
         })();
@@ -24126,10 +24305,10 @@ function go$apply$4827($clo, lst, k, acc) {
           switch (lst.$) {
             case "Nil": {
               {
-                const go_i8921 = { $: "$Clo_go$5095", _0: go$apply$5095 };
+                const go_i8923 = { $: "$Clo_go$5095", _0: go$apply$5095 };
                 {
-                  const $t253_i8922 = { $: "Nil" };
-                  return go$apply$5095(go_i8921, acc, $t253_i8922);
+                  const $t253_i8924 = { $: "Nil" };
+                  return go$apply$5095(go_i8923, acc, $t253_i8924);
                 }
               }
               break;

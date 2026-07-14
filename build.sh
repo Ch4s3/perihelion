@@ -36,5 +36,6 @@ cp "$MARCH_ROOT/runtime/march_runtime.mjs" "$HERE/"
 cp "$MARCH_ROOT/runtime/march_dom.mjs" "$HERE/"
 cp "$MARCH_ROOT/runtime/march_canvas.mjs" "$HERE/"
 cp "$MARCH_ROOT/runtime/march_audio.mjs" "$HERE/"
+cp "$MARCH_ROOT/runtime/march_webgl.mjs" "$HERE/"
 
 echo "Done! Open index.html in a browser, or serve this directory."
