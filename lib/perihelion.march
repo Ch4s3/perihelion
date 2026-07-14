@@ -402,23 +402,28 @@ mod Perihelion do
   end
 
   -- ── Nebula ───────────────────────────────────────────────────────────
-  -- Renders Perihelion.Nebula's clouds right after the starfield (behind
-  -- stars/entities/ball, so the player passes THROUGH a cloud, not around
-  -- it). "Subtle atmosphere": alpha is capped low enough that everything
-  -- gameplay-relevant stays clearly readable through it.
-  fn nebula_alpha_cap() : Float do 0.16 end
-
-  pfn draw_nebula_clouds(ctx, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
+  -- Renders Perihelion.Nebula's clouds via WebGL, composited onto the 2D
+  -- canvas (see docs/superpowers/specs/2026-07-13-webgl-nebula-design.md).
+  -- Rendered right after the background fill, before the camera translate,
+  -- so the composite lands in screen space -- see draw_nebula_gl below.
+  pfn to_screen_clouds(clouds : List(Perihelion.Nebula.Cloud), cam_x : Float, cam_y : Float) : List(WebGL.Cloud) do
     match clouds do
-      Nil -> ()
+      Nil -> Nil
       Cons(c, rest) ->
-        Canvas.fill_noise_circle(ctx, c.x, c.y, c.radius, nebula_alpha_cap() * c.strength)
-        draw_nebula_clouds(ctx, rest)
+        Cons({ x: c.x - cam_x, y: c.y - cam_y, radius: c.radius, strength: c.strength, seed: hashf(c.x, c.y) },
+             to_screen_clouds(rest, cam_x, cam_y))
     end
   end
 
-  pfn draw_nebula(ctx, stars : List(Star), cam : Float, view_h : Float, seed : Float) : Unit do
-    draw_nebula_clouds(ctx, Perihelion.Nebula.visible_clouds(stars, cam, view_h, seed))
+  pfn draw_nebula_gl(ctx, gl_opt : Option(WebGL.Context), game : Game, seed : Float) : Unit do
+    match gl_opt do
+      None -> ()
+      Some(gl) ->
+        let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, seed)
+        let screen_clouds = to_screen_clouds(clouds, game.camera_x, game.camera_y)
+        WebGL.draw_nebula(gl, screen_clouds, game.view_w, game.view_h, seed)
+        Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+    end
   end
 
   pfn draw_stars(ctx, stars : List(Star), cam : Float, view_h : Float, t : Float, aim : Option((Float, Float, Float, Float))) : Unit do
@@ -679,11 +684,11 @@ mod Perihelion do
     Canvas.set_global_alpha(ctx, 1.0)
     Canvas.set_fill_style(ctx, "#0a0a0a")
     Canvas.fill_rect(ctx, 0.0, 0.0, game.view_w, game.view_h)
+    let seedf = int_to_float(game.seed)
+    draw_nebula_gl(ctx, fx.gl, game, seedf)
     Canvas.save(ctx)
     Canvas.translate(ctx, 0.0 - game.camera_x, 0.0 - game.camera_y)
-    let seedf = int_to_float(game.seed)
     draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t)
-    draw_nebula(ctx, game.stars, game.camera_y, game.view_h, seedf)
     -- while flying, mark the stars the ball is heading toward (see star_targeted)
     let aim = match game.mode do
       Flying(vx, vy)     -> Some((game.ball_x, game.ball_y, vx, vy))
@@ -776,6 +781,17 @@ mod Perihelion do
     else
       Dom.set_attr(el, "width", int_to_string(float_to_int(w)))
       Dom.set_attr(el, "height", int_to_string(float_to_int(h)))
+    end
+  end
+
+  pfn resize_gl(gl_opt : Option(WebGL.Context), game : Game, w : Float, h : Float) : Unit do
+    if w == game.view_w && h == game.view_h do
+      ()
+    else
+      match gl_opt do
+        None -> ()
+        Some(gl) -> WebGL.resize(gl, w, h)
+      end
     end
   end
 
@@ -885,6 +901,7 @@ mod Perihelion do
     let view_w = int_to_float(win_w)
     let view_h = int_to_float(win_h)
     resize_canvas(el, game, view_w, view_h)
+    resize_gl(fx.gl, game, view_w, view_h)
     -- R hard-resets from ANY phase (see Core.update), but the Milestone
     -- branch below normally routes through pick_milestone instead of
     -- update -- which never looks at `keys` -- so without this check R
