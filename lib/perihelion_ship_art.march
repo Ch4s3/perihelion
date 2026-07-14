@@ -9,7 +9,7 @@
 -- any combination stay horizontally registered when stacked.
 mod Perihelion.ShipArt do
 
-  pfn enemy_top_grid(idx : Int) : List(String) do
+  fn enemy_top_grid(idx : Int) : List(String) do
     match idx do
       0 ->
        ["00000000000000000000000000000000",
@@ -382,7 +382,7 @@ mod Perihelion.ShipArt do
     end
   end
 
-  pfn enemy_mid_grid(idx : Int) : List(String) do
+  fn enemy_mid_grid(idx : Int) : List(String) do
     match idx do
       0 ->
        ["00000000000000000000000000000000",
@@ -835,7 +835,7 @@ mod Perihelion.ShipArt do
     end
   end
 
-  pfn enemy_bot_grid(idx : Int) : List(String) do
+  fn enemy_bot_grid(idx : Int) : List(String) do
     match idx do
       0 ->
        ["00000000000000000000000000000000",
