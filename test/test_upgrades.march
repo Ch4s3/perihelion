@@ -1,0 +1,184 @@
+-- Tests for Perihelion.Upgrades — pure upgrade-pool/milestone logic.
+-- Run from repo root:
+--   ./run-tests.sh   (or run-tests.sh individual files by editing the glob)
+mod TestPerihelionUpgrades do
+
+  describe "is_milestone" do
+    test "true at exact multiples of the interval" do
+      assert (Perihelion.Upgrades.is_milestone(10))
+      assert (Perihelion.Upgrades.is_milestone(20))
+      assert (Perihelion.Upgrades.is_milestone(100))
+    end
+
+    test "false everywhere else, including 0" do
+      assert (!Perihelion.Upgrades.is_milestone(0))
+      assert (!Perihelion.Upgrades.is_milestone(9))
+      assert (!Perihelion.Upgrades.is_milestone(11))
+    end
+  end
+
+  describe "draw_choices" do
+    test "always returns exactly 3 choices" do
+      let (_, choices) = Perihelion.Upgrades.draw_choices(Random.seed(1), Cons(Perihelion.Upgrades.Base, Nil), None)
+      assert (List.length(choices) == 3)
+    end
+
+    test "never offers a weapon the player already owns" do
+      let owned = Cons(Perihelion.Upgrades.Base, Cons(Perihelion.Upgrades.Homing, Cons(Perihelion.Upgrades.Spread, Nil)))
+      let (_, choices) = Perihelion.Upgrades.draw_choices(Random.seed(3), owned, None)
+      fn is_homing_or_spread(u : Perihelion.Upgrades.UpgradeKind) : Bool do
+        match u do
+          OffenseWeapon(Homing) -> true
+          OffenseWeapon(Spread) -> true
+          _ -> false
+        end
+      end
+      assert (!List.any(choices, is_homing_or_spread))
+    end
+
+    test "never offers star killer at a milestone" do
+      fn is_star_killer(u : Perihelion.Upgrades.UpgradeKind) : Bool do
+        match u do
+          OffenseWeapon(StarKiller) -> true
+          _ -> false
+        end
+      end
+      fn check_seeds(n : Int, owned : List(Perihelion.Upgrades.WeaponKind)) : Bool do
+        if n == 0 do
+          true
+        else
+          let (_, choices) = Perihelion.Upgrades.draw_choices(Random.seed(n), owned, None)
+          if List.any(choices, is_star_killer) do false else check_seeds(n - 1, owned) end
+        end
+      end
+      assert (check_seeds(50, Cons(Perihelion.Upgrades.Base, Nil)))
+    end
+
+    test "when a special is equipped, one choice is keep-current" do
+      let (_, choices) = Perihelion.Upgrades.draw_choices(Random.seed(5), Cons(Perihelion.Upgrades.Base, Nil), Some(Perihelion.Upgrades.StarThrust))
+      fn is_keep_current(u : Perihelion.Upgrades.UpgradeKind) : Bool do
+        match u do
+          SpecialItem(StarThrust) -> true
+          _ -> false
+        end
+      end
+      assert (List.any(choices, is_keep_current))
+    end
+
+    test "equipped special never appears more than once in the 3 choices" do
+      fn count_special(choices : List(Perihelion.Upgrades.UpgradeKind), target : Perihelion.Upgrades.SpecialKind) : Int do
+        match choices do
+          Nil -> 0
+          Cons(u, rest) ->
+            let inc = match u do
+              SpecialItem(sk) -> if sk == target do 1 else 0 end
+              _ -> 0
+            end
+            inc + count_special(rest, target)
+        end
+      end
+      fn check_seed_with_special(seed : Int, special : Perihelion.Upgrades.SpecialKind) : Bool do
+        let (_, choices) = Perihelion.Upgrades.draw_choices(Random.seed(seed), Cons(Perihelion.Upgrades.Base, Nil), Some(special))
+        count_special(choices, special) == 1
+      end
+      fn check_seeds(n : Int) : Bool do
+        if n == 0 do
+          true
+        else
+          if !check_seed_with_special(n, Perihelion.Upgrades.StarThrust) do
+            false
+          else
+            if !check_seed_with_special(n, Perihelion.Upgrades.StarJump) do
+              false
+            else
+              if !check_seed_with_special(n, Perihelion.Upgrades.TrajectoryPreview) do
+                false
+              else
+                check_seeds(n - 1)
+              end
+            end
+          end
+        end
+      end
+      assert (check_seeds(50))
+    end
+  end
+
+  describe "owned_upgrades" do
+    test "Base alone (no real upgrades held) is empty" do
+      let held = Perihelion.Upgrades.owned_upgrades(Cons(Perihelion.Upgrades.Base, Nil), 0, false, false, false, None)
+      assert (List.is_empty(held))
+    end
+
+    test "collects one entry per distinct held kind, Base excluded" do
+      let owned_weapons = Cons(Perihelion.Upgrades.Base, Cons(Perihelion.Upgrades.Homing, Nil))
+      let held = Perihelion.Upgrades.owned_upgrades(owned_weapons, 2, true, true, true, Some(Perihelion.Upgrades.StarJump))
+      -- Homing + FireRate + BulletWard + Deflector + Shield + Special = 6,
+      -- NOT one entry per fire_rate_stacks level (stacks=2 still counts once).
+      assert (List.length(held) == 6)
+      assert (List.member(held, Perihelion.Upgrades.OffenseWeapon(Perihelion.Upgrades.Homing)))
+      assert (List.member(held, Perihelion.Upgrades.OffenseFireRate))
+      assert (List.member(held, Perihelion.Upgrades.DefenseBulletWard))
+      assert (List.member(held, Perihelion.Upgrades.DefenseDeflector))
+      assert (List.member(held, Perihelion.Upgrades.DefenseShield))
+      assert (List.member(held, Perihelion.Upgrades.SpecialItem(Perihelion.Upgrades.StarJump)))
+    end
+  end
+
+  describe "pick_carryover" do
+    test "nothing held: no carryover" do
+      let (_, carry) = Perihelion.Upgrades.pick_carryover(Random.seed(1), Nil)
+      assert (carry == None)
+    end
+
+    test "exactly one held: that one always carries over, deterministically" do
+      let held = Cons(Perihelion.Upgrades.DefenseBulletWard, Nil)
+      fn check_seed(seed : Int) : Bool do
+        let (_, carry) = Perihelion.Upgrades.pick_carryover(Random.seed(seed), held)
+        match carry do
+          Some(DefenseBulletWard) -> true
+          _ -> false
+        end
+      end
+      fn check_seeds(n : Int) : Bool do
+        if n == 0 do true else if !check_seed(n) do false else check_seeds(n - 1) end end
+      end
+      assert (check_seeds(20))
+    end
+
+    test "multiple held: picks one of them, varying by seed" do
+      let held = Cons(Perihelion.Upgrades.DefenseBulletWard,
+                  Cons(Perihelion.Upgrades.DefenseDeflector,
+                  Cons(Perihelion.Upgrades.OffenseFireRate, Nil)))
+      fn pick_is_valid(seed : Int) : Bool do
+        let (_, carry) = Perihelion.Upgrades.pick_carryover(Random.seed(seed), held)
+        match carry do
+          None -> false
+          Some(u) -> List.member(held, u)
+        end
+      end
+      fn all_valid(n : Int) : Bool do
+        if n == 0 do true else if !pick_is_valid(n) do false else all_valid(n - 1) end end
+      end
+      assert (all_valid(20))
+      -- at least two DIFFERENT picks show up across a seed sweep (not
+      -- always the same index regardless of roll).
+      fn pick_at(seed : Int) : Perihelion.Upgrades.UpgradeKind do
+        let (_, carry) = Perihelion.Upgrades.pick_carryover(Random.seed(seed), held)
+        match carry do
+          Some(u) -> u
+          None -> Perihelion.Upgrades.DefenseBulletWard
+        end
+      end
+      fn any_different(n : Int, first : Perihelion.Upgrades.UpgradeKind) : Bool do
+        if n == 0 do
+          false
+        else
+          if pick_at(n) != first do true else any_different(n - 1, first) end
+        end
+      end
+      assert (any_different(20, pick_at(0)))
+    end
+  end
+
+end
