@@ -162,7 +162,11 @@ export function march_dom_key_presses() {
   if (__key_buffer === null) {
     __key_buffer = [];
     document.addEventListener("keydown", (e) => {
-      if (e.key === " " || e.key.startsWith("Arrow")) e.preventDefault();
+      // A full-screen game with no text inputs owns the whole keyboard --
+      // any plain key (no modifier) is prevented from reaching the browser
+      // or its extensions, not just Space/arrows. Keeps modifier-combo
+      // shortcuts (Cmd+R, Ctrl+Tab, ...) working since those aren't ours.
+      if (!e.ctrlKey && !e.altKey && !e.metaKey) e.preventDefault();
       __key_buffer.push(e.key);
     });
   }
