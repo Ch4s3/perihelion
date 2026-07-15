@@ -156,11 +156,44 @@ export function march_dom_taps(el) {
   return list_of_array(buf.splice(0, buf.length));
 }
 
+// preventDefault() only cancels the BROWSER's own default action for a key
+// -- it does nothing to stop an extension's content-script listener (Vimium,
+// etc.) from acting on the same keydown, since those often listen in the
+// capture phase and fire before this page's own script even runs. The one
+// thing such extensions reliably respect is focus: they explicitly skip
+// their hotkey handling whenever the focused element is a text input --
+// the same reason typing in any site's search box doesn't trigger Vimium
+// shortcuts. So a full-screen game claiming the whole keyboard needs an
+// invisible, permanently-focused input to sit in that "typing" state --
+// keydowns on it still bubble to `document` exactly like keydowns anywhere
+// else, so the listener below keeps working unchanged.
+function ensureKeyFocusTrap() {
+  if (document.getElementById("__march_key_focus_trap")) return;
+  const el = document.createElement("input");
+  el.id = "__march_key_focus_trap";
+  el.type = "text";
+  el.autocomplete = "off";
+  el.autocapitalize = "off";
+  el.spellcheck = false;
+  el.tabIndex = -1;
+  el.setAttribute("aria-hidden", "true");
+  Object.assign(el.style, {
+    position: "fixed", top: "0", left: "0", width: "1px", height: "1px",
+    opacity: "0", border: "0", padding: "0", pointerEvents: "none",
+  });
+  document.body.appendChild(el);
+  el.addEventListener("input", () => { el.value = ""; });
+  const refocus = () => el.focus({ preventScroll: true });
+  el.addEventListener("blur", () => setTimeout(refocus, 0));
+  refocus();
+}
+
 let __key_buffer = null;
 
 export function march_dom_key_presses() {
   if (__key_buffer === null) {
     __key_buffer = [];
+    ensureKeyFocusTrap();
     document.addEventListener("keydown", (e) => {
       // A full-screen game with no text inputs owns the whole keyboard --
       // any plain key (no modifier) is prevented from reaching the browser
