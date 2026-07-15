@@ -36,6 +36,7 @@ jobs:
           cp march_runtime.mjs march_dom.mjs march_canvas.mjs march_audio.mjs march_webgl.mjs _site/
           [ -f perihelion.mjs.map ] && cp perihelion.mjs.map _site/ || true
           [ -d pixel_icons ] && cp -r pixel_icons _site/ || true
+          [ -d asteroid_sprites ] && cp -r asteroid_sprites _site/ || true
 
       - uses: actions/configure-pages@v5
 
