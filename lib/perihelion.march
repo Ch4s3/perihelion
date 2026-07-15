@@ -37,7 +37,12 @@ mod Perihelion do
     shield_hull : List((Float, Float)),
     enemy_tops : List(Node),
     enemy_mids : List(Node),
-    enemy_bots : List(Node)
+    enemy_bots : List(Node),
+    icon_portal : Option(Canvas.Image),
+    icon_missile : Option(Canvas.Image),
+    icon_railgun_stack : Option(Canvas.Image),
+    icon_bomb : Option(Canvas.Image),
+    icon_energy_shield : Option(Canvas.Image)
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -263,6 +268,14 @@ mod Perihelion do
     build_enemy_bot_sprites_go(idx, Nil)
   end
 
+  doc "Loads a power-up icon PNG, called once at boot -- None on failure (e.g. served from a path without the pixel_icons/ dir) so a missing/broken icon just falls back to the existing text-only card/HUD rendering rather than crashing boot."
+  pfn load_icon(url : String) : Option(Canvas.Image) do
+    match Canvas.load_image(url) do
+      Ok(img) -> Some(img)
+      Err(_) -> None
+    end
+  end
+
   pfn fx_init() : Fx do
     let gl_node = Dom.create("canvas")
     let sprite_node = Dom.create("canvas")
@@ -279,7 +292,12 @@ mod Perihelion do
       shield_hull: shield_hull_points(),
       enemy_tops: build_enemy_top_sprites(0),
       enemy_mids: build_enemy_mid_sprites(0),
-      enemy_bots: build_enemy_bot_sprites(0) }
+      enemy_bots: build_enemy_bot_sprites(0),
+      icon_portal: load_icon("pixel_icons/portal.png"),
+      icon_missile: load_icon("pixel_icons/missile.png"),
+      icon_railgun_stack: load_icon("pixel_icons/railgun_stack_x5.png"),
+      icon_bomb: load_icon("pixel_icons/bomb.png"),
+      icon_energy_shield: load_icon("pixel_icons/energy_shield.png") }
   end
 
   pfn trail_max() : Int do 22 end
@@ -788,7 +806,7 @@ mod Perihelion do
     end
   end
 
-  pfn draw_pickups(ctx, pickups : List(Pickup)) : Unit do
+  pfn draw_pickups(ctx, pickups : List(Pickup), fx : Fx) : Unit do
     match pickups do
       Nil -> ()
       Cons(pk, rest) ->
@@ -797,7 +815,11 @@ mod Perihelion do
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, pk.x, pk.y, 8.0, 0.0, two_pi())
         Canvas.stroke(ctx)
-        draw_pickups(ctx, rest)
+        match upgrade_icon(pk.kind, fx) do
+          None -> ()
+          Some(img) -> draw_icon_fit(ctx, img, pk.x, pk.y, 13.0)
+        end
+        draw_pickups(ctx, rest, fx)
     end
   end
 
@@ -994,28 +1016,61 @@ mod Perihelion do
     end
   end
 
-  pfn draw_milestone_card(ctx, u : Perihelion.Upgrades.UpgradeKind, cx : Float, view_h : Float) : Unit do
-    Canvas.set_stroke_style(ctx, "#ffffff")
-    Canvas.set_line_width(ctx, 2.0)
-    Canvas.stroke_rect(ctx, cx - 60.0, view_h / 2.0 - 60.0, 120.0, 120.0)
-    Canvas.set_text_align(ctx, "center")
-    Canvas.set_font(ctx, "14px sans-serif")
-    Canvas.fill_text(ctx, upgrade_label(u), cx, view_h / 2.0)
-    Canvas.set_font(ctx, "10px sans-serif")
-    Canvas.fill_text(ctx, upgrade_description(u), cx, view_h / 2.0 + 20.0)
+  doc "The power-up icon art for an upgrade kind, if one has been drawn yet -- None falls back to the existing text-only rendering at every call site (milestone cards, world pickups, HUD), so undrawn upgrades (Faster Fire, Bullet Ward, Deflector Plating, Star Thrust, Trajectory Preview) degrade gracefully rather than needing placeholder art."
+  pfn upgrade_icon(u : Perihelion.Upgrades.UpgradeKind, fx : Fx) : Option(Canvas.Image) do
+    match u do
+      OffenseWeapon(Homing) -> fx.icon_missile
+      OffenseWeapon(Spread) -> fx.icon_railgun_stack
+      OffenseWeapon(StarKiller) -> fx.icon_bomb
+      DefenseShield -> fx.icon_energy_shield
+      SpecialItem(StarJump) -> fx.icon_portal
+      _ -> None
+    end
   end
 
-  pfn draw_milestone_cards(ctx, choices : List(Perihelion.Upgrades.UpgradeKind), view_w : Float, view_h : Float, i : Int) : Unit do
+  doc "Draws `img` centered at (cx, cy), scaled to fit within a `size` x `size` box while preserving aspect ratio -- the pixel_icons/*.png art is pre-cropped to square canvases, so this only matters if a differently-shaped image is ever dropped in."
+  pfn draw_icon_fit(ctx, img : Canvas.Image, cx : Float, cy : Float, size : Float) : Unit do
+    Canvas.draw_image_scaled(ctx, img, cx - size / 2.0, cy - size / 2.0, size, size)
+  end
+
+  pfn draw_milestone_card(ctx, u : Perihelion.Upgrades.UpgradeKind, cx : Float, view_h : Float, fx : Fx) : Unit do
+    let mid_y = view_h / 2.0
+    Canvas.set_stroke_style(ctx, "#ffffff")
+    Canvas.set_line_width(ctx, 2.0)
+    Canvas.stroke_rect(ctx, cx - 60.0, mid_y - 60.0, 120.0, 120.0)
+    match upgrade_icon(u, fx) do
+      None -> ()
+      Some(img) -> draw_icon_fit(ctx, img, cx, mid_y - 22.0, 56.0)
+    end
+    Canvas.set_text_align(ctx, "center")
+    Canvas.set_font(ctx, "14px sans-serif")
+    Canvas.fill_text(ctx, upgrade_label(u), cx, mid_y + 28.0)
+    Canvas.set_font(ctx, "10px sans-serif")
+    Canvas.fill_text(ctx, upgrade_description(u), cx, mid_y + 46.0)
+  end
+
+  pfn draw_milestone_cards(ctx, choices : List(Perihelion.Upgrades.UpgradeKind), view_w : Float, view_h : Float, fx : Fx, i : Int) : Unit do
     match choices do
       Nil -> ()
       Cons(u, rest) ->
         let col_w = view_w / 3.0
-        draw_milestone_card(ctx, u, col_w * (int_to_float(i) + 0.5), view_h)
-        draw_milestone_cards(ctx, rest, view_w, view_h, i + 1)
+        draw_milestone_card(ctx, u, col_w * (int_to_float(i) + 0.5), view_h, fx)
+        draw_milestone_cards(ctx, rest, view_w, view_h, fx, i + 1)
     end
   end
 
-  pfn draw_hud(ctx, game : Game) : Unit do
+  doc "Draws a HUD status line, with a small icon in front of the text when upgrade_icon has art for `u` -- falls back to plain left-aligned text otherwise."
+  pfn draw_hud_icon_line(ctx, fx : Fx, u : Perihelion.Upgrades.UpgradeKind, text : String, y : Float) : Unit do
+    Canvas.set_text_align(ctx, "left")
+    match upgrade_icon(u, fx) do
+      None -> Canvas.fill_text(ctx, text, 14.0, y)
+      Some(img) ->
+        draw_icon_fit(ctx, img, 22.0, y - 6.0, 18.0)
+        Canvas.fill_text(ctx, text, 34.0, y)
+    end
+  end
+
+  pfn draw_hud(ctx, game : Game, fx : Fx) : Unit do
     Canvas.set_fill_style(ctx, "#eeeeee")
     Canvas.set_font(ctx, "18px sans-serif")
     Canvas.set_text_align(ctx, "left")
@@ -1029,18 +1084,25 @@ mod Perihelion do
     else
       ()
     end
-    Canvas.set_text_align(ctx, "left")
     Canvas.set_font(ctx, "13px sans-serif")
-    Canvas.fill_text(ctx, upgrade_label(Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game))), 14.0, game.view_h - 60.0)
+    draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game)),
+                       upgrade_label(Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game))), game.view_h - 60.0)
     match game.special do
       None -> ()
-      Some(k) -> Canvas.fill_text(ctx, upgrade_label(Perihelion.Upgrades.SpecialItem(k)) ++ " x" ++ int_to_string(game.special_charges), 14.0, game.view_h - 40.0)
+      Some(k) ->
+        draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.SpecialItem(k),
+                           upgrade_label(Perihelion.Upgrades.SpecialItem(k)) ++ " x" ++ int_to_string(game.special_charges), game.view_h - 40.0)
     end
     let defense_tags =
       (if game.bullet_ward do "ward " else "" end) ++
       (if game.deflector_plating do "deflect " else "" end) ++
       (if game.shield > 0 do "shield x" ++ int_to_string(game.shield) else "" end)
-    Canvas.fill_text(ctx, defense_tags, 14.0, game.view_h - 20.0)
+    Canvas.set_text_align(ctx, "left")
+    if game.shield > 0 do
+      draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.DefenseShield, defense_tags, game.view_h - 20.0)
+    else
+      Canvas.fill_text(ctx, defense_tags, 14.0, game.view_h - 20.0)
+    end
     Canvas.set_text_align(ctx, "center")
     match game.phase do
       Ready ->
@@ -1056,7 +1118,7 @@ mod Perihelion do
       Milestone ->
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
-        draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, 0)
+        draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, fx, 0)
     end
   end
 
@@ -1097,13 +1159,13 @@ mod Perihelion do
     draw_ships(ctx, fx, game.ships)
     draw_shots(ctx, game.player_shots, "#ffffff", 3.0)
     draw_shots(ctx, game.enemy_shots, "#8a8a94", 2.5)
-    draw_pickups(ctx, game.pickups)
+    draw_pickups(ctx, game.pickups, fx)
     draw_trail(ctx, fx.trail, 0, trail_max())
     draw_particles(ctx, fx.particles)
     Canvas.set_global_alpha(ctx, 1.0)
     draw_ball(ctx, game, fx)
     Canvas.restore(ctx)
-    draw_hud(ctx, game)
+    draw_hud(ctx, game, fx)
   end
 
   pfn draw_starkiller_reticle(ctx, game : Game) : Unit do
