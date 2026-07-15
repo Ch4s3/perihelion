@@ -85,7 +85,7 @@ mod Perihelion.Combat do
   -- Base angular speed; scaled by the picked ring's own speed_mult, same as
   -- the player's own orbit_speed() * o.speed_mult (see Core.step_orbit).
   fn ship_orbit_speed() : Float do 1.4 end
-  fn ship_radius() : Float do 12.0 end
+  fn ship_radius() : Float do 10.0 end
   fn ship_fire_interval() : Float do 2.5 end
   fn ship_fire_range() : Float do 380.0 end
   fn ship_idle_min() : Float do 3.0 end
