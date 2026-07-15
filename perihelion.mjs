@@ -15158,7 +15158,7 @@ function Perihelion$Nebula$star_cloud(sx, sy, seed) {
             }
           }
         })();
-        return ($t29160 > 0.3);
+        return ($t29160 > 0.05);
       }
     })();
     if ($t29162 === true) {

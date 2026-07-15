@@ -17,7 +17,7 @@
 mod Perihelion.Nebula do
 
   -- ── Tuning constants ─────────────────────────────────────────────────
-  fn cloud_chance() : Float do 0.30 end
+  fn cloud_chance() : Float do 0.05 end
   fn radius_min() : Float do 240.0 end
   fn radius_max() : Float do 700.0 end
   -- Kept well under radius_min so a spawned cloud always overlaps the star
