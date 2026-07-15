@@ -9,13 +9,19 @@ mod Perihelion.Level do
   fn margin() : Float do 60.0 end
   fn gap_min() : Float do 160.0 end
   fn gap_max() : Float do 260.0 end
-  fn radius_min() : Float do 8.0 end
-  fn radius_max() : Float do 20.0 end
+  fn radius_min() : Float do 6.0 end
+  fn radius_max() : Float do 26.0 end
   -- Capture multipliers bumped alongside the smaller cores so the capture
   -- rings stay a playable size even though the visible star is a good bit
   -- smaller (the ring is what the player actually aims at).
   fn capture_mult_min() : Float do 2.8 end
   fn capture_mult_max() : Float do 5.2 end
+  -- How much capture_mult's roll leans toward a value derived from the same
+  -- draw that sized the star (vs. its own fully independent draw) -- see
+  -- next_star. 0 would be fully independent (today's behavior); 1 would
+  -- make ring size a deterministic function of star size. A low weight
+  -- keeps it a loose, mostly-independent trend rather than a hard rule.
+  fn size_capture_correlation() : Float do 0.35 end
   fn speed_mult_min() : Float do 0.7 end
   fn speed_mult_max() : Float do 1.6 end
 
@@ -77,10 +83,18 @@ mod Perihelion.Level do
     let gap = lerp(gap_min(), gap_max(), ty)
     let dx = lerp(0.0 - max_dx(), max_dx(), tx)
     let x = Math.clamp_float(prev.x + dx, margin(), view_w - margin())
-    -- tr*tr biases the distribution toward radius_min, so MOST stars are
-    -- small with only the occasional larger one.
-    let r = lerp(radius_min(), radius_max(), tr * tr)
-    let cm = lerp(capture_mult_min(), capture_mult_max(), tcm)
+    -- Averaging tr with tr*tr softens the old pure-quadratic small-bias --
+    -- still more small stars than large, but with real weight in the
+    -- middle/large end too, instead of a narrow "mostly small" clump.
+    let size_t = tr * tr * 0.5 + tr * 0.5
+    let r = lerp(radius_min(), radius_max(), size_t)
+    -- cm is mostly its own independent draw, but blended a little toward
+    -- reusing tr (the same draw that sized the star) so bigger stars trend
+    -- toward bigger capture rings on average -- a loose correlation, not a
+    -- rule, since 65% of cm still comes from an unrelated draw (tcm).
+    let cm_indep = lerp(capture_mult_min(), capture_mult_max(), tcm)
+    let cm_from_size = lerp(capture_mult_min(), capture_mult_max(), tr)
+    let cm = lerp(cm_indep, cm_from_size, size_capture_correlation())
     let sm = lerp(speed_mult_min(), speed_mult_max(), tsm)
     let cap = r * cm
     let orbits = make_orbits(cap, sm, ring_count_from(trings))
