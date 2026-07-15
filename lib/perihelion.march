@@ -24,6 +24,11 @@ mod Perihelion do
   -- `game` is.
   type Particle = { x : Float, y : Float, vx : Float, vy : Float, life : Float, max_life : Float }
 
+  -- A flying chunk-sprite piece (see spawn_chunk_debris), spawned when an
+  -- asteroid dies -- same shape as Particle but with rotation/spin and a
+  -- sprite index, since it draws an image rather than a plain dot.
+  type Debris = { x : Float, y : Float, vx : Float, vy : Float, rot : Float, spin : Float, life : Float, max_life : Float, img_idx : Int }
+
   -- actx/muted ride along in the same shell-local record: sound is another
   -- purely-cosmetic side effect keyed off the same before/after Game diff
   -- the particle/flash system already computes.
@@ -48,7 +53,17 @@ mod Perihelion do
     -- `zoom` is the current rendered scale, eased each frame toward
     -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
     zoom : Float,
-    zoom_target : Float
+    zoom_target : Float,
+    -- asteroid_01..05.png, indexed by a per-asteroid roll of shape_seed (see
+    -- asteroid_sprite_idx) -- an entry is None if that image failed to
+    -- load, in which case that asteroid falls back to the procedural jagged
+    -- polygon draw_asteroid_edges already draws (see draw_asteroids).
+    asteroid_sprites : List(Option(Canvas.Image)),
+    -- chunk_01..09.png, picked per debris piece when an asteroid dies (see
+    -- spawn_chunk_debris) -- None entries fall back to a plain dot, same
+    -- graceful-degradation shape as asteroid_sprites.
+    chunk_sprites : List(Option(Canvas.Image)),
+    debris : List(Debris)
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -282,6 +297,17 @@ mod Perihelion do
     end
   end
 
+  doc "Loads `prefix01.ext`..`prefixNN.ext` (2-digit, 1-based) into a same-length list of Option(Image) -- each entry independently None on failure, same graceful-degradation shape as load_icon."
+  pfn load_numbered_sprites(dir : String, prefix : String, ext : String, n : Int, i : Int, acc : List(Option(Canvas.Image))) : List(Option(Canvas.Image)) do
+    if i > n do
+      List.reverse(acc)
+    else
+      let num = if i < 10 do "0" ++ int_to_string(i) else int_to_string(i) end
+      let url = dir ++ "/" ++ prefix ++ num ++ ext
+      load_numbered_sprites(dir, prefix, ext, n, i + 1, Cons(load_icon(url), acc))
+    end
+  end
+
   pfn fx_init() : Fx do
     let gl_node = Dom.create("canvas")
     let sprite_node = Dom.create("canvas")
@@ -305,7 +331,10 @@ mod Perihelion do
       icon_bomb: load_icon("pixel_icons/bomb.png"),
       icon_energy_shield: load_icon("pixel_icons/energy_shield.png"),
       zoom: 1.0,
-      zoom_target: 1.0 }
+      zoom_target: 1.0,
+      asteroid_sprites: load_numbered_sprites("asteroid_sprites/asteroids", "asteroid_", ".png", 5, 1, Nil),
+      chunk_sprites: load_numbered_sprites("asteroid_sprites/chunks", "chunk_", ".png", 9, 1, Nil),
+      debris: Nil }
   end
 
   pfn flash_duration() : Float do 0.45 end
@@ -348,6 +377,84 @@ mod Perihelion do
 
   pfn step_particles(particles : List(Particle), dt_s : Float) : List(Particle) do
     List.filter(List.map(particles, fn p -> step_particle(p, dt_s)), fn p -> p.life > 0.0)
+  end
+
+  -- ── Asteroid breakup debris ──────────────────────────────────────────
+  -- Alongside the existing small dot-spark burst (spawn_bursts, still fed
+  -- by the same game.fx_bursts death-position signal), a destroyed asteroid
+  -- also throws a few chunk_0N.png pieces -- bigger, sprite-based debris
+  -- that tumbles and fades, layering fine dust with chunky wreckage.
+  pfn chunk_debris_count() : Int do 4 end
+  pfn chunk_debris_life() : Float do 0.7 end
+  pfn chunk_debris_speed_min() : Float do 30.0 end
+  pfn chunk_debris_speed_max() : Float do 110.0 end
+  pfn chunk_debris_spin_max() : Float do 4.0 end
+  pfn chunk_sprite_count() : Int do 9 end
+
+  pfn spawn_chunk_piece(x : Float, y : Float, t : Float, i : Int) : Debris do
+    let seed = t + int_to_float(i) * 11.0
+    let a = hashf(seed, 21.0) * two_pi()
+    let speed = chunk_debris_speed_min() + hashf(seed, 22.0) * (chunk_debris_speed_max() - chunk_debris_speed_min())
+    let life = chunk_debris_life() * (0.6 + 0.4 * hashf(seed, 23.0))
+    let spin = (hashf(seed, 24.0) - 0.5) * 2.0 * chunk_debris_spin_max()
+    let img_idx = float_to_int(hashf(seed, 25.0) * int_to_float(chunk_sprite_count()))
+    { x: x, y: y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
+      rot: hashf(seed, 26.0) * two_pi(), spin: spin, life: life, max_life: life,
+      img_idx: if img_idx >= chunk_sprite_count() do chunk_sprite_count() - 1 else img_idx end }
+  end
+
+  pfn spawn_chunk_pieces(x : Float, y : Float, t : Float, i : Int, acc : List(Debris)) : List(Debris) do
+    if i >= chunk_debris_count() do
+      acc
+    else
+      spawn_chunk_pieces(x, y, t, i + 1, Cons(spawn_chunk_piece(x, y, t, i), acc))
+    end
+  end
+
+  pfn spawn_chunk_bursts(bursts : List((Float, Float)), t : Float, acc : List(Debris)) : List(Debris) do
+    match bursts do
+      Nil -> acc
+      Cons(pt, rest) ->
+        let (x, y) = pt
+        spawn_chunk_bursts(rest, t, spawn_chunk_pieces(x, y, t, 0, acc))
+    end
+  end
+
+  pfn step_debris_piece(d : Debris, dt_s : Float) : Debris do
+    { d with x: d.x + d.vx * dt_s, y: d.y + d.vy * dt_s, rot: d.rot + d.spin * dt_s, life: d.life - dt_s }
+  end
+
+  pfn step_debris(debris : List(Debris), dt_s : Float) : List(Debris) do
+    List.filter(List.map(debris, fn d -> step_debris_piece(d, dt_s)), fn d -> d.life > 0.0)
+  end
+
+  pfn draw_debris_piece(ctx, fx : Fx, d : Debris) : Unit do
+    let f = d.life / d.max_life
+    Canvas.set_global_alpha(ctx, f)
+    match List.nth(fx.chunk_sprites, d.img_idx) do
+      Some(img) ->
+        let size = 14.0
+        Canvas.save(ctx)
+        Canvas.translate(ctx, d.x, d.y)
+        Canvas.rotate(ctx, d.rot)
+        Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
+        Canvas.restore(ctx)
+      None ->
+        Canvas.set_fill_style(ctx, "#cfcfcf")
+        Canvas.begin_path(ctx)
+        Canvas.arc(ctx, d.x, d.y, 1.5 + 1.5 * f, 0.0, two_pi())
+        Canvas.fill(ctx)
+    end
+  end
+
+  pfn draw_debris(ctx, fx : Fx, debris : List(Debris)) : Unit do
+    match debris do
+      Nil -> ()
+      Cons(d, rest) ->
+        draw_debris_piece(ctx, fx, d)
+        draw_debris(ctx, fx, rest)
+    end
+    Canvas.set_global_alpha(ctx, 1.0)
   end
 
   -- ── Rocket-exhaust trail ─────────────────────────────────────────────
@@ -402,9 +509,17 @@ mod Perihelion do
   fn zoom_ease() : Float do 6.0 end
 
   pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float) : Fx do
+    -- Freeze everything cosmetic while paused -- no time advance (stars
+    -- stop twinkling), no particle spawn/step (thrust particles would
+    -- otherwise re-spawn with an unchanged seed every frame, since t
+    -- wouldn't move, silently piling up an unbounded identical stack).
+    if game.paused do
+      fx
+    else
     let t2 = fx.t + dt_s
     let particles1 = if was_playing(game) do spawn_thrust_particles(game, t2, 0, fx.particles) else fx.particles end
     let particles2 = step_particles(spawn_bursts(game.fx_bursts, t2, particles1), dt_s)
+    let debris2 = step_debris(spawn_chunk_bursts(game.fx_bursts, t2, fx.debris), dt_s)
     let flash1 = step_flash(fx.flash, dt_s)
     let flash2 = match game.capture_flash do
       None -> flash1
@@ -413,7 +528,8 @@ mod Perihelion do
         Some((x, y, flash_duration()))
     end
     let zoom2 = fx.zoom + (zoom_target - fx.zoom) * zoom_ease() * dt_s
-    { fx with t: t2, particles: particles2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
+    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
+    end
   end
 
   pfn draw_particles(ctx, particles : List(Particle)) : Unit do
@@ -799,18 +915,65 @@ mod Perihelion do
     end
   end
 
-  pfn draw_asteroids(ctx, asteroids : List(Asteroid)) : Unit do
+  pfn draw_asteroid_procedural(ctx, a : Asteroid) : Unit do
+    let color = match a.mode do
+      AsteroidDrifting -> "#8a8a94"
+      AsteroidOrbiting(_, _) -> "#e8e8e8"
+    end
+    Canvas.set_fill_style(ctx, color)
+    Canvas.begin_path(ctx)
+    draw_asteroid_edges(ctx, a, 0)
+  end
+
+  -- Which of the 5 asteroid_0N.png tiles a given asteroid uses -- reuses
+  -- shape_seed (already rolled once at spawn for the procedural fallback
+  -- shape) rather than adding a new field, so the two rendering paths stay
+  -- deterministically in sync per asteroid.
+  pfn asteroid_sprite_idx(a : Asteroid) : Int do
+    let idx = float_to_int(a.shape_seed * 5.0)
+    if idx > 4 do 4 else if idx < 0 do 0 else idx end end
+  end
+
+  -- Slow deterministic tumble, derived (not stored) from shape_seed + elapsed
+  -- time -- reads as gently rotating in space without needing a new Asteroid
+  -- field just for cosmetic spin.
+  pfn asteroid_spin_rate(a : Asteroid) : Float do
+    0.3 + hashf(a.shape_seed, 77.0) * 0.9
+  end
+
+  pfn draw_asteroid_sprite(ctx, a : Asteroid, img : Canvas.Image, t : Float) : Unit do
+    let size = a.radius * 2.4
+    let angle = a.shape_seed * two_pi() + t * asteroid_spin_rate(a)
+    Canvas.save(ctx)
+    Canvas.translate(ctx, a.x, a.y)
+    Canvas.rotate(ctx, angle)
+    Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
+    Canvas.restore(ctx)
+    -- The sprite art itself doesn't distinguish drifting vs. permanently
+    -- orbiting (unlike the procedural fallback's color swap), so a thin
+    -- bright ring keeps that gameplay-relevant read alive.
+    match a.mode do
+      AsteroidDrifting -> ()
+      AsteroidOrbiting(_, _) ->
+        Canvas.set_global_alpha(ctx, 0.6)
+        Canvas.set_stroke_style(ctx, "#e8e8e8")
+        Canvas.set_line_width(ctx, 1.5)
+        Canvas.begin_path(ctx)
+        Canvas.arc(ctx, a.x, a.y, a.radius * 1.3, 0.0, two_pi())
+        Canvas.stroke(ctx)
+        Canvas.set_global_alpha(ctx, 1.0)
+    end
+  end
+
+  pfn draw_asteroids(ctx, fx : Fx, asteroids : List(Asteroid)) : Unit do
     match asteroids do
       Nil -> ()
       Cons(a, rest) ->
-        let color = match a.mode do
-          AsteroidDrifting -> "#8a8a94"
-          AsteroidOrbiting(_, _) -> "#e8e8e8"
+        match List.nth(fx.asteroid_sprites, asteroid_sprite_idx(a)) do
+          Some(img) -> draw_asteroid_sprite(ctx, a, img, fx.t)
+          None -> draw_asteroid_procedural(ctx, a)
         end
-        Canvas.set_fill_style(ctx, color)
-        Canvas.begin_path(ctx)
-        draw_asteroid_edges(ctx, a, 0)
-        draw_asteroids(ctx, rest)
+        draw_asteroids(ctx, fx, rest)
     end
   end
 
@@ -1173,7 +1336,17 @@ mod Perihelion do
         Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
                          game.view_w / 2.0, game.view_h / 2.0)
         draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 36.0, 0)
-      Playing -> ()
+      Playing ->
+        draw_pause_button(ctx, game, game.view_w, game.view_h)
+        if game.paused do
+          Canvas.set_font(ctx, "22px sans-serif")
+          Canvas.fill_text(ctx, "Paused", game.view_w / 2.0, game.view_h / 2.0)
+          Canvas.set_font(ctx, "13px sans-serif")
+          Canvas.fill_text(ctx, "tap the corner button or press P to resume",
+                           game.view_w / 2.0, game.view_h / 2.0 + 26.0)
+        else
+          ()
+        end
       Milestone ->
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
@@ -1224,12 +1397,13 @@ mod Perihelion do
       Flying(_, _) -> () -- only meaningful while aiming, not mid-flight
     end
     draw_flash(ctx, fx.flash)
-    draw_asteroids(ctx, game.asteroids)
+    draw_asteroids(ctx, fx, game.asteroids)
     draw_ships(ctx, fx, game.ships)
     draw_shots(ctx, game.player_shots, "#ffffff", 3.0)
     draw_shots(ctx, game.enemy_shots, "#8a8a94", 2.5)
     draw_pickups(ctx, game.pickups, fx)
     draw_particles(ctx, fx.particles)
+    draw_debris(ctx, fx, fx.debris)
     Canvas.set_global_alpha(ctx, 1.0)
     draw_ball(ctx, game, fx)
     Canvas.restore(ctx)
@@ -1411,15 +1585,78 @@ mod Perihelion do
     end
   end
 
+  -- ── Pause button (on-screen, bottom-right corner -- empty in the rest
+  -- of the HUD layout) ─────────────────────────────────────────────────
+  pfn pause_button_size() : Float do 40.0 end
+  pfn pause_button_margin() : Float do 14.0 end
+
+  pfn pause_button_x(view_w : Float) : Float do
+    view_w - pause_button_margin() - pause_button_size()
+  end
+
+  pfn pause_button_y(view_h : Float) : Float do
+    view_h - pause_button_margin() - pause_button_size()
+  end
+
+  pfn is_pause_button_tap(t : (Int, Int), view_w : Float, view_h : Float) : Bool do
+    let (tx, ty) = t
+    let fx2 = int_to_float(tx)
+    let fy = int_to_float(ty)
+    let bx = pause_button_x(view_w)
+    let btn_y = pause_button_y(view_h)
+    fx2 >= bx && fx2 <= bx + pause_button_size() && fy >= btn_y && fy <= btn_y + pause_button_size()
+  end
+
+  pfn any_pause_button_tap(taps : List((Int, Int)), view_w : Float, view_h : Float) : Bool do
+    List.any(taps, fn t -> is_pause_button_tap(t, view_w, view_h))
+  end
+
+  pfn draw_pause_button(ctx, game : Game, view_w : Float, view_h : Float) : Unit do
+    let bx = pause_button_x(view_w)
+    let btn_y = pause_button_y(view_h)
+    let size = pause_button_size()
+    Canvas.set_global_alpha(ctx, 0.7)
+    Canvas.set_stroke_style(ctx, "#cccccc")
+    Canvas.set_line_width(ctx, 1.5)
+    Canvas.stroke_rect(ctx, bx, btn_y, size, size)
+    Canvas.set_fill_style(ctx, "#eeeeee")
+    if game.paused do
+      -- Play triangle
+      Canvas.begin_path(ctx)
+      Canvas.move_to(ctx, bx + size * 0.36, btn_y + size * 0.28)
+      Canvas.line_to(ctx, bx + size * 0.36, btn_y + size * 0.72)
+      Canvas.line_to(ctx, bx + size * 0.74, btn_y + size * 0.5)
+      Canvas.fill(ctx)
+    else
+      -- Two pause bars
+      Canvas.fill_rect(ctx, bx + size * 0.32, btn_y + size * 0.26, size * 0.14, size * 0.48)
+      Canvas.fill_rect(ctx, bx + size * 0.54, btn_y + size * 0.26, size * 0.14, size * 0.48)
+    end
+    Canvas.set_global_alpha(ctx, 1.0)
+  end
+
   pfn tick(ctx, el, game : Game, fx : Fx) : Unit do
-    let taps = Dom.taps(el)
-    let keys = Dom.key_presses()
+    let raw_taps = Dom.taps(el)
+    let raw_keys = Dom.key_presses()
     let cursor = Dom.pointer_pos(el)
     let (win_w, win_h) = Dom.window_size()
     let view_w = int_to_float(win_w)
     let view_h = int_to_float(win_h)
     resize_canvas(el, game, view_w, view_h)
     resize_gl(fx.gl, view_w, view_h)
+    -- The on-screen pause button only exists during Playing (pausing
+    -- Ready/Over/Milestone makes no sense) -- a tap there is consumed here
+    -- (stripped from `taps` so it doesn't ALSO read as a release/milestone
+    -- pick) and folded into `keys` as a synthetic "p", so pause toggling
+    -- has exactly one code path (Core.wants_pause_toggle) regardless of
+    -- whether it came from the key or the button.
+    let is_playing_phase = match game.phase do
+      Playing -> true
+      _ -> false
+    end
+    let button_tapped = is_playing_phase && any_pause_button_tap(raw_taps, view_w, view_h)
+    let taps = if button_tapped do List.filter(raw_taps, fn t -> !is_pause_button_tap(t, view_w, view_h)) else raw_taps end
+    let keys = if button_tapped do Cons("p", raw_keys) else raw_keys end
     -- R hard-resets from ANY phase (see Core.update), but the Milestone
     -- branch below normally routes through pick_milestone instead of
     -- update -- which never looks at `keys` -- so without this check R
