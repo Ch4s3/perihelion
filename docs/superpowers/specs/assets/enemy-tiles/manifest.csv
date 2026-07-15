@@ -1,0 +1,25 @@
+category,index,name,filename,canvas_width,canvas_height,connector_alignment,connection_edge
+top,1,arch_bridge,top/top_01_arch_bridge.png,176,250,horizontal center,bottom
+top,2,twin_pod_bridge,top/top_02_twin_pod_bridge.png,176,250,horizontal center,bottom
+top,3,antenna_block_bridge,top/top_03_antenna_block_bridge.png,176,250,horizontal center,bottom
+top,4,needle_bridge,top/top_04_needle_bridge.png,176,250,horizontal center,bottom
+top,5,roundel_bridge,top/top_05_roundel_bridge.png,176,250,horizontal center,bottom
+top,6,forked_bridge,top/top_06_forked_bridge.png,176,250,horizontal center,bottom
+top,7,split_pod_bridge,top/top_07_split_pod_bridge.png,176,250,horizontal center,bottom
+top,8,claw_bridge,top/top_08_claw_bridge.png,176,250,horizontal center,bottom
+middle,1,armored_spine,middle/middle_01_armored_spine.png,176,305,horizontal center,top and bottom
+middle,2,service_frame,middle/middle_02_service_frame.png,176,305,horizontal center,top and bottom
+middle,3,ribbed_cargo,middle/middle_03_ribbed_cargo.png,176,305,horizontal center,top and bottom
+middle,4,windowed_core,middle/middle_04_windowed_core.png,176,305,horizontal center,top and bottom
+middle,5,triple_column,middle/middle_05_triple_column.png,176,305,horizontal center,top and bottom
+middle,6,tank_core,middle/middle_06_tank_core.png,176,305,horizontal center,top and bottom
+middle,7,reactor_spine,middle/middle_07_reactor_spine.png,176,305,horizontal center,top and bottom
+middle,8,slab_core,middle/middle_08_slab_core.png,176,305,horizontal center,top and bottom
+bottom,1,triple_thruster,bottom/bottom_01_triple_thruster.png,176,195,horizontal center,top
+bottom,2,heavy_thruster,bottom/bottom_02_heavy_thruster.png,176,195,horizontal center,top
+bottom,3,armored_quad,bottom/bottom_03_armored_quad.png,176,195,horizontal center,top
+bottom,4,ventral_array,bottom/bottom_04_ventral_array.png,176,195,horizontal center,top
+bottom,5,single_bell_frame,bottom/bottom_05_single_bell_frame.png,176,195,horizontal center,top
+bottom,6,twin_bell_frame,bottom/bottom_06_twin_bell_frame.png,176,195,horizontal center,top
+bottom,7,recessed_thruster,bottom/bottom_07_recessed_thruster.png,176,195,horizontal center,top
+bottom,8,compact_bell,bottom/bottom_08_compact_bell.png,176,195,horizontal center,top

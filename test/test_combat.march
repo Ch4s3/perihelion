@@ -90,7 +90,7 @@ mod TestPerihelionCombat do
   -- (used to build up kill streaks tick-by-tick).
   pfn mk_dead_ship_shot(s : Star) : (Ship, Shot) do
     let ship = { star_idx: 1, x: s.x, y: s.y, mode: ShipOrbiting(0, 0.0),
-                 fire_cooldown: 5.0, idle_timer: 10.0, hunter: false }
+                 fire_cooldown: 5.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
     let shot = { x: s.x, y: s.y, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false,
                  star_killer: false, target_x: 0.0, target_y: 0.0 }
     let out = (ship, shot)
@@ -342,7 +342,7 @@ mod TestPerihelionCombat do
       -- mk_star is single-ring, so ring 0's radius == capture_radius.
       let r = s1.capture_radius
       let ship = { star_idx: 1, x: s1.x + Math.cos(0.0) * r, y: s1.y + Math.sin(0.0) * r,
-                   mode: ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 10.0, hunter: false }
+                   mode: ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g = { g0 with ships: Cons(ship, Nil) }
       let g2 = Perihelion.Combat.step(g, dt())
       assert (List.length(g2.enemy_shots) == 1)
@@ -369,7 +369,7 @@ mod TestPerihelionCombat do
       let s0 = mk_multi_star(200.0, 360.0)
       let ring1 = Perihelion.Core.ring_at(s0, 1)
       let ship = { star_idx: 0, x: s0.x + ring1.radius, y: s0.y, mode: ShipOrbiting(1, 0.0),
-                   fire_cooldown: 5.0, idle_timer: 10.0, hunter: false }
+                   fire_cooldown: 5.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g0 = { base_game(0.0) with stars: Cons(s0, Nil), ships: Cons(ship, Nil) }
       let g2 = Perihelion.Combat.step(g0, dt())
       match g2.ships do
@@ -484,7 +484,7 @@ mod TestPerihelionCombat do
                       ball_x: 200.0, ball_y: 100.0 }
       -- hunter (idle expired) releases toward near_player -> flies up (vy < 0)
       let hunter = { star_idx: 0, x: 200.0, y: 500.0, mode: ShipOrbiting(0, 0.0),
-                     fire_cooldown: 5.0, idle_timer: 0.0, hunter: true }
+                     fire_cooldown: 5.0, idle_timer: 0.0, hunter: true, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       match (Perihelion.Combat.step({ board with ships: Cons(hunter, Nil) }, dt())).ships do
         Cons(sh, Nil) ->
           match sh.mode do
@@ -495,7 +495,7 @@ mod TestPerihelionCombat do
       end
       -- turret (idle expired) releases toward near_ship -> flies right (vx > 0)
       let turret = { star_idx: 0, x: 200.0, y: 500.0, mode: ShipOrbiting(0, 0.0),
-                     fire_cooldown: 5.0, idle_timer: 0.0, hunter: false }
+                     fire_cooldown: 5.0, idle_timer: 0.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       match (Perihelion.Combat.step({ board with ships: Cons(turret, Nil) }, dt())).ships do
         Cons(sh, Nil) ->
           match sh.mode do
@@ -511,7 +511,7 @@ mod TestPerihelionCombat do
     test "a hunter is a contact hazard like any ship" do
       let g0 = base_game(0.0)   -- ball at (254, 520)
       let hunter = { star_idx: 0, x: 254.0, y: 520.0, mode: ShipOrbiting(0, 0.0),
-                     fire_cooldown: 5.0, idle_timer: 10.0, hunter: true }
+                     fire_cooldown: 5.0, idle_timer: 10.0, hunter: true, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g2 = Perihelion.Combat.collide({ g0 with ships: Cons(hunter, Nil) })
       assert (is_over(g2))
     end
@@ -546,7 +546,7 @@ mod TestPerihelionCombat do
       -- mk_star is single-ring, so ring 0's radius == capture_radius.
       let r = s1.capture_radius
       let ship = { star_idx: 1, x: s1.x + Math.cos(0.0) * r, y: s1.y + Math.sin(0.0) * r,
-                   mode: ShipOrbiting(0, 0.0), fire_cooldown: 1.0, idle_timer: 10.0, hunter: false }
+                   mode: ShipOrbiting(0, 0.0), fire_cooldown: 1.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let pos = Perihelion.Combat.ship_pos(ship)
       let (sx, sy) = pos
       let shot = { x: sx, y: sy, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
@@ -674,7 +674,7 @@ mod TestPerihelionCombat do
                    active_weapon_idx: 1,
                    stars: List.append(base.stars, Cons(s2, Nil)) }
       let ship = { star_idx: 2, x: s2.x, y: s2.y, mode: ShipOrbiting(0, 0.0),
-                   fire_cooldown: 5.0, idle_timer: 10.0, hunter: false }
+                   fire_cooldown: 5.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g1 = { g0 with ships: Cons(ship, Nil) }
       let g2 = Perihelion.Combat.fire(g1, space(), cursor_east(), dt())
       -- run enough steps for the shot to reach star 1 (200, 360), destroying it;
@@ -770,7 +770,7 @@ mod TestPerihelionCombat do
   describe "generalized pickups" do
     test "roll_drops can drop a non-shield upgrade kind" do
       let g0 = { base_game(0.0) with rng: Random.seed(1) }
-      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false }
+      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g2 = Perihelion.Combat.roll_drops(g0, Cons(sh, Nil))
       -- with seed 1, drop_chance() succeeds (empirically checked seeds 0..39
       -- against Perihelion.Level.draw_pub's first draw; seed 1 rolls ~0.088,
@@ -792,7 +792,7 @@ mod TestPerihelionCombat do
     -- draws), same seed-pinning convention as the test above.
     test "roll_drops can drop StarKiller via its own rare roll when not owned" do
       let g0 = { base_game(0.0) with rng: Random.seed(87) }
-      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false }
+      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g2 = Perihelion.Combat.roll_drops(g0, Cons(sh, Nil))
       match g2.pickups do
         Cons(p, Nil) -> assert (p.kind == Perihelion.Upgrades.OffenseWeapon(Perihelion.Upgrades.StarKiller))
@@ -802,7 +802,7 @@ mod TestPerihelionCombat do
 
     test "roll_drops never drops a duplicate StarKiller once already owned, even on the same lucky seed" do
       let g0 = { base_game(0.0) with rng: Random.seed(87), owned_weapons: Cons(Perihelion.Upgrades.Base, Cons(Perihelion.Upgrades.StarKiller, Nil)) }
-      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false }
+      let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let g2 = Perihelion.Combat.roll_drops(g0, Cons(sh, Nil))
       match g2.pickups do
         Cons(p, Nil) -> assert (p.kind != Perihelion.Upgrades.OffenseWeapon(Perihelion.Upgrades.StarKiller))

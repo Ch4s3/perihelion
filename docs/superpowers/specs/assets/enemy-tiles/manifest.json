@@ -1,0 +1,242 @@
+[
+  {
+    "category": "top",
+    "index": 1,
+    "name": "arch_bridge",
+    "filename": "top/top_01_arch_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 2,
+    "name": "twin_pod_bridge",
+    "filename": "top/top_02_twin_pod_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 3,
+    "name": "antenna_block_bridge",
+    "filename": "top/top_03_antenna_block_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 4,
+    "name": "needle_bridge",
+    "filename": "top/top_04_needle_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 5,
+    "name": "roundel_bridge",
+    "filename": "top/top_05_roundel_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 6,
+    "name": "forked_bridge",
+    "filename": "top/top_06_forked_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 7,
+    "name": "split_pod_bridge",
+    "filename": "top/top_07_split_pod_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "top",
+    "index": 8,
+    "name": "claw_bridge",
+    "filename": "top/top_08_claw_bridge.png",
+    "canvas_width": 176,
+    "canvas_height": 250,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "bottom"
+  },
+  {
+    "category": "middle",
+    "index": 1,
+    "name": "armored_spine",
+    "filename": "middle/middle_01_armored_spine.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 2,
+    "name": "service_frame",
+    "filename": "middle/middle_02_service_frame.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 3,
+    "name": "ribbed_cargo",
+    "filename": "middle/middle_03_ribbed_cargo.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 4,
+    "name": "windowed_core",
+    "filename": "middle/middle_04_windowed_core.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 5,
+    "name": "triple_column",
+    "filename": "middle/middle_05_triple_column.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 6,
+    "name": "tank_core",
+    "filename": "middle/middle_06_tank_core.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 7,
+    "name": "reactor_spine",
+    "filename": "middle/middle_07_reactor_spine.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "middle",
+    "index": 8,
+    "name": "slab_core",
+    "filename": "middle/middle_08_slab_core.png",
+    "canvas_width": 176,
+    "canvas_height": 305,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top and bottom"
+  },
+  {
+    "category": "bottom",
+    "index": 1,
+    "name": "triple_thruster",
+    "filename": "bottom/bottom_01_triple_thruster.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 2,
+    "name": "heavy_thruster",
+    "filename": "bottom/bottom_02_heavy_thruster.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 3,
+    "name": "armored_quad",
+    "filename": "bottom/bottom_03_armored_quad.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 4,
+    "name": "ventral_array",
+    "filename": "bottom/bottom_04_ventral_array.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 5,
+    "name": "single_bell_frame",
+    "filename": "bottom/bottom_05_single_bell_frame.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 6,
+    "name": "twin_bell_frame",
+    "filename": "bottom/bottom_06_twin_bell_frame.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 7,
+    "name": "recessed_thruster",
+    "filename": "bottom/bottom_07_recessed_thruster.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  },
+  {
+    "category": "bottom",
+    "index": 8,
+    "name": "compact_bell",
+    "filename": "bottom/bottom_08_compact_bell.png",
+    "canvas_width": 176,
+    "canvas_height": 195,
+    "connector_alignment": "horizontal center",
+    "connection_edge": "top"
+  }
+]

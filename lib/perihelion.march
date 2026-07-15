@@ -34,7 +34,10 @@ mod Perihelion do
     muted : Bool,
     gl : Option(WebGL.Context),
     player_sprite : Option(Node),
-    shield_hull : List((Float, Float))
+    shield_hull : List((Float, Float)),
+    enemy_tops : List(Node),
+    enemy_mids : List(Node),
+    enemy_bots : List(Node)
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -200,6 +203,66 @@ mod Perihelion do
     draw_sprite_rows(ctx, player_sprite_grid(), 0, 64, 96, 32.0, 48.0)
   end
 
+  pfn build_enemy_top_sprites_go(idx : Int, acc : List(Node)) : List(Node) do
+    if idx >= 8 do
+      List.reverse(acc)
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "11")
+      Dom.set_attr(node, "height", "15")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 11.0, 15.0)
+      end
+      build_enemy_top_sprites_go(idx + 1, Cons(node, acc))
+    end
+  end
+
+  doc "Pre-renders enemy top-tile idx 0..7 into offscreen canvases (11x15 each), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
+  pfn build_enemy_top_sprites(idx : Int) : List(Node) do
+    build_enemy_top_sprites_go(idx, Nil)
+  end
+
+  pfn build_enemy_mid_sprites_go(idx : Int, acc : List(Node)) : List(Node) do
+    if idx >= 8 do
+      List.reverse(acc)
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "11")
+      Dom.set_attr(node, "height", "19")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 11.0, 19.0)
+      end
+      build_enemy_mid_sprites_go(idx + 1, Cons(node, acc))
+    end
+  end
+
+  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (11x19 each) -- see build_enemy_top_sprites."
+  pfn build_enemy_mid_sprites(idx : Int) : List(Node) do
+    build_enemy_mid_sprites_go(idx, Nil)
+  end
+
+  pfn build_enemy_bot_sprites_go(idx : Int, acc : List(Node)) : List(Node) do
+    if idx >= 8 do
+      List.reverse(acc)
+    else
+      let node = Dom.create("canvas")
+      Dom.set_attr(node, "width", "11")
+      Dom.set_attr(node, "height", "12")
+      match Canvas.get_context(node) do
+        None -> ()
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 11.0, 12.0)
+      end
+      build_enemy_bot_sprites_go(idx + 1, Cons(node, acc))
+    end
+  end
+
+  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (11x12 each) -- see build_enemy_top_sprites."
+  pfn build_enemy_bot_sprites(idx : Int) : List(Node) do
+    build_enemy_bot_sprites_go(idx, Nil)
+  end
+
   pfn fx_init() : Fx do
     let gl_node = Dom.create("canvas")
     let sprite_node = Dom.create("canvas")
@@ -213,7 +276,10 @@ mod Perihelion do
     { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
       gl: WebGL.get_context(gl_node),
       player_sprite: Some(sprite_node),
-      shield_hull: shield_hull_points() }
+      shield_hull: shield_hull_points(),
+      enemy_tops: build_enemy_top_sprites(0),
+      enemy_mids: build_enemy_mid_sprites(0),
+      enemy_bots: build_enemy_bot_sprites(0) }
   end
 
   pfn trail_max() : Int do 22 end
@@ -688,7 +754,8 @@ mod Perihelion do
     end
   end
 
-  pfn draw_ships(ctx, ships : List(Ship)) : Unit do
+  doc "Composites a ship's randomly-rolled top/middle/bottom tiles (pre-rendered once at boot into fx.enemy_tops/enemy_mids/enemy_bots) into one stacked sprite, centered on the ship and rotated to face its heading -- same -90deg nose-offset convention draw_ball uses, since the tile art's nose is the top tile's row 0, not local +X."
+  pfn draw_ships(ctx, fx : Fx, ships : List(Ship)) : Unit do
     match ships do
       Nil -> ()
       Cons(sh, rest) ->
@@ -697,23 +764,15 @@ mod Perihelion do
         let heading = ship_heading(sh)
         Canvas.save(ctx)
         Canvas.translate(ctx, sx, sy)
-        Canvas.rotate(ctx, heading)
-        -- Bright near-white with a dark outline: at #a9a9a9 the ship was
-        -- nearly indistinguishable from drifting asteroids (#8a8a94) and
-        -- vanished into the greyscale clutter -- a threat needs contrast,
-        -- not just a distinct (small, easy-to-miss) silhouette.
-        Canvas.set_fill_style(ctx, "#e2e2e2")
-        Canvas.set_stroke_style(ctx, "#333333")
-        Canvas.set_line_width(ctx, 1.2)
-        Canvas.begin_path(ctx)
-        Canvas.move_to(ctx, 9.0, 0.0)
-        Canvas.line_to(ctx, 0.0 - 6.0, 5.0)
-        Canvas.line_to(ctx, 0.0 - 6.0, 0.0 - 5.0)
-        Canvas.close_path(ctx)
-        Canvas.fill(ctx)
-        Canvas.stroke(ctx)
+        Canvas.rotate(ctx, heading - 1.5707963)
+        let top_node = List.nth(fx.enemy_tops, sh.top_idx)
+        let mid_node = List.nth(fx.enemy_mids, sh.mid_idx)
+        let bot_node = List.nth(fx.enemy_bots, sh.bot_idx)
+        Canvas.draw_node(ctx, top_node, 0.0 - 5.5, 0.0 - 23.0)
+        Canvas.draw_node(ctx, mid_node, 0.0 - 5.5, 0.0 - 8.0)
+        Canvas.draw_node(ctx, bot_node, 0.0 - 5.5, 11.0)
         Canvas.restore(ctx)
-        draw_ships(ctx, rest)
+        draw_ships(ctx, fx, rest)
     end
   end
 
@@ -1023,7 +1082,7 @@ mod Perihelion do
     end
     draw_flash(ctx, fx.flash)
     draw_asteroids(ctx, game.asteroids)
-    draw_ships(ctx, game.ships)
+    draw_ships(ctx, fx, game.ships)
     draw_shots(ctx, game.player_shots, "#ffffff", 3.0)
     draw_shots(ctx, game.enemy_shots, "#8a8a94", 2.5)
     draw_pickups(ctx, game.pickups)

@@ -41,7 +41,8 @@ mod Perihelion.Combat do
     mode : ShipMode,
     fire_cooldown : Float,
     idle_timer : Float,
-    hunter : Bool
+    hunter : Bool,
+    top_idx : Int, mid_idx : Int, bot_idx : Int
   }
 
   -- target_x/target_y: the star-killer's target star position, LOCKED IN at
@@ -445,6 +446,21 @@ mod Perihelion.Combat do
     let idx = float_to_int(t * int_to_float(n))
     let clamped = if idx >= n do n - 1 else idx end
     (rng2, clamped)
+  end
+
+  pfn roll_tile_idx(rng : Random.Rng) : (Random.Rng, Int) do
+    let (rng2, t) = draw(rng)
+    let idx = float_to_int(t * 8.0)
+    let clamped = if idx >= 8 do 7 else idx end
+    (rng2, clamped)
+  end
+
+  doc "Rolls three independent tile indices (0..7 each) for a freshly-spawned Ship's composed sprite -- top/middle/bottom picked from the same 8-tile pool, no distinction between hunter and turret ships."
+  pfn roll_ship_art(rng : Random.Rng) : (Random.Rng, Int, Int, Int) do
+    let (rng2, top_idx) = roll_tile_idx(rng)
+    let (rng3, mid_idx) = roll_tile_idx(rng2)
+    let (rng4, bot_idx) = roll_tile_idx(rng3)
+    (rng4, top_idx, mid_idx, bot_idx)
   end
 
   -- Walk ships: advance orbit/flight state, roll releases and arrivals,
@@ -954,14 +970,16 @@ mod Perihelion.Combat do
       Some(s) ->
         let (rng2, idle_f) = draw(rng)
         let (rng3, ring_idx) = pick_ring_idx(rng2, s)
+        let (rng4, top_idx, mid_idx, bot_idx) = roll_ship_art(rng3)
         let o = Perihelion.Core.ring_at(s, ring_idx)
         let r = o.radius
         let idle = ship_idle_min() + idle_f * (ship_idle_max() - ship_idle_min())
         let ship = { star_idx: star_idx,
                      x: s.x + Math.cos(0.0) * r, y: s.y + Math.sin(0.0) * r,
                      mode: ShipOrbiting(ring_idx, 0.0),
-                     fire_cooldown: ship_fire_interval(), idle_timer: idle, hunter: false }
-        { game with rng: rng3, ships: Cons(ship, game.ships) }
+                     fire_cooldown: ship_fire_interval(), idle_timer: idle, hunter: false,
+                     top_idx: top_idx, mid_idx: mid_idx, bot_idx: bot_idx }
+        { game with rng: rng4, ships: Cons(ship, game.ships) }
     end
   end
 
@@ -974,14 +992,16 @@ mod Perihelion.Combat do
       Some(s) ->
         let (rng2, idle_f) = draw(rng)
         let (rng3, ring_idx) = pick_ring_idx(rng2, s)
+        let (rng4, top_idx, mid_idx, bot_idx) = roll_ship_art(rng3)
         let o = Perihelion.Core.ring_at(s, ring_idx)
         let r = o.radius
         let idle = ship_idle_min() + idle_f * (ship_idle_max() - ship_idle_min())
         let ship = { star_idx: idx,
                      x: s.x + Math.cos(0.0) * r, y: s.y + Math.sin(0.0) * r,
                      mode: ShipOrbiting(ring_idx, 0.0),
-                     fire_cooldown: ship_fire_interval(), idle_timer: idle, hunter: true }
-        { game with rng: rng3, ships: Cons(ship, game.ships) }
+                     fire_cooldown: ship_fire_interval(), idle_timer: idle, hunter: true,
+                     top_idx: top_idx, mid_idx: mid_idx, bot_idx: bot_idx }
+        { game with rng: rng4, ships: Cons(ship, game.ships) }
     end
   end
 
