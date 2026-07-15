@@ -49,6 +49,12 @@ mod Perihelion do
     icon_railgun_stack : Option(Canvas.Image),
     icon_bomb : Option(Canvas.Image),
     icon_energy_shield : Option(Canvas.Image),
+    icon_railgun : Option(Canvas.Image),
+    icon_faster_fire : Option(Canvas.Image),
+    icon_bullet_ward : Option(Canvas.Image),
+    icon_deflector_plating : Option(Canvas.Image),
+    icon_star_thrust : Option(Canvas.Image),
+    icon_trajectory_preview : Option(Canvas.Image),
     -- Purely cosmetic view zoom, toggled by Z (see toggle_zoom_target):
     -- `zoom` is the current rendered scale, eased each frame toward
     -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
@@ -330,6 +336,12 @@ mod Perihelion do
       icon_railgun_stack: load_icon("pixel_icons/railgun_stack_x5.png"),
       icon_bomb: load_icon("pixel_icons/bomb.png"),
       icon_energy_shield: load_icon("pixel_icons/energy_shield.png"),
+      icon_railgun: load_icon("pixel_icons/railgun.png"),
+      icon_faster_fire: load_icon("pixel_icons/faster_fire.png"),
+      icon_bullet_ward: load_icon("pixel_icons/bullet_ward.png"),
+      icon_deflector_plating: load_icon("pixel_icons/deflector_plating.png"),
+      icon_star_thrust: load_icon("pixel_icons/star_thrust.png"),
+      icon_trajectory_preview: load_icon("pixel_icons/trajectory_preview.png"),
       zoom: 1.0,
       zoom_target: 1.0,
       asteroid_sprites: load_numbered_sprites("asteroid_sprites/asteroids", "asteroid_", ".png", 5, 1, Nil),
@@ -1238,15 +1250,20 @@ mod Perihelion do
     end
   end
 
-  doc "The power-up icon art for an upgrade kind, if one has been drawn yet -- None falls back to the existing text-only rendering at every call site (milestone cards, world pickups, HUD), so undrawn upgrades (Faster Fire, Bullet Ward, Deflector Plating, Star Thrust, Trajectory Preview) degrade gracefully rather than needing placeholder art."
+  doc "The power-up icon art for an upgrade kind -- None (falling back to the existing text-only rendering at every call site: milestone cards, world pickups, HUD) only if that icon failed to load."
   pfn upgrade_icon(u : Perihelion.Upgrades.UpgradeKind, fx : Fx) : Option(Canvas.Image) do
     match u do
       OffenseWeapon(Homing) -> fx.icon_missile
       OffenseWeapon(Spread) -> fx.icon_railgun_stack
       OffenseWeapon(StarKiller) -> fx.icon_bomb
+      OffenseWeapon(Base) -> fx.icon_railgun
+      OffenseFireRate -> fx.icon_faster_fire
+      DefenseBulletWard -> fx.icon_bullet_ward
+      DefenseDeflector -> fx.icon_deflector_plating
       DefenseShield -> fx.icon_energy_shield
+      SpecialItem(StarThrust) -> fx.icon_star_thrust
       SpecialItem(StarJump) -> fx.icon_portal
-      _ -> None
+      SpecialItem(TrajectoryPreview) -> fx.icon_trajectory_preview
     end
   end
 
