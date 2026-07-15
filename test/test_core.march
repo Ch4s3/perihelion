@@ -60,7 +60,7 @@ mod TestPerihelionCore do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None }
+      fx_bursts: Nil, capture_flash: None, paused: false }
   end
 
   pfn is_playing(p : Phase) : Bool do
@@ -167,6 +167,10 @@ mod TestPerihelionCore do
 
   pfn key_r() : List(String) do
     Cons("r", Nil)
+  end
+
+  pfn key_p() : List(String) do
+    Cons("p", Nil)
   end
 
   -- A game orbiting a 3-ring star (index 0) at ring `ring`. Ring radii are
@@ -317,6 +321,45 @@ mod TestPerihelionCore do
       let g2 = step_keys(g1, key_r())
       assert (is_ready(g2.phase))
       assert (g2.best == 30)
+    end
+  end
+
+  describe "pause (P)" do
+    test "P during Playing sets paused and freezes score_accum-driving state" do
+      let g0 = { mk_game(0.0) with phase: Playing }
+      let g1 = step_keys(g0, key_p())
+      assert (g1.paused)
+      assert (is_playing(g1.phase))
+    end
+
+    test "P again while paused resumes" do
+      let g0 = { mk_game(0.0) with phase: Playing, paused: true }
+      let g1 = step_keys(g0, key_p())
+      assert (!g1.paused)
+    end
+
+    test "while paused, ordinary ticks (no key) leave the game byte-for-byte frozen" do
+      let g0 = { mk_game(0.0) with phase: Playing, paused: true, score: 7, current: 1 }
+      let g1 = Perihelion.Core.update(g0, no_taps(), Nil, (999, 999), 400.0, 640.0, Perihelion.Core.dt())
+      assert (g1.paused)
+      assert (g1.score == 7)
+      assert (g1.current == 1)
+      assert (ring_of(g1) == ring_of(g0))
+    end
+
+    test "R while paused still hard-resets" do
+      let g0 = { mk_game(0.0) with phase: Playing, paused: true, score: 9, best: 5 }
+      let g1 = step_keys(g0, key_r())
+      assert (is_ready(g1.phase))
+      assert (!g1.paused)
+      assert (g1.score == 0)
+    end
+
+    test "P has no effect outside Playing" do
+      let g0 = { mk_game(0.0) with phase: Ready }
+      let g1 = step_keys(g0, key_p())
+      assert (!g1.paused)
+      assert (is_ready(g1.phase))
     end
   end
 
