@@ -421,15 +421,25 @@ mod Perihelion do
     hashf(s.x + 3.0, s.y + 3.0) * two_pi()
   end
 
-  -- Style-2 (orbiting dots) identity, per star: how many dots (2..5) and how
-  -- fast they circle (0.4..2.8 rad/s) -- both derived from the star's fixed
-  -- position, so no two look quite alike and none share the base pulse speed.
+  -- Style-2 (orbiting dots) identity, per star: how many dots (2..5),
+  -- derived from the star's fixed position so no two stars look quite alike.
+  -- Each individual dot's orbit radius/speed is randomized separately below.
   pfn dot_count(s : Star) : Int do
     2 + float_to_int(hashf(s.x + 4.0, s.y + 4.0) * 4.0)
   end
 
-  pfn dot_speed(s : Star) : Float do
-    0.4 + hashf(s.x + 5.0, s.y + 5.0) * 2.4
+  -- Per-dot variation for style-2 orbiting dots: each dot on a star gets its
+  -- own orbit radius (1.4..2.4 * s.radius) and angular speed (0.3..3.0 rad/s),
+  -- seeded off both the star's position and the dot index so dots on the same
+  -- star drift independently instead of moving in lockstep.
+  pfn dot_radius(s : Star, i : Int) : Float do
+    let fi = int_to_float(i)
+    s.radius * (1.4 + hashf(s.x + 6.0 + fi, s.y + 6.0 + fi) * 1.0)
+  end
+
+  pfn dot_speed_i(s : Star, i : Int) : Float do
+    let fi = int_to_float(i)
+    0.3 + hashf(s.x + 7.0 + fi, s.y + 7.0 + fi) * 2.7
   end
 
   -- Style 0: the ring itself brightens/thickens on the pulse, layered on
@@ -452,14 +462,16 @@ mod Perihelion do
     Canvas.fill(ctx)
   end
 
-  -- Style 2: `n` small points drifting around the star at dot_speed(s), evenly
-  -- spaced (2*pi/n apart). n = dot_count(s); the caller seeds i = 0.
+  -- Style 2: `n` small points drifting around the star, each with its own
+  -- independently-rolled orbit radius and angular speed (see dot_radius /
+  -- dot_speed_i), initially spread evenly (2*pi/n apart). n = dot_count(s);
+  -- the caller seeds i = 0.
   pfn draw_pulse_particle(ctx, s : Star, t : Float, n : Int, i : Int) : Unit do
     if i >= n do
       ()
     else
-      let a = t * dot_speed(s) + pulse_phase(s) + int_to_float(i) * (two_pi() / int_to_float(n))
-      let r = s.radius * 1.8
+      let a = t * dot_speed_i(s, i) + pulse_phase(s) + int_to_float(i) * (two_pi() / int_to_float(n))
+      let r = dot_radius(s, i)
       let px = s.x + Math.cos(a) * r
       let py = s.y + Math.sin(a) * r
       Canvas.set_global_alpha(ctx, 0.14)
@@ -953,7 +965,7 @@ mod Perihelion do
       OffenseWeapon(Homing) -> "Homing Missiles"
       OffenseWeapon(Spread) -> "Spread Fire"
       OffenseWeapon(StarKiller) -> "Star Killer"
-      OffenseWeapon(Base) -> "Base Weapon"
+      OffenseWeapon(Base) -> "Railgun"
       OffenseFireRate -> "Faster Fire"
       DefenseBulletWard -> "Bullet Ward"
       DefenseDeflector -> "Deflector Plating"
@@ -971,7 +983,7 @@ mod Perihelion do
       OffenseWeapon(Homing) -> "Curves toward threats"
       OffenseWeapon(Spread) -> "5-shot fan"
       OffenseWeapon(StarKiller) -> "Destroys a distant star"
-      OffenseWeapon(Base) -> "Standard radial shot"
+      OffenseWeapon(Base) -> "Standard railgun shot"
       OffenseFireRate -> "Faster shooting"
       DefenseBulletWard -> "Blocks one enemy shot"
       DefenseDeflector -> "Bounces asteroids"
