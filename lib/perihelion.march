@@ -17,16 +17,17 @@ mod Perihelion do
 
   -- ── Visual-effects state ─────────────────────────────────────────────
   -- Purely cosmetic, shell-local (not in the pure Game record, not tested):
-  -- a short ball-position trail, an elapsed-time accumulator driving the
-  -- stars' pulsating glow, live particle-burst instances, and an active
-  -- capture-flash ring. Threaded through tick() the same way `game` is.
+  -- an elapsed-time accumulator driving the stars' pulsating glow, live
+  -- particle instances (both one-off capture bursts and the continuous
+  -- rocket-exhaust stream trailing the ship -- see spawn_thrust_particles),
+  -- and an active capture-flash ring. Threaded through tick() the same way
+  -- `game` is.
   type Particle = { x : Float, y : Float, vx : Float, vy : Float, life : Float, max_life : Float }
 
   -- actx/muted ride along in the same shell-local record: sound is another
   -- purely-cosmetic side effect keyed off the same before/after Game diff
   -- the particle/flash system already computes.
   type Fx = {
-    trail : List((Float, Float)),
     t : Float,
     particles : List(Particle),
     flash : Option((Float, Float, Float)),
@@ -42,7 +43,12 @@ mod Perihelion do
     icon_missile : Option(Canvas.Image),
     icon_railgun_stack : Option(Canvas.Image),
     icon_bomb : Option(Canvas.Image),
-    icon_energy_shield : Option(Canvas.Image)
+    icon_energy_shield : Option(Canvas.Image),
+    -- Purely cosmetic view zoom, toggled by Z (see toggle_zoom_target):
+    -- `zoom` is the current rendered scale, eased each frame toward
+    -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
+    zoom : Float,
+    zoom_target : Float
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -286,7 +292,7 @@ mod Perihelion do
       None -> ()
       Some(sctx) -> draw_player_sprite_pixels(sctx)
     end
-    { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
+    { t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
       gl: WebGL.get_context(gl_node),
       player_sprite: Some(sprite_node),
       shield_hull: shield_hull_points(),
@@ -297,10 +303,11 @@ mod Perihelion do
       icon_missile: load_icon("pixel_icons/missile.png"),
       icon_railgun_stack: load_icon("pixel_icons/railgun_stack_x5.png"),
       icon_bomb: load_icon("pixel_icons/bomb.png"),
-      icon_energy_shield: load_icon("pixel_icons/energy_shield.png") }
+      icon_energy_shield: load_icon("pixel_icons/energy_shield.png"),
+      zoom: 1.0,
+      zoom_target: 1.0 }
   end
 
-  pfn trail_max() : Int do 22 end
   pfn flash_duration() : Float do 0.45 end
   pfn burst_count() : Int do 10 end
   pfn particle_life() : Float do 0.5 end
@@ -343,8 +350,43 @@ mod Perihelion do
     List.filter(List.map(particles, fn p -> step_particle(p, dt_s)), fn p -> p.life > 0.0)
   end
 
-  pfn push_trail(trail : List((Float, Float)), pos : (Float, Float)) : List((Float, Float)) do
-    List.take(Cons(pos, trail), trail_max())
+  -- ── Rocket-exhaust trail ─────────────────────────────────────────────
+  -- Replaces the old flat fading-dot trail with a continuous stream of
+  -- particles emitted from the ship's engine (the tail, opposite its
+  -- heading) each frame it's active -- reuses the same Particle type and
+  -- draw_particles rendering as capture bursts, just spawned continuously
+  -- instead of all-at-once, and with a shorter life so the plume stays
+  -- tight rather than piling up into a long tail.
+  pfn thrust_particles_per_tick() : Int do 2 end
+  pfn thrust_particle_life() : Float do 0.35 end
+  pfn thrust_speed_min() : Float do 25.0 end
+  pfn thrust_speed_max() : Float do 70.0 end
+  -- Half-angle (radians) of the exhaust cone's random spread around the
+  -- straight-back direction -- ~20 degrees, enough to read as turbulent
+  -- puffs rather than a laser-straight line of dots.
+  pfn thrust_spread() : Float do 0.35 end
+  -- How far behind the ship's center the engine nozzle sits, so particles
+  -- spawn from the tail rather than the ship's middle.
+  pfn thrust_engine_offset() : Float do 16.0 end
+
+  pfn spawn_thrust_particle(game : Game, t : Float, i : Int) : Particle do
+    let back = ball_heading(game) + 3.14159265
+    let seed = t + int_to_float(i) * 5.0
+    let spread = (hashf(seed, 11.0) - 0.5) * 2.0 * thrust_spread()
+    let a = back + spread
+    let speed = thrust_speed_min() + hashf(seed, 12.0) * (thrust_speed_max() - thrust_speed_min())
+    let life = thrust_particle_life() * (0.6 + 0.4 * hashf(seed, 13.0))
+    let ex = game.ball_x + Math.cos(back) * thrust_engine_offset()
+    let ey = game.ball_y + Math.sin(back) * thrust_engine_offset()
+    { x: ex, y: ey, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: life, max_life: life }
+  end
+
+  pfn spawn_thrust_particles(game : Game, t : Float, i : Int, acc : List(Particle)) : List(Particle) do
+    if i >= thrust_particles_per_tick() do
+      acc
+    else
+      spawn_thrust_particles(game, t, i + 1, Cons(spawn_thrust_particle(game, t, i), acc))
+    end
   end
 
   pfn step_flash(flash : Option((Float, Float, Float)), dt_s : Float) : Option((Float, Float, Float)) do
@@ -357,10 +399,12 @@ mod Perihelion do
     end
   end
 
-  pfn step_fx(fx : Fx, game : Game, dt_s : Float) : Fx do
+  fn zoom_ease() : Float do 6.0 end
+
+  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float) : Fx do
     let t2 = fx.t + dt_s
-    let trail2 = if was_playing(game) do push_trail(fx.trail, (game.ball_x, game.ball_y)) else fx.trail end
-    let particles2 = step_particles(spawn_bursts(game.fx_bursts, t2, fx.particles), dt_s)
+    let particles1 = if was_playing(game) do spawn_thrust_particles(game, t2, 0, fx.particles) else fx.particles end
+    let particles2 = step_particles(spawn_bursts(game.fx_bursts, t2, particles1), dt_s)
     let flash1 = step_flash(fx.flash, dt_s)
     let flash2 = match game.capture_flash do
       None -> flash1
@@ -368,22 +412,8 @@ mod Perihelion do
         let (x, y) = pt
         Some((x, y, flash_duration()))
     end
-    { fx with trail: trail2, t: t2, particles: particles2, flash: flash2 }
-  end
-
-  pfn draw_trail(ctx, trail : List((Float, Float)), i : Int, n : Int) : Unit do
-    match trail do
-      Nil -> ()
-      Cons(pt, rest) ->
-        let (x, y) = pt
-        let f = 1.0 - int_to_float(i) / int_to_float(n)
-        Canvas.set_global_alpha(ctx, f * 0.38)
-        Canvas.set_fill_style(ctx, "#ffffff")
-        Canvas.begin_path(ctx)
-        Canvas.arc(ctx, x, y, 1.2 + 2.6 * f, 0.0, two_pi())
-        Canvas.fill(ctx)
-        draw_trail(ctx, rest, i + 1, n)
-    end
+    let zoom2 = fx.zoom + (zoom_target - fx.zoom) * zoom_ease() * dt_s
+    { fx with t: t2, particles: particles2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
   end
 
   pfn draw_particles(ctx, particles : List(Particle)) : Unit do
@@ -607,14 +637,26 @@ mod Perihelion do
   -- wide viewport leaves empty around the narrow gameplay ladder) and
   -- scrolls vertically with the same camera translate as everything else.
   pfn bg_star_chance() : Float do 0.5 end
+  -- How much a cell's nebula density (0-1) can raise its star-spawn chance
+  -- above the base bg_star_chance() -- a cell dead-center in a dense cloud
+  -- can reach 0.5 + 0.35 = 0.85, well above clear space's flat 0.5, without
+  -- ever guaranteeing every cell fills in.
+  pfn density_bg_boost() : Float do 0.35 end
   -- Fraction of background stars (of those that spawn) that get a slow
   -- brightness pulse -- a small minority, so it reads as just a couple of
   -- twinkling points rather than the whole field animating.
   pfn bg_pulse_chance() : Float do 0.04 end
 
-  pfn draw_bg_cell(ctx, gx : Int, gy : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_cell(ctx, gx : Int, gy : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     let h = bg_hash(gx, gy, seed)
-    if h > bg_star_chance() do
+    -- Cell-center world position (not the jittered star position computed
+    -- below, which depends on h already having passed) is precise enough
+    -- for a coarse density sample -- only used to bias the spawn chance.
+    let cx = int_to_float(gx) * cell + cell * 0.5
+    let cy = int_to_float(gy) * cell + cell * 0.5
+    let dens = Perihelion.Nebula.density_of_clouds(cx, cy, clouds)
+    let chance = bg_star_chance() + dens * density_bg_boost()
+    if h > chance do
       ()
     else
       let jx = bg_hash(gx, gy + 1000, seed)
@@ -643,32 +685,32 @@ mod Perihelion do
     end
   end
 
-  pfn draw_bg_row(ctx, gx : Int, gx_max : Int, gy : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_row(ctx, gx : Int, gx_max : Int, gy : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     if gx > gx_max do
       ()
     else
-      draw_bg_cell(ctx, gx, gy, cell, seed, t)
-      draw_bg_row(ctx, gx + 1, gx_max, gy, cell, seed, t)
+      draw_bg_cell(ctx, gx, gy, cell, seed, t, clouds)
+      draw_bg_row(ctx, gx + 1, gx_max, gy, cell, seed, t, clouds)
     end
   end
 
-  pfn draw_bg_rows(ctx, gx0 : Int, gx1 : Int, gy : Int, gy_max : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_rows(ctx, gx0 : Int, gx1 : Int, gy : Int, gy_max : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     if gy > gy_max do
       ()
     else
-      draw_bg_row(ctx, gx0, gx1, gy, cell, seed, t)
-      draw_bg_rows(ctx, gx0, gx1, gy + 1, gy_max, cell, seed, t)
+      draw_bg_row(ctx, gx0, gx1, gy, cell, seed, t, clouds)
+      draw_bg_rows(ctx, gx0, gx1, gy + 1, gy_max, cell, seed, t, clouds)
     end
   end
 
-  pfn draw_starfield(ctx, cam_x : Float, cam : Float, view_w : Float, view_h : Float, seed : Float, t : Float) : Unit do
+  pfn draw_starfield(ctx, cam_x : Float, cam : Float, view_w : Float, view_h : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     let cell = 70.0
     let gx0 = float_to_int(Math.floor(cam_x / cell)) - 1
     let gx1 = float_to_int(Math.floor((cam_x + view_w) / cell)) + 1
     let gy0 = float_to_int(Math.floor(cam / cell)) - 1
     let gy1 = float_to_int(Math.floor((cam + view_h) / cell)) + 1
     Canvas.set_fill_style(ctx, "#ffffff")
-    draw_bg_rows(ctx, gx0, gx1, gy0, gy1, cell, seed, t)
+    draw_bg_rows(ctx, gx0, gx1, gy0, gy1, cell, seed, t, clouds)
     Canvas.set_global_alpha(ctx, 1.0)
   end
 
@@ -677,22 +719,39 @@ mod Perihelion do
   -- canvas (see docs/superpowers/specs/2026-07-13-webgl-nebula-design.md).
   -- Rendered right after the background fill, before the camera translate,
   -- so the composite lands in screen space -- see draw_nebula_gl below.
-  pfn to_screen_clouds(clouds : List(Perihelion.Nebula.Cloud), cam_x : Float, cam_y : Float) : List(WebGL.Cloud) do
+  -- Applies the same focus-preserving zoom transform draw()'s Canvas calls
+  -- use, since this maps world -> screen manually rather than riding the
+  -- Canvas transform stack (the WebGL composite is drawn before that
+  -- stack's save/translate/scale is even pushed).
+  pfn to_screen_clouds(clouds : List(Perihelion.Nebula.Cloud), focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.Cloud) do
     match clouds do
       Nil -> Nil
       Cons(c, rest) ->
-        Cons({ x: c.x - cam_x, y: c.y - cam_y, radius: c.radius, strength: c.strength, seed: hashf(c.x, c.y) },
-             to_screen_clouds(rest, cam_x, cam_y))
+        Cons({ x: (c.x - focus_x) * zoom + view_w / 2.0, y: (c.y - focus_y) * zoom + view_h / 2.0,
+               radius: c.radius * zoom, strength: c.strength, seed: hashf(c.x, c.y) },
+             to_screen_clouds(rest, focus_x, focus_y, zoom, view_w, view_h))
     end
   end
 
-  pfn draw_nebula_gl(ctx, gl_opt : Option(WebGL.Context), game : Game, seed : Float) : Unit do
+  -- Fraction of clouds that render as a foreground layer (after the ship,
+  -- drifting in front of it) rather than background-only -- independent of
+  -- size, decided per-cloud by a deterministic hash of its own position so
+  -- it's stable across frames without storing anything.
+  pfn foreground_cloud_chance() : Float do 0.25 end
+
+  pfn is_foreground_cloud(c : Perihelion.Nebula.Cloud) : Bool do
+    hashf(c.x, c.y) < foreground_cloud_chance()
+  end
+
+  doc "Renders an already-computed cloud list via WebGL and composites it onto ctx -- takes `clouds` explicitly (rather than deriving it from `game` itself) so the shell can compute visible_clouds() once per frame and reuse the result for both this and the background-starfield density lookup, and so it can be called twice a frame (background clouds pre-ship, foreground clouds post-ship -- see draw())."
+  pfn draw_nebula_gl(ctx, gl_opt : Option(WebGL.Context), clouds : List(Perihelion.Nebula.Cloud), cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float, seed : Float) : Unit do
     match gl_opt do
       None -> ()
       Some(gl) ->
-        let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, game.view_w, seed)
-        let screen_clouds = to_screen_clouds(clouds, game.camera_x, game.camera_y)
-        WebGL.draw_nebula(gl, screen_clouds, game.view_w, game.view_h, seed)
+        let focus_x = cam_x + view_w / 2.0
+        let focus_y = cam_y + view_h / 2.0
+        let screen_clouds = to_screen_clouds(clouds, focus_x, focus_y, zoom, view_w, view_h)
+        WebGL.draw_nebula(gl, screen_clouds, view_w, view_h, seed)
         Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
     end
   end
@@ -884,7 +943,7 @@ mod Perihelion do
   -- How far the shield hull is scaled out from the sprite's own silhouette,
   -- from its center -- so the shield visibly surrounds the ship rather than
   -- tracing directly on top of it.
-  fn shield_scale() : Float do 1.15 end
+  fn shield_scale() : Float do 1.28 end
   -- Grid-space (64 cols x 96 rows) to the sprite's own local pixel-space
   -- (32x48, matching draw_player_sprite_pixels's target size).
   fn sprite_col_scale() : Float do 0.5 end
@@ -1127,10 +1186,20 @@ mod Perihelion do
     Canvas.set_fill_style(ctx, "#0a0a0a")
     Canvas.fill_rect(ctx, 0.0, 0.0, game.view_w, game.view_h)
     let seedf = int_to_float(game.seed)
-    draw_nebula_gl(ctx, fx.gl, game, seedf)
+    let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, game.view_w, seedf)
+    let bg_clouds = List.filter(clouds, fn c -> !is_foreground_cloud(c))
+    let fg_clouds = List.filter(clouds, fn c -> is_foreground_cloud(c))
+    draw_nebula_gl(ctx, fx.gl, bg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
     Canvas.save(ctx)
-    Canvas.translate(ctx, 0.0 - game.camera_x, 0.0 - game.camera_y)
-    draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t)
+    -- Focus-preserving zoom: translate to viewport center, scale, then
+    -- translate back by the pre-zoom view center -- at zoom 1.0 this is
+    -- exactly equivalent to the old flat `translate(-camera_x, -camera_y)`.
+    let focus_x = game.camera_x + game.view_w / 2.0
+    let focus_y = game.camera_y + game.view_h / 2.0
+    Canvas.translate(ctx, game.view_w / 2.0, game.view_h / 2.0)
+    Canvas.scale(ctx, fx.zoom, fx.zoom)
+    Canvas.translate(ctx, 0.0 - focus_x, 0.0 - focus_y)
+    draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t, clouds)
     -- while flying, mark the stars the ball is heading toward (see star_targeted)
     let aim = match game.mode do
       Flying(vx, vy)     -> Some((game.ball_x, game.ball_y, vx, vy))
@@ -1160,11 +1229,11 @@ mod Perihelion do
     draw_shots(ctx, game.player_shots, "#ffffff", 3.0)
     draw_shots(ctx, game.enemy_shots, "#8a8a94", 2.5)
     draw_pickups(ctx, game.pickups, fx)
-    draw_trail(ctx, fx.trail, 0, trail_max())
     draw_particles(ctx, fx.particles)
     Canvas.set_global_alpha(ctx, 1.0)
     draw_ball(ctx, game, fx)
     Canvas.restore(ctx)
+    draw_nebula_gl(ctx, fx.gl, fg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
     draw_hud(ctx, game, fx)
   end
 
@@ -1265,6 +1334,17 @@ mod Perihelion do
     if List.any(keys, fn k -> k == "m" || k == "M") do !muted else muted end
   end
 
+  fn zoom_target_low() : Float do 1.0 end
+  fn zoom_target_high() : Float do 3.0 end
+
+  pfn toggle_zoom_target(target : Float, keys : List(String)) : Float do
+    if List.any(keys, fn k -> k == "z" || k == "Z") do
+      if target == zoom_target_high() do zoom_target_low() else zoom_target_high() end
+    else
+      target
+    end
+  end
+
   -- Every trigger here reuses an event the Combat/Core layer already reports
   -- for the visual-effects system (fx_bursts, capture_flash, phase/mode
   -- transitions) -- no game logic exists solely to drive sound.
@@ -1356,8 +1436,9 @@ mod Perihelion do
       _ -> Perihelion.Core.update(game, taps, keys, cursor, view_w, view_h, Perihelion.Core.dt())
     end
     let muted2 = toggle_mute(fx.muted, keys)
+    let zoom_target2 = toggle_zoom_target(fx.zoom_target, keys)
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt())
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2)
     let fx2 = { fx1 with muted: muted2 }
     if was_playing(game) && is_over_phase(g2) do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))
