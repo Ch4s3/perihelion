@@ -53,7 +53,19 @@ mod Perihelion.Combat do
   -- (rather than re-deriving it from the live reticle at collision time)
   -- keeps a shot correctly homed on the star it was actually fired at even
   -- if W/D retarget the reticle again while the shot is still in flight.
-  type Shot = { x : Float, y : Float, vx : Float, vy : Float, ttl : Float, homing : Bool, star_killer : Bool, target_x : Float, target_y : Float }
+  -- ShotOrbiting(star_idx, angle, time_left): a homing shot captured into a
+  -- temporary orbit around a star it grazed at a near-tangential angle (see
+  -- missile_capture_target) -- same star_idx/angle-not-raw-position shape
+  -- AsteroidOrbiting uses, looked up fresh each frame via Core.star_at so a
+  -- ladder change can't leave it pointing at stale geometry. Stays fully
+  -- live in collision checks the whole time (a temporary automated turret
+  -- circling the star), then breaks free tangentially -- resuming ShotFlying
+  -- with its pre-capture speed -- once time_left runs out. vx/vy are left
+  -- untouched while orbiting (x/y are driven by the orbit formula instead),
+  -- so they still record the speed to break free with.
+  type ShotMode = ShotFlying | ShotOrbiting(Int, Float, Float)
+
+  type Shot = { x : Float, y : Float, vx : Float, vy : Float, ttl : Float, homing : Bool, star_killer : Bool, target_x : Float, target_y : Float, mode : ShotMode }
 
   type Pickup = { x : Float, y : Float, ttl : Float, kind : Perihelion.Upgrades.UpgradeKind }
 
@@ -187,8 +199,8 @@ mod Perihelion.Combat do
     && x > 0.0 - 100.0 && x < game.view_w + 100.0
   end
 
-  fn homing_turn_rate() : Float do 3.0 end
-  fn homing_range() : Float do 220.0 end
+  fn homing_turn_rate() : Float do 4.5 end
+  fn homing_range() : Float do 260.0 end
 
   -- Same "recursive best-so-far" shape as Core's nearest_assist_target:
   -- thread (best_d2, best_pos) through the list, keeping whichever is closer.
@@ -259,21 +271,140 @@ mod Perihelion.Combat do
     end
   end
 
+  -- ── Homing missile orbit-capture ────────────────────────────────────
+  -- A homing shot that grazes a star at a near-tangential angle has a
+  -- chance to get pulled into a temporary orbit -- a bonus for a good-angle
+  -- shot, not something to rely on (see missile_orbit_chance). Stays fully
+  -- live in collision checks the whole time it orbits (a brief automated
+  -- turret circling the star), then breaks free tangentially with its
+  -- pre-capture speed once missile_orbit_duration() runs out.
+  fn missile_orbit_chance() : Float do 0.25 end
+  fn missile_orbit_duration() : Float do 2.0 end
+  fn missile_orbit_angular_speed() : Float do 2.2 end
+  -- Settles a little inside the visible capture ring, same reasoning as
+  -- asteroid_orbit_mult().
+  fn missile_orbit_radius_mult() : Float do 0.85 end
+  -- |dot(radial_unit, velocity_unit)| below this counts as "near-tangential"
+  -- (0 = perfectly tangential, 1 = a dead-on radial dive). ~0.7071 = cos(45deg),
+  -- a generous near-tangential window rather than requiring a razor-exact pass.
+  fn missile_orbit_tangent_tolerance() : Float do 0.7071 end
+
+  pfn fabs(x : Float) : Float do
+    if x < 0.0 do 0.0 - x else x end
+  end
+
+  doc "The first star (idx, Star) a homing shot at (x, y) moving (vx, vy) is both within the capture ring of AND passing at a near-tangential angle -- None if no star qualifies this frame. Re-checked every frame the shot remains inside a ring, same shape as asteroids' arrived_star."
+  pfn missile_capture_target(x : Float, y : Float, vx : Float, vy : Float, stars : List(Star), i : Int) : Option((Int, Star)) do
+    match stars do
+      Nil -> None
+      Cons(s, rest) ->
+        let dx = s.x - x
+        let dy = s.y - y
+        let dist = Math.sqrt(dx * dx + dy * dy)
+        let speed = Math.sqrt(vx * vx + vy * vy)
+        let tangential = dist > 0.0 && speed > 0.0 && dist <= s.capture_radius &&
+          fabs((dx / dist) * (vx / speed) + (dy / dist) * (vy / speed)) < missile_orbit_tangent_tolerance()
+        if tangential do
+          Some((i, s))
+        else
+          missile_capture_target(x, y, vx, vy, rest, i + 1)
+        end
+    end
+  end
+
+  pfn is_orbiting_shot(s : Shot) : Bool do
+    match s.mode do
+      ShotOrbiting(_, _, _) -> true
+      ShotFlying -> false
+    end
+  end
+
+  -- Tangential unit velocity at `angle` around a star, scaled to `speed` --
+  -- how a captured shot breaks free (see age_player_shots_go), and matches
+  -- the CCW convention Level/Core's own orbit angle math already uses.
+  pfn tangent_velocity(angle : Float, speed : Float) : (Float, Float) do
+    (0.0 - Math.sin(angle) * speed, Math.cos(angle) * speed)
+  end
+
+  doc "Ages player shots one at a time, threading `game` as the fold accumulator for its `rng` (capture rolls) -- same shape as step_asteroids_go/step_ships_go. Handles both flight (move + home + roll for orbit-capture) and the temporary orbit itself."
+  pfn age_player_shots_go(game : Game, shots : List(Shot), acc : List(Shot), dt_s : Float) : Game do
+    match shots do
+      Nil -> { game with player_shots: List.reverse(acc) }
+      Cons(s, rest) ->
+        match s.mode do
+          ShotOrbiting(idx, angle, time_left) ->
+            let ttl2 = s.ttl - dt_s
+            match Perihelion.Core.star_at(game, idx) do
+              None ->
+                -- The star this shot was orbiting is gone (ladder scrolled
+                -- past it) -- break free immediately from its last position.
+                let speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy)
+                let pair = tangent_velocity(angle, speed)
+                let (bvx, bvy) = pair
+                let s2 = { s with vx: bvx, vy: bvy, ttl: ttl2, mode: ShotFlying }
+                age_player_shots_go(game, rest, Cons(s2, acc), dt_s)
+              Some(star) ->
+                let time_left2 = time_left - dt_s
+                if time_left2 <= 0.0 do
+                  let speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy)
+                  let pair = tangent_velocity(angle, speed)
+                  let (bvx, bvy) = pair
+                  let s2 = { s with vx: bvx, vy: bvy, ttl: ttl2, mode: ShotFlying }
+                  age_player_shots_go(game, rest, Cons(s2, acc), dt_s)
+                else
+                  let angle2 = angle + missile_orbit_angular_speed() * dt_s
+                  let r = star.capture_radius * missile_orbit_radius_mult()
+                  let s2 = { s with
+                               x: star.x + Math.cos(angle2) * r,
+                               y: star.y + Math.sin(angle2) * r,
+                               ttl: ttl2,
+                               mode: ShotOrbiting(idx, angle2, time_left2) }
+                  age_player_shots_go(game, rest, Cons(s2, acc), dt_s)
+                end
+            end
+          ShotFlying ->
+            let aged = age_shot(s, dt_s, game.asteroids, game.ships)
+            if !s.homing do
+              age_player_shots_go(game, rest, Cons(aged, acc), dt_s)
+            else
+              match missile_capture_target(aged.x, aged.y, aged.vx, aged.vy, game.stars, 0) do
+                None -> age_player_shots_go(game, rest, Cons(aged, acc), dt_s)
+                Some(pair) ->
+                  let (idx, star) = pair
+                  let (rng2, roll) = draw(game.rng)
+                  let game2 = { game with rng: rng2 }
+                  if roll < missile_orbit_chance() do
+                    let angle = Math.atan2(aged.y - star.y, aged.x - star.x)
+                    let s2 = { aged with mode: ShotOrbiting(idx, angle, missile_orbit_duration()) }
+                    age_player_shots_go(game2, rest, Cons(s2, acc), dt_s)
+                  else
+                    age_player_shots_go(game2, rest, Cons(aged, acc), dt_s)
+                  end
+              end
+            end
+        end
+    end
+  end
+
   pfn step_entities(game : Game, dt_s : Float) : Game do
     let g1 = step_asteroids(game, dt_s)
-    let p_shots = List.filter(List.map(g1.player_shots, fn s -> age_shot(s, dt_s, g1.asteroids, g1.ships)),
-      fn s -> s.ttl > 0.0 && in_band(g1, s.x, s.y))
-    let e_shots = List.filter(List.map(g1.enemy_shots, fn s -> age_shot(s, dt_s, g1.asteroids, g1.ships)),
-      fn s -> s.ttl > 0.0 && in_band(g1, s.x, s.y))
+    let g2 = age_player_shots_go(g1, g1.player_shots, Nil, dt_s)
+    -- Orbiting shots are exempt from the in-band despawn (same exemption
+    -- AsteroidOrbiting gets) -- they're tethered to a star, not drifting
+    -- off toward the edge of the world, and their own ttl/orbit timer
+    -- already bounds how long they can stick around.
+    let p_shots = List.filter(g2.player_shots, fn s -> s.ttl > 0.0 && (is_orbiting_shot(s) || in_band(g2, s.x, s.y)))
+    let e_shots = List.filter(List.map(g2.enemy_shots, fn s -> age_shot(s, dt_s, g2.asteroids, g2.ships)),
+      fn s -> s.ttl > 0.0 && in_band(g2, s.x, s.y))
     let pickups = List.filter(
-      List.map(g1.pickups, fn p -> { p with ttl: p.ttl - dt_s }),
+      List.map(g2.pickups, fn p -> { p with ttl: p.ttl - dt_s }),
       fn p -> p.ttl > 0.0)
-    { g1 with
+    { g2 with
         player_shots: p_shots,
         enemy_shots: e_shots,
         pickups: pickups,
-        fire_cooldown: if g1.fire_cooldown > 0.0 do g1.fire_cooldown - dt_s else 0.0 end,
-        starkiller_cooldown: if g1.starkiller_cooldown > 0.0 do g1.starkiller_cooldown - dt_s else 0.0 end }
+        fire_cooldown: if g2.fire_cooldown > 0.0 do g2.fire_cooldown - dt_s else 0.0 end,
+        starkiller_cooldown: if g2.starkiller_cooldown > 0.0 do g2.starkiller_cooldown - dt_s else 0.0 end }
   end
 
   -- Nearest star to (x, y) within asteroid_gravity_range(), if any (plain
@@ -431,9 +562,9 @@ mod Perihelion.Combat do
     let dy = game.ball_y - sy
     let dist = Math.sqrt(dx * dx + dy * dy)
     if dist > 0.0 do
-      { x: sx, y: sy, vx: dx / dist * enemy_shot_speed(), vy: dy / dist * enemy_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      { x: sx, y: sy, vx: dx / dist * enemy_shot_speed(), vy: dy / dist * enemy_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: ShotFlying }
     else
-      { x: sx, y: sy, vx: 0.0, vy: enemy_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      { x: sx, y: sy, vx: 0.0, vy: enemy_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: ShotFlying }
     end
   end
 
@@ -597,11 +728,11 @@ mod Perihelion.Combat do
   fn spread_angle_step() : Float do 0.5236 end -- 30 degrees in radians
 
   pfn make_shot(x : Float, y : Float, ax : Float, ay : Float) : Shot do
-    { x: x, y: y, vx: ax * player_shot_speed(), vy: ay * player_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+    { x: x, y: y, vx: ax * player_shot_speed(), vy: ay * player_shot_speed(), ttl: shot_ttl(), homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: ShotFlying }
   end
 
   pfn make_homing_shot(x : Float, y : Float, ax : Float, ay : Float) : Shot do
-    { x: x, y: y, vx: ax * player_shot_speed(), vy: ay * player_shot_speed(), ttl: shot_ttl(), homing: true, star_killer: false, target_x: 0.0, target_y: 0.0 }
+    { x: x, y: y, vx: ax * player_shot_speed(), vy: ay * player_shot_speed(), ttl: shot_ttl(), homing: true, star_killer: false, target_x: 0.0, target_y: 0.0, mode: ShotFlying }
   end
 
   pfn rotate(ax : Float, ay : Float, angle : Float) : (Float, Float) do
@@ -669,7 +800,7 @@ mod Perihelion.Combat do
                            vx: (tdx / tdist) * player_shot_speed(),
                            vy: (tdy / tdist) * player_shot_speed(),
                            ttl: shot_ttl() * 3.0, homing: false, star_killer: true,
-                           target_x: target.x, target_y: target.y }, Nil)
+                           target_x: target.x, target_y: target.y, mode: ShotFlying }, Nil)
                   end
               end
           end

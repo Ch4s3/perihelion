@@ -60,7 +60,7 @@ mod TestPerihelionCombat do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None }
+      fx_bursts: Nil, capture_flash: None, paused: false }
   end
 
   pfn space() : List(String) do
@@ -86,13 +86,23 @@ mod TestPerihelionCombat do
     end
   end
 
+  -- A homing shot 40px directly above star 1 (200, 360, capture_radius
+  -- 54), moving purely +x -- perpendicular to the radial (straight up),
+  -- i.e. a tangential pass, not a dive toward the center. No asteroids/
+  -- ships in base_game, so homing's own steering has nothing to curve
+  -- toward and leaves vx/vy exactly (120, 0).
+  pfn mk_tangential_homing_shot() : Shot do
+    { x: 200.0, y: 320.0, vx: 120.0, vy: 0.0, ttl: 3.0, homing: true,
+      star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+  end
+
   -- A ship + a shot already on top of it, ready to die on the next collide()
   -- (used to build up kill streaks tick-by-tick).
   pfn mk_dead_ship_shot(s : Star) : (Ship, Shot) do
     let ship = { star_idx: 1, x: s.x, y: s.y, mode: ShipOrbiting(0, 0.0),
                  fire_cooldown: 5.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
     let shot = { x: s.x, y: s.y, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false,
-                 star_killer: false, target_x: 0.0, target_y: 0.0 }
+                 star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
     let out = (ship, shot)
     out
   end
@@ -100,7 +110,7 @@ mod TestPerihelionCombat do
   pfn mk_dead_asteroid_shot(x : Float, y : Float) : (Asteroid, Shot) do
     let ast = { x: x, y: y, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
     let shot = { x: x, y: y, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false,
-                 star_killer: false, target_x: 0.0, target_y: 0.0 }
+                 star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
     let out = (ast, shot)
     out
   end
@@ -276,7 +286,7 @@ mod TestPerihelionCombat do
     test "asteroids drift, arc toward a nearby star, and shots age" do
       let g0 = base_game(0.0)
       let ast = { x: 100.0, y: 300.0, vx: 90.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
-      let shot = { x: 50.0, y: 300.0, vx: 0.0, vy: 0.0, ttl: 0.01, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let shot = { x: 50.0, y: 300.0, vx: 0.0, vy: 0.0, ttl: 0.01, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
       let g2 = Perihelion.Combat.step(g, dt())
       match g2.asteroids do
@@ -354,6 +364,86 @@ mod TestPerihelionCombat do
       end
       match g2.ships do
         Cons(sh, Nil) -> assert (sh.fire_cooldown > 0.0)
+        _ -> assert false
+      end
+    end
+  end
+
+  describe "homing missile orbit-capture" do
+    test "a tangential homing shot inside a star's ring either keeps flying or gets captured into orbit" do
+      let g0 = base_game(0.0)
+      let g = { g0 with player_shots: Cons(mk_tangential_homing_shot(), Nil), rng: Random.seed(7) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotFlying -> assert true
+            ShotOrbiting(idx, _, time_left) ->
+              assert (idx == 1)
+              assert (time_left > 0.0)
+              assert (time_left <= Perihelion.Combat.missile_orbit_duration())
+          end
+        _ -> assert false
+      end
+    end
+
+    test "a homing shot diving straight at a star's center never gets captured" do
+      -- 20px directly above star 1 (200, 360), heading straight down (0,
+      -- 300) toward its center: dot(radial, velocity) ~= 1.0, well outside
+      -- missile_orbit_tangent_tolerance() regardless of the rng roll.
+      let radial_shot = { x: 200.0, y: 340.0, vx: 0.0, vy: 300.0, ttl: 3.0, homing: true,
+                           star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      let g0 = base_game(0.0)
+      let g = { g0 with player_shots: Cons(radial_shot, Nil), rng: Random.seed(7) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotFlying -> assert true
+            ShotOrbiting(_, _, _) -> assert false
+          end
+        _ -> assert false
+      end
+    end
+
+    test "an orbiting shot advances its angle and stays pinned to its inset ring" do
+      let g0 = base_game(0.0)
+      let s1 = mk_star(200.0, 360.0)
+      let orbiting_shot = { x: s1.x + s1.capture_radius, y: s1.y, vx: 120.0, vy: 0.0, ttl: 3.0,
+                             homing: true, star_killer: false, target_x: 0.0, target_y: 0.0,
+                             mode: Perihelion.Combat.ShotOrbiting(1, 0.0, 2.0) }
+      let g = { g0 with player_shots: Cons(orbiting_shot, Nil) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotOrbiting(idx, angle, time_left) ->
+              assert (idx == 1)
+              assert (angle > 0.0)
+              assert (time_left < 2.0)
+              let d = Math.sqrt((s.x - s1.x) * (s.x - s1.x) + (s.y - s1.y) * (s.y - s1.y))
+              assert (approx(d, s1.capture_radius * Perihelion.Combat.missile_orbit_radius_mult()))
+            ShotFlying -> assert false
+          end
+        _ -> assert false
+      end
+    end
+
+    test "an orbiting shot breaks free (tangentially, same speed) once its orbit timer runs out" do
+      let g0 = base_game(0.0)
+      let s1 = mk_star(200.0, 360.0)
+      let orbiting_shot = { x: s1.x + s1.capture_radius, y: s1.y, vx: 120.0, vy: 0.0, ttl: 3.0,
+                             homing: true, star_killer: false, target_x: 0.0, target_y: 0.0,
+                             mode: Perihelion.Combat.ShotOrbiting(1, 0.0, 0.001) }
+      let g = { g0 with player_shots: Cons(orbiting_shot, Nil) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotFlying ->
+              assert (approx(Math.sqrt(s.vx * s.vx + s.vy * s.vy), 120.0))
+            ShotOrbiting(_, _, _) -> assert false
+          end
         _ -> assert false
       end
     end
@@ -521,7 +611,7 @@ mod TestPerihelionCombat do
     test "player shot kills asteroid and scores multiplier" do
       let g0 = base_game(0.0)
       let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
-      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), multiplier: 3 }
       let g2 = Perihelion.Combat.collide(g)
       assert (List.is_empty(g2.asteroids))
@@ -532,7 +622,7 @@ mod TestPerihelionCombat do
     test "shot misses outside radii sum" do
       let g0 = base_game(0.0)
       let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
-      let shot = { x: 315.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let shot = { x: 315.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
       let g2 = Perihelion.Combat.collide(g)
       assert (List.length(g2.asteroids) == 1)
@@ -549,7 +639,7 @@ mod TestPerihelionCombat do
                    mode: ShipOrbiting(0, 0.0), fire_cooldown: 1.0, idle_timer: 10.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }
       let pos = Perihelion.Combat.ship_pos(ship)
       let (sx, sy) = pos
-      let shot = { x: sx, y: sy, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let shot = { x: sx, y: sy, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with ships: Cons(ship, Nil), player_shots: Cons(shot, Nil), multiplier: 2, rng: Random.seed(12345) }
       let g2 = Perihelion.Combat.collide(g)
       assert (List.is_empty(g2.ships))
@@ -725,7 +815,7 @@ mod TestPerihelionCombat do
   describe "defense: bullet ward" do
     test "absorbs one enemy shot hit, then is consumed" do
       let g0 = { base_game(0.0) with bullet_ward: true }
-      let es = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, ttl: 5.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let es = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, ttl: 5.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with enemy_shots: Cons(es, Nil) }
       let g2 = Perihelion.Combat.collide(g)
       assert (!is_over(g2))
@@ -735,7 +825,7 @@ mod TestPerihelionCombat do
 
     test "without bullet ward, the same hit ends the run (no shield either)" do
       let g0 = base_game(0.0)
-      let es = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, ttl: 5.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0 }
+      let es = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, ttl: 5.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with enemy_shots: Cons(es, Nil) }
       let g2 = Perihelion.Combat.collide(g)
       assert (is_over(g2))
