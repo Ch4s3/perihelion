@@ -17,16 +17,22 @@ mod Perihelion do
 
   -- ── Visual-effects state ─────────────────────────────────────────────
   -- Purely cosmetic, shell-local (not in the pure Game record, not tested):
-  -- a short ball-position trail, an elapsed-time accumulator driving the
-  -- stars' pulsating glow, live particle-burst instances, and an active
-  -- capture-flash ring. Threaded through tick() the same way `game` is.
+  -- an elapsed-time accumulator driving the stars' pulsating glow, live
+  -- particle instances (both one-off capture bursts and the continuous
+  -- rocket-exhaust stream trailing the ship -- see spawn_thrust_particles),
+  -- and an active capture-flash ring. Threaded through tick() the same way
+  -- `game` is.
   type Particle = { x : Float, y : Float, vx : Float, vy : Float, life : Float, max_life : Float }
+
+  -- A flying chunk-sprite piece (see spawn_chunk_debris), spawned when an
+  -- asteroid dies -- same shape as Particle but with rotation/spin and a
+  -- sprite index, since it draws an image rather than a plain dot.
+  type Debris = { x : Float, y : Float, vx : Float, vy : Float, rot : Float, spin : Float, life : Float, max_life : Float, img_idx : Int }
 
   -- actx/muted ride along in the same shell-local record: sound is another
   -- purely-cosmetic side effect keyed off the same before/after Game diff
   -- the particle/flash system already computes.
   type Fx = {
-    trail : List((Float, Float)),
     t : Float,
     particles : List(Particle),
     flash : Option((Float, Float, Float)),
@@ -37,7 +43,27 @@ mod Perihelion do
     shield_hull : List((Float, Float)),
     enemy_tops : List(Node),
     enemy_mids : List(Node),
-    enemy_bots : List(Node)
+    enemy_bots : List(Node),
+    icon_portal : Option(Canvas.Image),
+    icon_missile : Option(Canvas.Image),
+    icon_railgun_stack : Option(Canvas.Image),
+    icon_bomb : Option(Canvas.Image),
+    icon_energy_shield : Option(Canvas.Image),
+    -- Purely cosmetic view zoom, toggled by Z (see toggle_zoom_target):
+    -- `zoom` is the current rendered scale, eased each frame toward
+    -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
+    zoom : Float,
+    zoom_target : Float,
+    -- asteroid_01..05.png, indexed by a per-asteroid roll of shape_seed (see
+    -- asteroid_sprite_idx) -- an entry is None if that image failed to
+    -- load, in which case that asteroid falls back to the procedural jagged
+    -- polygon draw_asteroid_edges already draws (see draw_asteroids).
+    asteroid_sprites : List(Option(Canvas.Image)),
+    -- chunk_01..09.png, picked per debris piece when an asteroid dies (see
+    -- spawn_chunk_debris) -- None entries fall back to a plain dot, same
+    -- graceful-degradation shape as asteroid_sprites.
+    chunk_sprites : List(Option(Canvas.Image)),
+    debris : List(Debris)
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -263,6 +289,25 @@ mod Perihelion do
     build_enemy_bot_sprites_go(idx, Nil)
   end
 
+  doc "Loads a power-up icon PNG, called once at boot -- None on failure (e.g. served from a path without the pixel_icons/ dir) so a missing/broken icon just falls back to the existing text-only card/HUD rendering rather than crashing boot."
+  pfn load_icon(url : String) : Option(Canvas.Image) do
+    match Canvas.load_image(url) do
+      Ok(img) -> Some(img)
+      Err(_) -> None
+    end
+  end
+
+  doc "Loads `prefix01.ext`..`prefixNN.ext` (2-digit, 1-based) into a same-length list of Option(Image) -- each entry independently None on failure, same graceful-degradation shape as load_icon."
+  pfn load_numbered_sprites(dir : String, prefix : String, ext : String, n : Int, i : Int, acc : List(Option(Canvas.Image))) : List(Option(Canvas.Image)) do
+    if i > n do
+      List.reverse(acc)
+    else
+      let num = if i < 10 do "0" ++ int_to_string(i) else int_to_string(i) end
+      let url = dir ++ "/" ++ prefix ++ num ++ ext
+      load_numbered_sprites(dir, prefix, ext, n, i + 1, Cons(load_icon(url), acc))
+    end
+  end
+
   pfn fx_init() : Fx do
     let gl_node = Dom.create("canvas")
     let sprite_node = Dom.create("canvas")
@@ -273,16 +318,25 @@ mod Perihelion do
       None -> ()
       Some(sctx) -> draw_player_sprite_pixels(sctx)
     end
-    { trail: Nil, t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
+    { t: 0.0, particles: Nil, flash: None, actx: Audio.create(), muted: false,
       gl: WebGL.get_context(gl_node),
       player_sprite: Some(sprite_node),
       shield_hull: shield_hull_points(),
       enemy_tops: build_enemy_top_sprites(0),
       enemy_mids: build_enemy_mid_sprites(0),
-      enemy_bots: build_enemy_bot_sprites(0) }
+      enemy_bots: build_enemy_bot_sprites(0),
+      icon_portal: load_icon("pixel_icons/portal.png"),
+      icon_missile: load_icon("pixel_icons/missile.png"),
+      icon_railgun_stack: load_icon("pixel_icons/railgun_stack_x5.png"),
+      icon_bomb: load_icon("pixel_icons/bomb.png"),
+      icon_energy_shield: load_icon("pixel_icons/energy_shield.png"),
+      zoom: 1.0,
+      zoom_target: 1.0,
+      asteroid_sprites: load_numbered_sprites("asteroid_sprites/asteroids", "asteroid_", ".png", 5, 1, Nil),
+      chunk_sprites: load_numbered_sprites("asteroid_sprites/chunks", "chunk_", ".png", 9, 1, Nil),
+      debris: Nil }
   end
 
-  pfn trail_max() : Int do 22 end
   pfn flash_duration() : Float do 0.45 end
   pfn burst_count() : Int do 10 end
   pfn particle_life() : Float do 0.5 end
@@ -325,8 +379,121 @@ mod Perihelion do
     List.filter(List.map(particles, fn p -> step_particle(p, dt_s)), fn p -> p.life > 0.0)
   end
 
-  pfn push_trail(trail : List((Float, Float)), pos : (Float, Float)) : List((Float, Float)) do
-    List.take(Cons(pos, trail), trail_max())
+  -- ── Asteroid breakup debris ──────────────────────────────────────────
+  -- Alongside the existing small dot-spark burst (spawn_bursts, still fed
+  -- by the same game.fx_bursts death-position signal), a destroyed asteroid
+  -- also throws a few chunk_0N.png pieces -- bigger, sprite-based debris
+  -- that tumbles and fades, layering fine dust with chunky wreckage.
+  pfn chunk_debris_count() : Int do 4 end
+  pfn chunk_debris_life() : Float do 0.7 end
+  pfn chunk_debris_speed_min() : Float do 30.0 end
+  pfn chunk_debris_speed_max() : Float do 110.0 end
+  pfn chunk_debris_spin_max() : Float do 4.0 end
+  pfn chunk_sprite_count() : Int do 9 end
+
+  pfn spawn_chunk_piece(x : Float, y : Float, t : Float, i : Int) : Debris do
+    let seed = t + int_to_float(i) * 11.0
+    let a = hashf(seed, 21.0) * two_pi()
+    let speed = chunk_debris_speed_min() + hashf(seed, 22.0) * (chunk_debris_speed_max() - chunk_debris_speed_min())
+    let life = chunk_debris_life() * (0.6 + 0.4 * hashf(seed, 23.0))
+    let spin = (hashf(seed, 24.0) - 0.5) * 2.0 * chunk_debris_spin_max()
+    let img_idx = float_to_int(hashf(seed, 25.0) * int_to_float(chunk_sprite_count()))
+    { x: x, y: y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
+      rot: hashf(seed, 26.0) * two_pi(), spin: spin, life: life, max_life: life,
+      img_idx: if img_idx >= chunk_sprite_count() do chunk_sprite_count() - 1 else img_idx end }
+  end
+
+  pfn spawn_chunk_pieces(x : Float, y : Float, t : Float, i : Int, acc : List(Debris)) : List(Debris) do
+    if i >= chunk_debris_count() do
+      acc
+    else
+      spawn_chunk_pieces(x, y, t, i + 1, Cons(spawn_chunk_piece(x, y, t, i), acc))
+    end
+  end
+
+  pfn spawn_chunk_bursts(bursts : List((Float, Float)), t : Float, acc : List(Debris)) : List(Debris) do
+    match bursts do
+      Nil -> acc
+      Cons(pt, rest) ->
+        let (x, y) = pt
+        spawn_chunk_bursts(rest, t, spawn_chunk_pieces(x, y, t, 0, acc))
+    end
+  end
+
+  pfn step_debris_piece(d : Debris, dt_s : Float) : Debris do
+    { d with x: d.x + d.vx * dt_s, y: d.y + d.vy * dt_s, rot: d.rot + d.spin * dt_s, life: d.life - dt_s }
+  end
+
+  pfn step_debris(debris : List(Debris), dt_s : Float) : List(Debris) do
+    List.filter(List.map(debris, fn d -> step_debris_piece(d, dt_s)), fn d -> d.life > 0.0)
+  end
+
+  pfn draw_debris_piece(ctx, fx : Fx, d : Debris) : Unit do
+    let f = d.life / d.max_life
+    Canvas.set_global_alpha(ctx, f)
+    match List.nth(fx.chunk_sprites, d.img_idx) do
+      Some(img) ->
+        let size = 14.0
+        Canvas.save(ctx)
+        Canvas.translate(ctx, d.x, d.y)
+        Canvas.rotate(ctx, d.rot)
+        Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
+        Canvas.restore(ctx)
+      None ->
+        Canvas.set_fill_style(ctx, "#cfcfcf")
+        Canvas.begin_path(ctx)
+        Canvas.arc(ctx, d.x, d.y, 1.5 + 1.5 * f, 0.0, two_pi())
+        Canvas.fill(ctx)
+    end
+  end
+
+  pfn draw_debris(ctx, fx : Fx, debris : List(Debris)) : Unit do
+    match debris do
+      Nil -> ()
+      Cons(d, rest) ->
+        draw_debris_piece(ctx, fx, d)
+        draw_debris(ctx, fx, rest)
+    end
+    Canvas.set_global_alpha(ctx, 1.0)
+  end
+
+  -- ── Rocket-exhaust trail ─────────────────────────────────────────────
+  -- Replaces the old flat fading-dot trail with a continuous stream of
+  -- particles emitted from the ship's engine (the tail, opposite its
+  -- heading) each frame it's active -- reuses the same Particle type and
+  -- draw_particles rendering as capture bursts, just spawned continuously
+  -- instead of all-at-once, and with a shorter life so the plume stays
+  -- tight rather than piling up into a long tail.
+  pfn thrust_particles_per_tick() : Int do 2 end
+  pfn thrust_particle_life() : Float do 0.35 end
+  pfn thrust_speed_min() : Float do 25.0 end
+  pfn thrust_speed_max() : Float do 70.0 end
+  -- Half-angle (radians) of the exhaust cone's random spread around the
+  -- straight-back direction -- ~20 degrees, enough to read as turbulent
+  -- puffs rather than a laser-straight line of dots.
+  pfn thrust_spread() : Float do 0.35 end
+  -- How far behind the ship's center the engine nozzle sits, so particles
+  -- spawn from the tail rather than the ship's middle.
+  pfn thrust_engine_offset() : Float do 16.0 end
+
+  pfn spawn_thrust_particle(game : Game, t : Float, i : Int) : Particle do
+    let back = ball_heading(game) + 3.14159265
+    let seed = t + int_to_float(i) * 5.0
+    let spread = (hashf(seed, 11.0) - 0.5) * 2.0 * thrust_spread()
+    let a = back + spread
+    let speed = thrust_speed_min() + hashf(seed, 12.0) * (thrust_speed_max() - thrust_speed_min())
+    let life = thrust_particle_life() * (0.6 + 0.4 * hashf(seed, 13.0))
+    let ex = game.ball_x + Math.cos(back) * thrust_engine_offset()
+    let ey = game.ball_y + Math.sin(back) * thrust_engine_offset()
+    { x: ex, y: ey, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: life, max_life: life }
+  end
+
+  pfn spawn_thrust_particles(game : Game, t : Float, i : Int, acc : List(Particle)) : List(Particle) do
+    if i >= thrust_particles_per_tick() do
+      acc
+    else
+      spawn_thrust_particles(game, t, i + 1, Cons(spawn_thrust_particle(game, t, i), acc))
+    end
   end
 
   pfn step_flash(flash : Option((Float, Float, Float)), dt_s : Float) : Option((Float, Float, Float)) do
@@ -339,10 +506,20 @@ mod Perihelion do
     end
   end
 
-  pfn step_fx(fx : Fx, game : Game, dt_s : Float) : Fx do
+  fn zoom_ease() : Float do 6.0 end
+
+  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float) : Fx do
+    -- Freeze everything cosmetic while paused -- no time advance (stars
+    -- stop twinkling), no particle spawn/step (thrust particles would
+    -- otherwise re-spawn with an unchanged seed every frame, since t
+    -- wouldn't move, silently piling up an unbounded identical stack).
+    if game.paused do
+      fx
+    else
     let t2 = fx.t + dt_s
-    let trail2 = if was_playing(game) do push_trail(fx.trail, (game.ball_x, game.ball_y)) else fx.trail end
-    let particles2 = step_particles(spawn_bursts(game.fx_bursts, t2, fx.particles), dt_s)
+    let particles1 = if was_playing(game) do spawn_thrust_particles(game, t2, 0, fx.particles) else fx.particles end
+    let particles2 = step_particles(spawn_bursts(game.fx_bursts, t2, particles1), dt_s)
+    let debris2 = step_debris(spawn_chunk_bursts(game.fx_bursts, t2, fx.debris), dt_s)
     let flash1 = step_flash(fx.flash, dt_s)
     let flash2 = match game.capture_flash do
       None -> flash1
@@ -350,21 +527,8 @@ mod Perihelion do
         let (x, y) = pt
         Some((x, y, flash_duration()))
     end
-    { fx with trail: trail2, t: t2, particles: particles2, flash: flash2 }
-  end
-
-  pfn draw_trail(ctx, trail : List((Float, Float)), i : Int, n : Int) : Unit do
-    match trail do
-      Nil -> ()
-      Cons(pt, rest) ->
-        let (x, y) = pt
-        let f = 1.0 - int_to_float(i) / int_to_float(n)
-        Canvas.set_global_alpha(ctx, f * 0.38)
-        Canvas.set_fill_style(ctx, "#ffffff")
-        Canvas.begin_path(ctx)
-        Canvas.arc(ctx, x, y, 1.2 + 2.6 * f, 0.0, two_pi())
-        Canvas.fill(ctx)
-        draw_trail(ctx, rest, i + 1, n)
+    let zoom2 = fx.zoom + (zoom_target - fx.zoom) * zoom_ease() * dt_s
+    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
     end
   end
 
@@ -421,15 +585,25 @@ mod Perihelion do
     hashf(s.x + 3.0, s.y + 3.0) * two_pi()
   end
 
-  -- Style-2 (orbiting dots) identity, per star: how many dots (2..5) and how
-  -- fast they circle (0.4..2.8 rad/s) -- both derived from the star's fixed
-  -- position, so no two look quite alike and none share the base pulse speed.
+  -- Style-2 (orbiting dots) identity, per star: how many dots (2..5),
+  -- derived from the star's fixed position so no two stars look quite alike.
+  -- Each individual dot's orbit radius/speed is randomized separately below.
   pfn dot_count(s : Star) : Int do
     2 + float_to_int(hashf(s.x + 4.0, s.y + 4.0) * 4.0)
   end
 
-  pfn dot_speed(s : Star) : Float do
-    0.4 + hashf(s.x + 5.0, s.y + 5.0) * 2.4
+  -- Per-dot variation for style-2 orbiting dots: each dot on a star gets its
+  -- own orbit radius (1.4..2.4 * s.radius) and angular speed (0.3..3.0 rad/s),
+  -- seeded off both the star's position and the dot index so dots on the same
+  -- star drift independently instead of moving in lockstep.
+  pfn dot_radius(s : Star, i : Int) : Float do
+    let fi = int_to_float(i)
+    s.radius * (1.4 + hashf(s.x + 6.0 + fi, s.y + 6.0 + fi) * 1.0)
+  end
+
+  pfn dot_speed_i(s : Star, i : Int) : Float do
+    let fi = int_to_float(i)
+    0.3 + hashf(s.x + 7.0 + fi, s.y + 7.0 + fi) * 2.7
   end
 
   -- Style 0: the ring itself brightens/thickens on the pulse, layered on
@@ -452,14 +626,16 @@ mod Perihelion do
     Canvas.fill(ctx)
   end
 
-  -- Style 2: `n` small points drifting around the star at dot_speed(s), evenly
-  -- spaced (2*pi/n apart). n = dot_count(s); the caller seeds i = 0.
+  -- Style 2: `n` small points drifting around the star, each with its own
+  -- independently-rolled orbit radius and angular speed (see dot_radius /
+  -- dot_speed_i), initially spread evenly (2*pi/n apart). n = dot_count(s);
+  -- the caller seeds i = 0.
   pfn draw_pulse_particle(ctx, s : Star, t : Float, n : Int, i : Int) : Unit do
     if i >= n do
       ()
     else
-      let a = t * dot_speed(s) + pulse_phase(s) + int_to_float(i) * (two_pi() / int_to_float(n))
-      let r = s.radius * 1.8
+      let a = t * dot_speed_i(s, i) + pulse_phase(s) + int_to_float(i) * (two_pi() / int_to_float(n))
+      let r = dot_radius(s, i)
       let px = s.x + Math.cos(a) * r
       let py = s.y + Math.sin(a) * r
       Canvas.set_global_alpha(ctx, 0.14)
@@ -577,14 +753,26 @@ mod Perihelion do
   -- wide viewport leaves empty around the narrow gameplay ladder) and
   -- scrolls vertically with the same camera translate as everything else.
   pfn bg_star_chance() : Float do 0.5 end
+  -- How much a cell's nebula density (0-1) can raise its star-spawn chance
+  -- above the base bg_star_chance() -- a cell dead-center in a dense cloud
+  -- can reach 0.5 + 0.35 = 0.85, well above clear space's flat 0.5, without
+  -- ever guaranteeing every cell fills in.
+  pfn density_bg_boost() : Float do 0.35 end
   -- Fraction of background stars (of those that spawn) that get a slow
   -- brightness pulse -- a small minority, so it reads as just a couple of
   -- twinkling points rather than the whole field animating.
   pfn bg_pulse_chance() : Float do 0.04 end
 
-  pfn draw_bg_cell(ctx, gx : Int, gy : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_cell(ctx, gx : Int, gy : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     let h = bg_hash(gx, gy, seed)
-    if h > bg_star_chance() do
+    -- Cell-center world position (not the jittered star position computed
+    -- below, which depends on h already having passed) is precise enough
+    -- for a coarse density sample -- only used to bias the spawn chance.
+    let cx = int_to_float(gx) * cell + cell * 0.5
+    let cy = int_to_float(gy) * cell + cell * 0.5
+    let dens = Perihelion.Nebula.density_of_clouds(cx, cy, clouds)
+    let chance = bg_star_chance() + dens * density_bg_boost()
+    if h > chance do
       ()
     else
       let jx = bg_hash(gx, gy + 1000, seed)
@@ -613,32 +801,32 @@ mod Perihelion do
     end
   end
 
-  pfn draw_bg_row(ctx, gx : Int, gx_max : Int, gy : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_row(ctx, gx : Int, gx_max : Int, gy : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     if gx > gx_max do
       ()
     else
-      draw_bg_cell(ctx, gx, gy, cell, seed, t)
-      draw_bg_row(ctx, gx + 1, gx_max, gy, cell, seed, t)
+      draw_bg_cell(ctx, gx, gy, cell, seed, t, clouds)
+      draw_bg_row(ctx, gx + 1, gx_max, gy, cell, seed, t, clouds)
     end
   end
 
-  pfn draw_bg_rows(ctx, gx0 : Int, gx1 : Int, gy : Int, gy_max : Int, cell : Float, seed : Float, t : Float) : Unit do
+  pfn draw_bg_rows(ctx, gx0 : Int, gx1 : Int, gy : Int, gy_max : Int, cell : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     if gy > gy_max do
       ()
     else
-      draw_bg_row(ctx, gx0, gx1, gy, cell, seed, t)
-      draw_bg_rows(ctx, gx0, gx1, gy + 1, gy_max, cell, seed, t)
+      draw_bg_row(ctx, gx0, gx1, gy, cell, seed, t, clouds)
+      draw_bg_rows(ctx, gx0, gx1, gy + 1, gy_max, cell, seed, t, clouds)
     end
   end
 
-  pfn draw_starfield(ctx, cam_x : Float, cam : Float, view_w : Float, view_h : Float, seed : Float, t : Float) : Unit do
+  pfn draw_starfield(ctx, cam_x : Float, cam : Float, view_w : Float, view_h : Float, seed : Float, t : Float, clouds : List(Perihelion.Nebula.Cloud)) : Unit do
     let cell = 70.0
     let gx0 = float_to_int(Math.floor(cam_x / cell)) - 1
     let gx1 = float_to_int(Math.floor((cam_x + view_w) / cell)) + 1
     let gy0 = float_to_int(Math.floor(cam / cell)) - 1
     let gy1 = float_to_int(Math.floor((cam + view_h) / cell)) + 1
     Canvas.set_fill_style(ctx, "#ffffff")
-    draw_bg_rows(ctx, gx0, gx1, gy0, gy1, cell, seed, t)
+    draw_bg_rows(ctx, gx0, gx1, gy0, gy1, cell, seed, t, clouds)
     Canvas.set_global_alpha(ctx, 1.0)
   end
 
@@ -647,22 +835,39 @@ mod Perihelion do
   -- canvas (see docs/superpowers/specs/2026-07-13-webgl-nebula-design.md).
   -- Rendered right after the background fill, before the camera translate,
   -- so the composite lands in screen space -- see draw_nebula_gl below.
-  pfn to_screen_clouds(clouds : List(Perihelion.Nebula.Cloud), cam_x : Float, cam_y : Float) : List(WebGL.Cloud) do
+  -- Applies the same focus-preserving zoom transform draw()'s Canvas calls
+  -- use, since this maps world -> screen manually rather than riding the
+  -- Canvas transform stack (the WebGL composite is drawn before that
+  -- stack's save/translate/scale is even pushed).
+  pfn to_screen_clouds(clouds : List(Perihelion.Nebula.Cloud), focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.Cloud) do
     match clouds do
       Nil -> Nil
       Cons(c, rest) ->
-        Cons({ x: c.x - cam_x, y: c.y - cam_y, radius: c.radius, strength: c.strength, seed: hashf(c.x, c.y) },
-             to_screen_clouds(rest, cam_x, cam_y))
+        Cons({ x: (c.x - focus_x) * zoom + view_w / 2.0, y: (c.y - focus_y) * zoom + view_h / 2.0,
+               radius: c.radius * zoom, strength: c.strength, seed: hashf(c.x, c.y) },
+             to_screen_clouds(rest, focus_x, focus_y, zoom, view_w, view_h))
     end
   end
 
-  pfn draw_nebula_gl(ctx, gl_opt : Option(WebGL.Context), game : Game, seed : Float) : Unit do
+  -- Fraction of clouds that render as a foreground layer (after the ship,
+  -- drifting in front of it) rather than background-only -- independent of
+  -- size, decided per-cloud by a deterministic hash of its own position so
+  -- it's stable across frames without storing anything.
+  pfn foreground_cloud_chance() : Float do 0.25 end
+
+  pfn is_foreground_cloud(c : Perihelion.Nebula.Cloud) : Bool do
+    hashf(c.x, c.y) < foreground_cloud_chance()
+  end
+
+  doc "Renders an already-computed cloud list via WebGL and composites it onto ctx -- takes `clouds` explicitly (rather than deriving it from `game` itself) so the shell can compute visible_clouds() once per frame and reuse the result for both this and the background-starfield density lookup, and so it can be called twice a frame (background clouds pre-ship, foreground clouds post-ship -- see draw())."
+  pfn draw_nebula_gl(ctx, gl_opt : Option(WebGL.Context), clouds : List(Perihelion.Nebula.Cloud), cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float, seed : Float) : Unit do
     match gl_opt do
       None -> ()
       Some(gl) ->
-        let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, game.view_w, seed)
-        let screen_clouds = to_screen_clouds(clouds, game.camera_x, game.camera_y)
-        WebGL.draw_nebula(gl, screen_clouds, game.view_w, game.view_h, seed)
+        let focus_x = cam_x + view_w / 2.0
+        let focus_y = cam_y + view_h / 2.0
+        let screen_clouds = to_screen_clouds(clouds, focus_x, focus_y, zoom, view_w, view_h)
+        WebGL.draw_nebula(gl, screen_clouds, view_w, view_h, seed)
         Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
     end
   end
@@ -710,18 +915,65 @@ mod Perihelion do
     end
   end
 
-  pfn draw_asteroids(ctx, asteroids : List(Asteroid)) : Unit do
+  pfn draw_asteroid_procedural(ctx, a : Asteroid) : Unit do
+    let color = match a.mode do
+      AsteroidDrifting -> "#8a8a94"
+      AsteroidOrbiting(_, _) -> "#e8e8e8"
+    end
+    Canvas.set_fill_style(ctx, color)
+    Canvas.begin_path(ctx)
+    draw_asteroid_edges(ctx, a, 0)
+  end
+
+  -- Which of the 5 asteroid_0N.png tiles a given asteroid uses -- reuses
+  -- shape_seed (already rolled once at spawn for the procedural fallback
+  -- shape) rather than adding a new field, so the two rendering paths stay
+  -- deterministically in sync per asteroid.
+  pfn asteroid_sprite_idx(a : Asteroid) : Int do
+    let idx = float_to_int(a.shape_seed * 5.0)
+    if idx > 4 do 4 else if idx < 0 do 0 else idx end end
+  end
+
+  -- Slow deterministic tumble, derived (not stored) from shape_seed + elapsed
+  -- time -- reads as gently rotating in space without needing a new Asteroid
+  -- field just for cosmetic spin.
+  pfn asteroid_spin_rate(a : Asteroid) : Float do
+    0.3 + hashf(a.shape_seed, 77.0) * 0.9
+  end
+
+  pfn draw_asteroid_sprite(ctx, a : Asteroid, img : Canvas.Image, t : Float) : Unit do
+    let size = a.radius * 2.4
+    let angle = a.shape_seed * two_pi() + t * asteroid_spin_rate(a)
+    Canvas.save(ctx)
+    Canvas.translate(ctx, a.x, a.y)
+    Canvas.rotate(ctx, angle)
+    Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
+    Canvas.restore(ctx)
+    -- The sprite art itself doesn't distinguish drifting vs. permanently
+    -- orbiting (unlike the procedural fallback's color swap), so a thin
+    -- bright ring keeps that gameplay-relevant read alive.
+    match a.mode do
+      AsteroidDrifting -> ()
+      AsteroidOrbiting(_, _) ->
+        Canvas.set_global_alpha(ctx, 0.6)
+        Canvas.set_stroke_style(ctx, "#e8e8e8")
+        Canvas.set_line_width(ctx, 1.5)
+        Canvas.begin_path(ctx)
+        Canvas.arc(ctx, a.x, a.y, a.radius * 1.3, 0.0, two_pi())
+        Canvas.stroke(ctx)
+        Canvas.set_global_alpha(ctx, 1.0)
+    end
+  end
+
+  pfn draw_asteroids(ctx, fx : Fx, asteroids : List(Asteroid)) : Unit do
     match asteroids do
       Nil -> ()
       Cons(a, rest) ->
-        let color = match a.mode do
-          AsteroidDrifting -> "#8a8a94"
-          AsteroidOrbiting(_, _) -> "#e8e8e8"
+        match List.nth(fx.asteroid_sprites, asteroid_sprite_idx(a)) do
+          Some(img) -> draw_asteroid_sprite(ctx, a, img, fx.t)
+          None -> draw_asteroid_procedural(ctx, a)
         end
-        Canvas.set_fill_style(ctx, color)
-        Canvas.begin_path(ctx)
-        draw_asteroid_edges(ctx, a, 0)
-        draw_asteroids(ctx, rest)
+        draw_asteroids(ctx, fx, rest)
     end
   end
 
@@ -776,7 +1028,7 @@ mod Perihelion do
     end
   end
 
-  pfn draw_pickups(ctx, pickups : List(Pickup)) : Unit do
+  pfn draw_pickups(ctx, pickups : List(Pickup), fx : Fx) : Unit do
     match pickups do
       Nil -> ()
       Cons(pk, rest) ->
@@ -785,7 +1037,11 @@ mod Perihelion do
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, pk.x, pk.y, 8.0, 0.0, two_pi())
         Canvas.stroke(ctx)
-        draw_pickups(ctx, rest)
+        match upgrade_icon(pk.kind, fx) do
+          None -> ()
+          Some(img) -> draw_icon_fit(ctx, img, pk.x, pk.y, 13.0)
+        end
+        draw_pickups(ctx, rest, fx)
     end
   end
 
@@ -850,7 +1106,7 @@ mod Perihelion do
   -- How far the shield hull is scaled out from the sprite's own silhouette,
   -- from its center -- so the shield visibly surrounds the ship rather than
   -- tracing directly on top of it.
-  fn shield_scale() : Float do 1.15 end
+  fn shield_scale() : Float do 1.28 end
   -- Grid-space (64 cols x 96 rows) to the sprite's own local pixel-space
   -- (32x48, matching draw_player_sprite_pixels's target size).
   fn sprite_col_scale() : Float do 0.5 end
@@ -953,7 +1209,7 @@ mod Perihelion do
       OffenseWeapon(Homing) -> "Homing Missiles"
       OffenseWeapon(Spread) -> "Spread Fire"
       OffenseWeapon(StarKiller) -> "Star Killer"
-      OffenseWeapon(Base) -> "Base Weapon"
+      OffenseWeapon(Base) -> "Railgun"
       OffenseFireRate -> "Faster Fire"
       DefenseBulletWard -> "Bullet Ward"
       DefenseDeflector -> "Deflector Plating"
@@ -971,7 +1227,7 @@ mod Perihelion do
       OffenseWeapon(Homing) -> "Curves toward threats"
       OffenseWeapon(Spread) -> "5-shot fan"
       OffenseWeapon(StarKiller) -> "Destroys a distant star"
-      OffenseWeapon(Base) -> "Standard radial shot"
+      OffenseWeapon(Base) -> "Standard railgun shot"
       OffenseFireRate -> "Faster shooting"
       DefenseBulletWard -> "Blocks one enemy shot"
       DefenseDeflector -> "Bounces asteroids"
@@ -982,28 +1238,61 @@ mod Perihelion do
     end
   end
 
-  pfn draw_milestone_card(ctx, u : Perihelion.Upgrades.UpgradeKind, cx : Float, view_h : Float) : Unit do
-    Canvas.set_stroke_style(ctx, "#ffffff")
-    Canvas.set_line_width(ctx, 2.0)
-    Canvas.stroke_rect(ctx, cx - 60.0, view_h / 2.0 - 60.0, 120.0, 120.0)
-    Canvas.set_text_align(ctx, "center")
-    Canvas.set_font(ctx, "14px sans-serif")
-    Canvas.fill_text(ctx, upgrade_label(u), cx, view_h / 2.0)
-    Canvas.set_font(ctx, "10px sans-serif")
-    Canvas.fill_text(ctx, upgrade_description(u), cx, view_h / 2.0 + 20.0)
+  doc "The power-up icon art for an upgrade kind, if one has been drawn yet -- None falls back to the existing text-only rendering at every call site (milestone cards, world pickups, HUD), so undrawn upgrades (Faster Fire, Bullet Ward, Deflector Plating, Star Thrust, Trajectory Preview) degrade gracefully rather than needing placeholder art."
+  pfn upgrade_icon(u : Perihelion.Upgrades.UpgradeKind, fx : Fx) : Option(Canvas.Image) do
+    match u do
+      OffenseWeapon(Homing) -> fx.icon_missile
+      OffenseWeapon(Spread) -> fx.icon_railgun_stack
+      OffenseWeapon(StarKiller) -> fx.icon_bomb
+      DefenseShield -> fx.icon_energy_shield
+      SpecialItem(StarJump) -> fx.icon_portal
+      _ -> None
+    end
   end
 
-  pfn draw_milestone_cards(ctx, choices : List(Perihelion.Upgrades.UpgradeKind), view_w : Float, view_h : Float, i : Int) : Unit do
+  doc "Draws `img` centered at (cx, cy), scaled to fit within a `size` x `size` box while preserving aspect ratio -- the pixel_icons/*.png art is pre-cropped to square canvases, so this only matters if a differently-shaped image is ever dropped in."
+  pfn draw_icon_fit(ctx, img : Canvas.Image, cx : Float, cy : Float, size : Float) : Unit do
+    Canvas.draw_image_scaled(ctx, img, cx - size / 2.0, cy - size / 2.0, size, size)
+  end
+
+  pfn draw_milestone_card(ctx, u : Perihelion.Upgrades.UpgradeKind, cx : Float, view_h : Float, fx : Fx) : Unit do
+    let mid_y = view_h / 2.0
+    Canvas.set_stroke_style(ctx, "#ffffff")
+    Canvas.set_line_width(ctx, 2.0)
+    Canvas.stroke_rect(ctx, cx - 60.0, mid_y - 60.0, 120.0, 120.0)
+    match upgrade_icon(u, fx) do
+      None -> ()
+      Some(img) -> draw_icon_fit(ctx, img, cx, mid_y - 22.0, 56.0)
+    end
+    Canvas.set_text_align(ctx, "center")
+    Canvas.set_font(ctx, "14px sans-serif")
+    Canvas.fill_text(ctx, upgrade_label(u), cx, mid_y + 28.0)
+    Canvas.set_font(ctx, "10px sans-serif")
+    Canvas.fill_text(ctx, upgrade_description(u), cx, mid_y + 46.0)
+  end
+
+  pfn draw_milestone_cards(ctx, choices : List(Perihelion.Upgrades.UpgradeKind), view_w : Float, view_h : Float, fx : Fx, i : Int) : Unit do
     match choices do
       Nil -> ()
       Cons(u, rest) ->
         let col_w = view_w / 3.0
-        draw_milestone_card(ctx, u, col_w * (int_to_float(i) + 0.5), view_h)
-        draw_milestone_cards(ctx, rest, view_w, view_h, i + 1)
+        draw_milestone_card(ctx, u, col_w * (int_to_float(i) + 0.5), view_h, fx)
+        draw_milestone_cards(ctx, rest, view_w, view_h, fx, i + 1)
     end
   end
 
-  pfn draw_hud(ctx, game : Game) : Unit do
+  doc "Draws a HUD status line, with a small icon in front of the text when upgrade_icon has art for `u` -- falls back to plain left-aligned text otherwise."
+  pfn draw_hud_icon_line(ctx, fx : Fx, u : Perihelion.Upgrades.UpgradeKind, text : String, y : Float) : Unit do
+    Canvas.set_text_align(ctx, "left")
+    match upgrade_icon(u, fx) do
+      None -> Canvas.fill_text(ctx, text, 14.0, y)
+      Some(img) ->
+        draw_icon_fit(ctx, img, 22.0, y - 6.0, 18.0)
+        Canvas.fill_text(ctx, text, 34.0, y)
+    end
+  end
+
+  pfn draw_hud(ctx, game : Game, fx : Fx) : Unit do
     Canvas.set_fill_style(ctx, "#eeeeee")
     Canvas.set_font(ctx, "18px sans-serif")
     Canvas.set_text_align(ctx, "left")
@@ -1017,18 +1306,25 @@ mod Perihelion do
     else
       ()
     end
-    Canvas.set_text_align(ctx, "left")
     Canvas.set_font(ctx, "13px sans-serif")
-    Canvas.fill_text(ctx, upgrade_label(Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game))), 14.0, game.view_h - 60.0)
+    draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game)),
+                       upgrade_label(Perihelion.Upgrades.OffenseWeapon(Perihelion.Core.active_weapon(game))), game.view_h - 60.0)
     match game.special do
       None -> ()
-      Some(k) -> Canvas.fill_text(ctx, upgrade_label(Perihelion.Upgrades.SpecialItem(k)) ++ " x" ++ int_to_string(game.special_charges), 14.0, game.view_h - 40.0)
+      Some(k) ->
+        draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.SpecialItem(k),
+                           upgrade_label(Perihelion.Upgrades.SpecialItem(k)) ++ " x" ++ int_to_string(game.special_charges), game.view_h - 40.0)
     end
     let defense_tags =
       (if game.bullet_ward do "ward " else "" end) ++
       (if game.deflector_plating do "deflect " else "" end) ++
       (if game.shield > 0 do "shield x" ++ int_to_string(game.shield) else "" end)
-    Canvas.fill_text(ctx, defense_tags, 14.0, game.view_h - 20.0)
+    Canvas.set_text_align(ctx, "left")
+    if game.shield > 0 do
+      draw_hud_icon_line(ctx, fx, Perihelion.Upgrades.DefenseShield, defense_tags, game.view_h - 20.0)
+    else
+      Canvas.fill_text(ctx, defense_tags, 14.0, game.view_h - 20.0)
+    end
     Canvas.set_text_align(ctx, "center")
     match game.phase do
       Ready ->
@@ -1040,11 +1336,21 @@ mod Perihelion do
         Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
                          game.view_w / 2.0, game.view_h / 2.0)
         draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 36.0, 0)
-      Playing -> ()
+      Playing ->
+        draw_pause_button(ctx, game, game.view_w, game.view_h)
+        if game.paused do
+          Canvas.set_font(ctx, "22px sans-serif")
+          Canvas.fill_text(ctx, "Paused", game.view_w / 2.0, game.view_h / 2.0)
+          Canvas.set_font(ctx, "13px sans-serif")
+          Canvas.fill_text(ctx, "tap the corner button or press P to resume",
+                           game.view_w / 2.0, game.view_h / 2.0 + 26.0)
+        else
+          ()
+        end
       Milestone ->
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
-        draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, 0)
+        draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, fx, 0)
     end
   end
 
@@ -1053,10 +1359,20 @@ mod Perihelion do
     Canvas.set_fill_style(ctx, "#0a0a0a")
     Canvas.fill_rect(ctx, 0.0, 0.0, game.view_w, game.view_h)
     let seedf = int_to_float(game.seed)
-    draw_nebula_gl(ctx, fx.gl, game, seedf)
+    let clouds = Perihelion.Nebula.visible_clouds(game.stars, game.camera_y, game.view_h, game.view_w, seedf)
+    let bg_clouds = List.filter(clouds, fn c -> !is_foreground_cloud(c))
+    let fg_clouds = List.filter(clouds, fn c -> is_foreground_cloud(c))
+    draw_nebula_gl(ctx, fx.gl, bg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
     Canvas.save(ctx)
-    Canvas.translate(ctx, 0.0 - game.camera_x, 0.0 - game.camera_y)
-    draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t)
+    -- Focus-preserving zoom: translate to viewport center, scale, then
+    -- translate back by the pre-zoom view center -- at zoom 1.0 this is
+    -- exactly equivalent to the old flat `translate(-camera_x, -camera_y)`.
+    let focus_x = game.camera_x + game.view_w / 2.0
+    let focus_y = game.camera_y + game.view_h / 2.0
+    Canvas.translate(ctx, game.view_w / 2.0, game.view_h / 2.0)
+    Canvas.scale(ctx, fx.zoom, fx.zoom)
+    Canvas.translate(ctx, 0.0 - focus_x, 0.0 - focus_y)
+    draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t, clouds)
     -- while flying, mark the stars the ball is heading toward (see star_targeted)
     let aim = match game.mode do
       Flying(vx, vy)     -> Some((game.ball_x, game.ball_y, vx, vy))
@@ -1081,17 +1397,18 @@ mod Perihelion do
       Flying(_, _) -> () -- only meaningful while aiming, not mid-flight
     end
     draw_flash(ctx, fx.flash)
-    draw_asteroids(ctx, game.asteroids)
+    draw_asteroids(ctx, fx, game.asteroids)
     draw_ships(ctx, fx, game.ships)
     draw_shots(ctx, game.player_shots, "#ffffff", 3.0)
     draw_shots(ctx, game.enemy_shots, "#8a8a94", 2.5)
-    draw_pickups(ctx, game.pickups)
-    draw_trail(ctx, fx.trail, 0, trail_max())
+    draw_pickups(ctx, game.pickups, fx)
     draw_particles(ctx, fx.particles)
+    draw_debris(ctx, fx, fx.debris)
     Canvas.set_global_alpha(ctx, 1.0)
     draw_ball(ctx, game, fx)
     Canvas.restore(ctx)
-    draw_hud(ctx, game)
+    draw_nebula_gl(ctx, fx.gl, fg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
+    draw_hud(ctx, game, fx)
   end
 
   pfn draw_starkiller_reticle(ctx, game : Game) : Unit do
@@ -1191,6 +1508,17 @@ mod Perihelion do
     if List.any(keys, fn k -> k == "m" || k == "M") do !muted else muted end
   end
 
+  fn zoom_target_low() : Float do 1.0 end
+  fn zoom_target_high() : Float do 3.0 end
+
+  pfn toggle_zoom_target(target : Float, keys : List(String)) : Float do
+    if List.any(keys, fn k -> k == "z" || k == "Z") do
+      if target == zoom_target_high() do zoom_target_low() else zoom_target_high() end
+    else
+      target
+    end
+  end
+
   -- Every trigger here reuses an event the Combat/Core layer already reports
   -- for the visual-effects system (fx_bursts, capture_flash, phase/mode
   -- transitions) -- no game logic exists solely to drive sound.
@@ -1257,15 +1585,78 @@ mod Perihelion do
     end
   end
 
+  -- ── Pause button (on-screen, bottom-right corner -- empty in the rest
+  -- of the HUD layout) ─────────────────────────────────────────────────
+  pfn pause_button_size() : Float do 40.0 end
+  pfn pause_button_margin() : Float do 14.0 end
+
+  pfn pause_button_x(view_w : Float) : Float do
+    view_w - pause_button_margin() - pause_button_size()
+  end
+
+  pfn pause_button_y(view_h : Float) : Float do
+    view_h - pause_button_margin() - pause_button_size()
+  end
+
+  pfn is_pause_button_tap(t : (Int, Int), view_w : Float, view_h : Float) : Bool do
+    let (tx, ty) = t
+    let fx2 = int_to_float(tx)
+    let fy = int_to_float(ty)
+    let bx = pause_button_x(view_w)
+    let btn_y = pause_button_y(view_h)
+    fx2 >= bx && fx2 <= bx + pause_button_size() && fy >= btn_y && fy <= btn_y + pause_button_size()
+  end
+
+  pfn any_pause_button_tap(taps : List((Int, Int)), view_w : Float, view_h : Float) : Bool do
+    List.any(taps, fn t -> is_pause_button_tap(t, view_w, view_h))
+  end
+
+  pfn draw_pause_button(ctx, game : Game, view_w : Float, view_h : Float) : Unit do
+    let bx = pause_button_x(view_w)
+    let btn_y = pause_button_y(view_h)
+    let size = pause_button_size()
+    Canvas.set_global_alpha(ctx, 0.7)
+    Canvas.set_stroke_style(ctx, "#cccccc")
+    Canvas.set_line_width(ctx, 1.5)
+    Canvas.stroke_rect(ctx, bx, btn_y, size, size)
+    Canvas.set_fill_style(ctx, "#eeeeee")
+    if game.paused do
+      -- Play triangle
+      Canvas.begin_path(ctx)
+      Canvas.move_to(ctx, bx + size * 0.36, btn_y + size * 0.28)
+      Canvas.line_to(ctx, bx + size * 0.36, btn_y + size * 0.72)
+      Canvas.line_to(ctx, bx + size * 0.74, btn_y + size * 0.5)
+      Canvas.fill(ctx)
+    else
+      -- Two pause bars
+      Canvas.fill_rect(ctx, bx + size * 0.32, btn_y + size * 0.26, size * 0.14, size * 0.48)
+      Canvas.fill_rect(ctx, bx + size * 0.54, btn_y + size * 0.26, size * 0.14, size * 0.48)
+    end
+    Canvas.set_global_alpha(ctx, 1.0)
+  end
+
   pfn tick(ctx, el, game : Game, fx : Fx) : Unit do
-    let taps = Dom.taps(el)
-    let keys = Dom.key_presses()
+    let raw_taps = Dom.taps(el)
+    let raw_keys = Dom.key_presses()
     let cursor = Dom.pointer_pos(el)
     let (win_w, win_h) = Dom.window_size()
     let view_w = int_to_float(win_w)
     let view_h = int_to_float(win_h)
     resize_canvas(el, game, view_w, view_h)
     resize_gl(fx.gl, view_w, view_h)
+    -- The on-screen pause button only exists during Playing (pausing
+    -- Ready/Over/Milestone makes no sense) -- a tap there is consumed here
+    -- (stripped from `taps` so it doesn't ALSO read as a release/milestone
+    -- pick) and folded into `keys` as a synthetic "p", so pause toggling
+    -- has exactly one code path (Core.wants_pause_toggle) regardless of
+    -- whether it came from the key or the button.
+    let is_playing_phase = match game.phase do
+      Playing -> true
+      _ -> false
+    end
+    let button_tapped = is_playing_phase && any_pause_button_tap(raw_taps, view_w, view_h)
+    let taps = if button_tapped do List.filter(raw_taps, fn t -> !is_pause_button_tap(t, view_w, view_h)) else raw_taps end
+    let keys = if button_tapped do Cons("p", raw_keys) else raw_keys end
     -- R hard-resets from ANY phase (see Core.update), but the Milestone
     -- branch below normally routes through pick_milestone instead of
     -- update -- which never looks at `keys` -- so without this check R
@@ -1282,8 +1673,9 @@ mod Perihelion do
       _ -> Perihelion.Core.update(game, taps, keys, cursor, view_w, view_h, Perihelion.Core.dt())
     end
     let muted2 = toggle_mute(fx.muted, keys)
+    let zoom_target2 = toggle_zoom_target(fx.zoom_target, keys)
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt())
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2)
     let fx2 = { fx1 with muted: muted2 }
     if was_playing(game) && is_over_phase(g2) do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))

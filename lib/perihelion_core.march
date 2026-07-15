@@ -139,7 +139,11 @@ mod Perihelion.Core do
     -- capture_flash: the star just captured (forward progress only), for a
     -- brief highlight pulse.
     fx_bursts : List((Float, Float)),
-    capture_flash : Option((Float, Float))
+    capture_flash : Option((Float, Float)),
+    -- Freezes step_playing entirely while true (see update) -- toggled by
+    -- P (or the shell's on-screen button) only during Playing. Not its own
+    -- Phase variant so every existing Phase match arm stays untouched.
+    paused : Bool
   }
 
   -- ── Helpers ──────────────────────────────────────────────────────────
@@ -307,6 +311,11 @@ mod Perihelion.Core do
     List.any(keys, fn k -> k == "r" || k == "R")
   end
 
+  doc "Whether `keys` contains the pause-toggle key (p/P) -- also synthesized by the shell when the on-screen pause button is tapped, so this one check covers both input paths."
+  fn wants_pause_toggle(keys : List(String)) : Bool do
+    List.any(keys, fn k -> k == "p" || k == "P")
+  end
+
   doc "The only state transition: advance `game` by `dt_s` seconds, consuming this frame's taps, key presses, live cursor position, and viewport size."
   fn update(game : Game, taps : List((Int, Int)), keys : List(String), cursor : (Int, Int), view_w : Float, view_h : Float, dt_s : Float) : Game do
     -- fx_bursts/capture_flash are read-once signals: reset here so a frame
@@ -314,9 +323,10 @@ mod Perihelion.Core do
     -- on_capture overwrite them later THIS SAME pipeline call if something
     -- actually happens.
     let g0 = { game with view_w: view_w, view_h: view_h, fx_bursts: Nil, capture_flash: None }
-    -- R hard-resets from ANY phase: abandon the current run and return to a
-    -- fresh "tap to start" board. Persisted best + run history are kept (a
-    -- reset is not a finished run, so it neither records nor updates them).
+    -- R hard-resets from ANY phase (including while paused): abandon the
+    -- current run and return to a fresh "tap to start" board. Persisted
+    -- best + run history are kept (a reset is not a finished run, so it
+    -- neither records nor updates them).
     if wants_reset(keys) do
       reset(g0)
     else
@@ -327,7 +337,16 @@ mod Perihelion.Core do
         Over ->
           if tapped do restart(g0) else g0 end
         Playing ->
-          step_playing(g0, tapped, keys, cursor, dt_s)
+          -- Pause only applies to Playing -- toggled here (not folded into
+          -- step_playing) so the freeze is a hard stop: nothing below this
+          -- branch runs at all while paused, not even a no-op pass through
+          -- physics/combat.
+          let paused2 = if wants_pause_toggle(keys) do !g0.paused else g0.paused end
+          if paused2 do
+            { g0 with paused: true }
+          else
+            step_playing({ g0 with paused: false }, tapped, keys, cursor, dt_s)
+          end
         Milestone ->
           if tapped do
             match List.nth_opt(g0.milestone_choices, 0) do
@@ -738,7 +757,7 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None }
+          fx_bursts: Nil, capture_flash: None, paused: false }
       Cons(s0, _) ->
         { seed: seed, phase: Ready,
           ball_x: s0.x + Math.cos(start_angle) * s0.capture_radius,
@@ -765,7 +784,7 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None }
+          fx_bursts: Nil, capture_flash: None, paused: false }
     end
   end
 

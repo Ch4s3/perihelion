@@ -17,7 +17,7 @@
 mod Perihelion.Nebula do
 
   -- ── Tuning constants ─────────────────────────────────────────────────
-  fn cloud_chance() : Float do 0.30 end
+  fn cloud_chance() : Float do 0.05 end
   fn radius_min() : Float do 240.0 end
   fn radius_max() : Float do 700.0 end
   -- Kept well under radius_min so a spawned cloud always overlaps the star
@@ -32,6 +32,11 @@ mod Perihelion.Nebula do
   fn free_cloud_chance() : Float do 0.12 end
   fn free_band_size() : Float do 500.0 end
   fn free_x_margin() : Float do 100.0 end
+
+  -- A minority of triggered clouds roll as "giants", stretching base_r well
+  -- past the normal radius_max() ceiling for real scale variety.
+  fn giant_chance() : Float do 0.12 end
+  fn giant_radius_mult() : Float do 1.8 end
 
   type Cloud = { x : Float, y : Float, radius : Float, strength : Float }
 
@@ -79,20 +84,63 @@ mod Perihelion.Nebula do
     end
   end
 
+  -- How many "arm" tendrils (0-2) a triggered star-cloud gets, on top of
+  -- its normal lobes -- most clouds get none, a minority get one or two,
+  -- via an independent hash roll (offset +31, well clear of make_lobe's
+  -- +10/+20-range offsets so the two rolls never correlate).
+  pfn arm_count(sx : Float, sy : Float, seed : Float) : Int do
+    let t = hash3(sx + 31.0, sy, seed)
+    if t < 0.55 do 0 else if t < 0.85 do 1 else 2 end end
+  end
+
+  -- An "arm": like make_lobe, but placed farther out (up to 1.3x base_r,
+  -- vs. a normal lobe's 0.5x) and thinner (0.25-0.4x base_r, vs. a normal
+  -- lobe's 0.5-0.85x) -- reads as a tendril reaching beyond the cloud's
+  -- core rather than another rounded blob. Own offset space (+40/+50) so
+  -- it never rolls the same values as make_lobe's lobes.
+  pfn make_arm(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int) : Cloud do
+    let fi = int_to_float(i)
+    let spread = base_r * 1.3
+    let jx = (hash3(sx + 40.0 + fi, sy, seed) - 0.5) * 2.0 * spread
+    let jy = (hash3(sx, sy + 40.0 + fi, seed) - 0.5) * 2.0 * spread
+    let rf = 0.25 + 0.15 * hash3(sx + 50.0 + fi, sy, seed)
+    let strength = 0.3 + 0.5 * hash3(sx, sy + 50.0 + fi, seed)
+    { x: sx + jx, y: sy + jy, radius: base_r * rf, strength: strength }
+  end
+
+  pfn make_arms(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, acc : List(Cloud)) : List(Cloud) do
+    if i >= n do
+      acc
+    else
+      make_arms(sx, sy, seed, base_r, i + 1, n, Cons(make_arm(sx, sy, seed, base_r, i), acc))
+    end
+  end
+
   -- The cloud lobes (if any) anchored at a star's position -- 0 if the
   -- cloud_chance() roll misses, otherwise 2-3 lobes clustered near the star
-  -- (see make_lobe). Empty-list-vs-Option mirrors how visible_clouds already
-  -- returns a plain List(Cloud) -- callers never branched on Option here.
+  -- (see make_lobe) plus 0-2 protruding arms (see make_arm). Empty-list-vs-
+  -- Option mirrors how visible_clouds already returns a plain List(Cloud)
+  -- -- callers never branched on Option here.
   pfn star_cloud(sx : Float, sy : Float, seed : Float) : List(Cloud) do
     if hash3(sx, sy, seed) > cloud_chance() do
       Nil
     else
-      -- Square the raw hash before lerping so sizes skew toward the small
-      -- end with a real tail of much bigger clouds, instead of a flat
-      -- uniform spread -- most clouds modest, a few genuinely huge.
       let rt = hash3(sx + 2.0, sy, seed)
-      let base_r = lerp(radius_min(), radius_max(), rt * rt)
-      make_lobes(sx, sy, seed, base_r, 0, lobe_count(sx, sy, seed), Nil)
+      let is_giant = hash3(sx + 30.0, sy, seed) < giant_chance()
+      let base_r =
+        if is_giant do
+          -- Giants roll linearly across their (already large) range rather
+          -- than skewing small again -- the point is real size variety.
+          lerp(radius_max(), radius_max() * giant_radius_mult(), rt)
+        else
+          -- Square the raw hash before lerping so sizes skew toward the
+          -- small end with a real tail of much bigger clouds, instead of a
+          -- flat uniform spread -- most non-giant clouds modest.
+          lerp(radius_min(), radius_max(), rt * rt)
+        end
+      let lobes = make_lobes(sx, sy, seed, base_r, 0, lobe_count(sx, sy, seed), Nil)
+      let arms = make_arms(sx, sy, seed, base_r, 0, arm_count(sx, sy, seed), Nil)
+      List.append(arms, lobes)
     end
   end
 
@@ -135,6 +183,12 @@ mod Perihelion.Nebula do
   doc "Nebula density at world position (x, y) for the given star ladder and run seed, in [0, 1]. 0 in clear space; rises smoothly toward a cloud's center, falls back to exactly 0 at its edge. Deterministic: the same (x, y, stars, seed) always gives the same value — this is the single field both the renderer and any future gameplay effect should sample."
   fn density(x : Float, y : Float, stars : List(Star), seed : Float) : Float do
     let raw = density_over(x, y, seed, stars, 0.0)
+    if raw > 1.0 do 1.0 else raw end
+  end
+
+  doc "Like density, but sums over an already-built List(Cloud) instead of re-deriving each star's cloud from scratch -- for callers (like the shell's per-frame background-starfield density lookup) that already have visible_clouds' output on hand and would otherwise redo that work once per query."
+  fn density_of_clouds(x : Float, y : Float, clouds : List(Cloud)) : Float do
+    let raw = sum_contributions(x, y, clouds, 0.0)
     if raw > 1.0 do 1.0 else raw end
   end
 

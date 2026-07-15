@@ -21,22 +21,25 @@ mod TestPerihelionNebula do
     if gx > 3000.0 do
       acc
     else
-      if gy > 3000.0 do
-        grid_stars(gx + 1000.0, 0.0 - 3000.0, acc)
+      if gy > 4500.0 do
+        grid_stars(gx + 500.0, 0.0 - 500.0, acc)
       else
-        grid_stars(gx, gy + 1000.0, Cons(mk_star(gx, gy), acc))
+        grid_stars(gx, gy + 500.0, Cons(mk_star(gx, gy), acc))
       end
     end
   end
 
-  -- A dense 7x7 grid of anchor points (49 total) across a large area, so
-  -- tests below have plenty of independent cloud_chance() rolls to draw on
-  -- -- at cloud_chance() = 0.30, the odds of a fixed seed rolling zero
-  -- clouds across all 49 is astronomically small (0.70^49), unlike a
-  -- smaller spread where a ~2%+ miss-all chance could make a fixed-seed
-  -- assertion genuinely flaky.
+  -- A 13x11 grid of anchor points (143 total), all placed within the
+  -- visible band used below (y in [-500, 4500], comfortably inside the
+  -- [-790, 4790] band visible_clouds admits), so tests have plenty of
+  -- independent cloud_chance() rolls to draw on -- at cloud_chance() = 0.05,
+  -- the odds of a fixed seed rolling zero clouds across all 143 is under
+  -- 0.1% (0.95^143), unlike a sparser spread where a non-trivial miss-all
+  -- chance could make a fixed-seed assertion flaky. Kept modest (not
+  -- larger) since density()/visible_clouds() scan is O(anchors) and several
+  -- tests below additionally sample a grid of points against it.
   pfn test_stars() : List(Star) do
-    grid_stars(0.0 - 3000.0, 0.0 - 3000.0, Nil)
+    grid_stars(0.0 - 3000.0, 0.0 - 500.0, Nil)
   end
 
   -- Walk a grid of sample points, failing fast if any density falls outside
@@ -137,8 +140,8 @@ mod TestPerihelionNebula do
       assert (all_near(clouds))
     end
 
-    test "cloud_chance is tuned down to 0.30" do
-      assert (approx(Perihelion.Nebula.cloud_chance(), 0.30))
+    test "cloud_chance is tuned down to 0.05" do
+      assert (approx(Perihelion.Nebula.cloud_chance(), 0.05))
     end
 
     -- Isolate a single star across many seeds: any hit (cloud_chance()
