@@ -60,7 +60,7 @@ mod TestPerihelionCombat do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
+      fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone, jump: None }
   end
 
   pfn space() : List(String) do
@@ -169,6 +169,14 @@ mod TestPerihelionCombat do
         _ -> assert false
       end
       assert (g2.fire_cooldown > 0.0)
+    end
+
+    test "no shot spawns while a JumpTransit is in progress" do
+      let g0 = { base_game(0.0) with
+          jump: Some({ target_idx: 1, start_x: 200.0, start_y: 520.0, time_left: 0.4 }) }
+      let g2 = Perihelion.Combat.fire(g0, space(), cursor_east(), dt())
+      assert (List.is_empty(g2.player_shots))
+      assert (g2.fire_cooldown == g0.fire_cooldown)
     end
 
     test "aims correctly when the horizontal camera has panned (camera_x != 0)" do
@@ -729,6 +737,22 @@ mod TestPerihelionCombat do
       assert (!is_over(g2))
       assert (g2.shield == 0)
       assert (List.is_empty(g2.asteroids))
+    end
+
+    test "an asteroid overlapping the ball does not end the run mid-JumpTransit" do
+      let g0 = { base_game(0.0) with
+          jump: Some({ target_idx: 1, start_x: 200.0, start_y: 520.0, time_left: 0.4 }) }
+      let ast = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let g = { g0 with asteroids: Cons(ast, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (!is_over(g2))
+      match g2.death_cause do
+        DeathNone -> assert true
+        _ -> assert false
+      end
+      -- the asteroid isn't even removed -- collide_ball_hazards short-circuits
+      -- entirely while a transit is in progress, ball or no ball.
+      assert (List.length(g2.asteroids) == 1)
     end
   end
 

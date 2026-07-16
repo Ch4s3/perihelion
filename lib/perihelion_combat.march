@@ -760,65 +760,69 @@ mod Perihelion.Combat do
   end
 
   fn fire(game : Game, keys : List(String), cursor : (Int, Int), _dt_s : Float) : Game do
-    let pressed = List.any(keys, fn k -> k == " ")
-    if !pressed || game.fire_cooldown > 0.0 || starkiller_on_cooldown(game) do
-      game
-    else
-      let (cx, cy) = cursor
-      -- cursor is screen-space; camera_x/camera_y pan the world beneath it
-      -- (dead-zone horizontal pan + vertical follow), so both need the
-      -- offset to recover the cursor's world-space position.
-      let cursor_world_x = int_to_float(cx) + game.camera_x
-      let cursor_world_y = int_to_float(cy) + game.camera_y
-      let dx = cursor_world_x - game.ball_x
-      let dy = cursor_world_y - game.ball_y
-      let dist = Math.sqrt(dx * dx + dy * dy)
-      let aim = if dist > 0.0 do Some((dx / dist, dy / dist)) else fire_fallback_aim(game) end
-      match aim do
-        None -> game
-        Some(pair) ->
-          let (ax, ay) = pair
-          let g2 = apply_recoil(game, ax, ay)
-          let new_shots = match Perihelion.Core.active_weapon(game) do
-            Base -> Cons(make_shot(game.ball_x, game.ball_y, ax, ay), Nil)
-            Homing -> Cons(make_homing_shot(game.ball_x, game.ball_y, ax, ay), Nil)
-            Spread -> spread_shots(game.ball_x, game.ball_y, ax, ay)
-            StarKiller ->
-              -- The outer guard already excluded starkiller_cooldown > 0.0,
-              -- so this always attempts to fire when reached. Lock the
-              -- target star's position into the shot NOW (target_x/target_y)
-              -- so a later W/D retarget can't desync this shot from what it
-              -- actually flies toward (see collide_shots_stars).
-              match Perihelion.Core.star_at(game, starkiller_target_idx(game)) do
-                None -> Nil
-                Some(target) ->
-                  let tdx = target.x - game.ball_x
-                  let tdy = target.y - game.ball_y
-                  let tdist = Math.sqrt(tdx * tdx + tdy * tdy)
-                  if tdist <= 0.0 do Nil else
-                    Cons({ x: game.ball_x, y: game.ball_y,
-                           vx: (tdx / tdist) * player_shot_speed(),
-                           vy: (tdy / tdist) * player_shot_speed(),
-                           ttl: shot_ttl() * 3.0, homing: false, star_killer: true,
-                           target_x: target.x, target_y: target.y, mode: ShotFlying }, Nil)
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- no firing until it lands
+      None ->
+        let pressed = List.any(keys, fn k -> k == " ")
+        if !pressed || game.fire_cooldown > 0.0 || starkiller_on_cooldown(game) do
+          game
+        else
+          let (cx, cy) = cursor
+          -- cursor is screen-space; camera_x/camera_y pan the world beneath it
+          -- (dead-zone horizontal pan + vertical follow), so both need the
+          -- offset to recover the cursor's world-space position.
+          let cursor_world_x = int_to_float(cx) + game.camera_x
+          let cursor_world_y = int_to_float(cy) + game.camera_y
+          let dx = cursor_world_x - game.ball_x
+          let dy = cursor_world_y - game.ball_y
+          let dist = Math.sqrt(dx * dx + dy * dy)
+          let aim = if dist > 0.0 do Some((dx / dist, dy / dist)) else fire_fallback_aim(game) end
+          match aim do
+            None -> game
+            Some(pair) ->
+              let (ax, ay) = pair
+              let g2 = apply_recoil(game, ax, ay)
+              let new_shots = match Perihelion.Core.active_weapon(game) do
+                Base -> Cons(make_shot(game.ball_x, game.ball_y, ax, ay), Nil)
+                Homing -> Cons(make_homing_shot(game.ball_x, game.ball_y, ax, ay), Nil)
+                Spread -> spread_shots(game.ball_x, game.ball_y, ax, ay)
+                StarKiller ->
+                  -- The outer guard already excluded starkiller_cooldown > 0.0,
+                  -- so this always attempts to fire when reached. Lock the
+                  -- target star's position into the shot NOW (target_x/target_y)
+                  -- so a later W/D retarget can't desync this shot from what it
+                  -- actually flies toward (see collide_shots_stars).
+                  match Perihelion.Core.star_at(game, starkiller_target_idx(game)) do
+                    None -> Nil
+                    Some(target) ->
+                      let tdx = target.x - game.ball_x
+                      let tdy = target.y - game.ball_y
+                      let tdist = Math.sqrt(tdx * tdx + tdy * tdy)
+                      if tdist <= 0.0 do Nil else
+                        Cons({ x: game.ball_x, y: game.ball_y,
+                               vx: (tdx / tdist) * player_shot_speed(),
+                               vy: (tdy / tdist) * player_shot_speed(),
+                               ttl: shot_ttl() * 3.0, homing: false, star_killer: true,
+                               target_x: target.x, target_y: target.y, mode: ShotFlying }, Nil)
+                      end
                   end
               end
+              -- StarKiller shouldn't ALSO reset the normal fire_cooldown -- it
+              -- has its own, much longer cooldown that gates it instead.
+              let cooldown2 = match Perihelion.Core.active_weapon(game) do
+                StarKiller -> game.fire_cooldown -- unchanged; starkiller_cooldown gates it instead
+                _ -> effective_fire_cooldown(game)
+              end
+              let starkiller_cd2 = match Perihelion.Core.active_weapon(game) do
+                StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else starkiller_cooldown_seconds() end
+                _ -> game.starkiller_cooldown
+              end
+              { g2 with
+                  player_shots: List.append(g2.player_shots, new_shots),
+                  fire_cooldown: cooldown2,
+                  starkiller_cooldown: starkiller_cd2 }
           end
-          -- StarKiller shouldn't ALSO reset the normal fire_cooldown -- it
-          -- has its own, much longer cooldown that gates it instead.
-          let cooldown2 = match Perihelion.Core.active_weapon(game) do
-            StarKiller -> game.fire_cooldown -- unchanged; starkiller_cooldown gates it instead
-            _ -> effective_fire_cooldown(game)
-          end
-          let starkiller_cd2 = match Perihelion.Core.active_weapon(game) do
-            StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else starkiller_cooldown_seconds() end
-            _ -> game.starkiller_cooldown
-          end
-          { g2 with
-              player_shots: List.append(g2.player_shots, new_shots),
-              fire_cooldown: cooldown2,
-              starkiller_cooldown: starkiller_cd2 }
-      end
+        end
     end
   end
 
@@ -1006,6 +1010,9 @@ mod Perihelion.Combat do
   end
 
   pfn collide_ball_pickups(game : Game) : Game do
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- not physically present to pick anything up
+      None ->
     match List.find(game.pickups, fn p -> ball_on_pickup(game, p)) do
       None -> game
       Some(p) ->
@@ -1030,6 +1037,7 @@ mod Perihelion.Combat do
           _ -> { (Perihelion.Core.apply_upgrade(game, p.kind)) with pickups: remaining, pickup_collected: true }
         end
     end
+    end
   end
 
   pfn ball_hits_ship(game : Game, sh : Ship) : Bool do
@@ -1052,28 +1060,32 @@ mod Perihelion.Combat do
   end
 
   pfn collide_ball_hazards(game : Game) : Game do
-    let shot_hit = List.any(game.enemy_shots, fn s -> ball_hits_shot(game, s))
-    if shot_hit && game.bullet_ward do
-      { game with
-          bullet_ward: false,
-          enemy_shots: List.filter(game.enemy_shots, fn s -> !ball_hits_shot(game, s)) }
-    else
-      let ast_hit = List.any(game.asteroids, fn a -> ball_hits_asteroid(game, a))
-      let ship_hit = List.any(game.ships, fn sh -> ball_hits_ship(game, sh))
-      if !(ast_hit || shot_hit || ship_hit) do
-        game
-      else
-        if ast_hit && !shot_hit && !ship_hit && game.deflector_plating do
-          let (rng2, deflected) = deflector_roll(game)
-          if deflected do
-            { game with rng: rng2 }
-          else
-            collide_ball_hazards_shield_or_die({ game with rng: rng2 })
-          end
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- invulnerable until it lands
+      None ->
+        let shot_hit = List.any(game.enemy_shots, fn s -> ball_hits_shot(game, s))
+        if shot_hit && game.bullet_ward do
+          { game with
+              bullet_ward: false,
+              enemy_shots: List.filter(game.enemy_shots, fn s -> !ball_hits_shot(game, s)) }
         else
-          collide_ball_hazards_shield_or_die(game)
+          let ast_hit = List.any(game.asteroids, fn a -> ball_hits_asteroid(game, a))
+          let ship_hit = List.any(game.ships, fn sh -> ball_hits_ship(game, sh))
+          if !(ast_hit || shot_hit || ship_hit) do
+            game
+          else
+            if ast_hit && !shot_hit && !ship_hit && game.deflector_plating do
+              let (rng2, deflected) = deflector_roll(game)
+              if deflected do
+                { game with rng: rng2 }
+              else
+                collide_ball_hazards_shield_or_die({ game with rng: rng2 })
+              end
+            else
+              collide_ball_hazards_shield_or_die(game)
+            end
+          end
         end
-      end
     end
   end
 

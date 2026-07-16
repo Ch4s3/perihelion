@@ -29,6 +29,9 @@ mod Perihelion.Core do
   fn cam_dead_zone() : Float do 0.25 end
   fn kill_margin() : Float do 40.0 end
   fn overshoot_margin() : Float do 150.0 end
+  -- How long a StarJump travel pause lasts (see JumpTransit) -- the ball is
+  -- frozen/invulnerable/uncontrollable for this long before landing.
+  fn jump_transit_duration() : Float do 0.4 end
   fn fall_margin() : Float do 200.0 end
   -- Ladder generation stays this many screen-heights ahead of the visible
   -- top edge (world y = camera_y), so a newly-generated star is always
@@ -71,6 +74,13 @@ mod Perihelion.Core do
   type DeathCause = DeathNone | DeathMissed | DeathAsteroid | DeathEnemyShip | DeathEnemyShot
 
   type RunRecord = { score : Int, stars : Int, max_mult : Int }
+
+  -- A StarJump special mid-travel: the ball is frozen at (start_x, start_y)
+  -- (mode/position untouched in Game), invulnerable, and ignores input while
+  -- this counts down. target_idx was rolled once at activation (see
+  -- apply_star_jump); when time_left reaches 0, step_jump_transit lands the
+  -- ball there via the same on_capture seam a normal forward capture uses.
+  type JumpTransit = { target_idx : Int, start_x : Float, start_y : Float, time_left : Float }
 
   type Game = {
     -- The one master seed for this run: everything random -- the gameplay
@@ -158,7 +168,10 @@ mod Perihelion.Core do
     -- Set once by end_run when the run ends; DeathNone the rest of the
     -- time (not read-once/reset-per-frame like the signals above, since
     -- the Over screen needs it to stay put for as long as it's shown).
-    death_cause : DeathCause
+    death_cause : DeathCause,
+    -- Some while a StarJump special is mid-travel-pause; None otherwise.
+    -- See JumpTransit and step_jump_transit.
+    jump : Option(JumpTransit)
   }
 
   -- ── Helpers ──────────────────────────────────────────────────────────
@@ -277,46 +290,80 @@ mod Perihelion.Core do
 
   fn star_jump_max_stars() : Int do 4 end
 
-  -- Draws 1..star_jump_max_stars() rungs ahead and lands there via
-  -- on_capture -- the same scoring seam a skilled forward capture uses (see
-  -- on_capture's doc comment). A free jump therefore scores/bumps the
-  -- multiplier/can trigger a milestone exactly like a normal capture; this is
-  -- the deliberate, simplest-correct starting point (not a bug -- see task brief).
+  -- Draws 1..star_jump_max_stars() rungs ahead and starts a JumpTransit
+  -- travel pause there -- the ball freezes at its current position
+  -- (invulnerable, ignores input, see step_playing/collide_ball_*) until
+  -- step_jump_transit lands it via on_capture, the same scoring seam a
+  -- skilled forward capture uses (see on_capture's doc comment). A free
+  -- jump therefore scores/bumps the multiplier/can trigger a milestone
+  -- exactly like a normal capture, just delayed until landing instead of
+  -- happening on this activation frame.
   pfn apply_star_jump(game : Game) : Game do
     let (rng2, t) = Perihelion.Level.draw_pub(game.rng)
-    let jump = 1 + float_to_int(t * int_to_float(star_jump_max_stars()))
-    let target_idx = game.current + jump
+    let roll = 1 + float_to_int(t * int_to_float(star_jump_max_stars()))
+    let target_idx = game.current + roll
     match star_at(game, target_idx) do
       None -> { game with rng: rng2 } -- not enough ladder generated yet; consume the roll, no-op the jump (rare, harmless)
-      Some(target) ->
-        on_capture({ game with rng: rng2, special_charges: game.special_charges - 1 }, target, target_idx)
+      Some(_) ->
+        { game with rng: rng2, special_charges: game.special_charges - 1,
+            jump: Some({ target_idx: target_idx, start_x: game.ball_x, start_y: game.ball_y,
+                         time_left: jump_transit_duration() }) }
+    end
+  end
+
+  -- Resolves a JumpTransit once its travel pause elapses, landing the ball
+  -- via on_capture (same seam apply_star_jump used to call directly before
+  -- the travel pause existed). No-ops (just clears jump) if the target star
+  -- vanished in the meantime (e.g. star-killer removed it mid-transit) --
+  -- same rare/harmless fallback apply_star_jump itself uses when the ladder
+  -- isn't generated far enough yet.
+  pfn step_jump_transit(game : Game, dt_s : Float) : Game do
+    match game.jump do
+      None -> game
+      Some(jt) ->
+        let time_left2 = jt.time_left - dt_s
+        if time_left2 > 0.0 do
+          { game with jump: Some({ jt with time_left: time_left2 }) }
+        else
+          let g2 = { game with jump: None }
+          match star_at(g2, jt.target_idx) do
+            None -> g2
+            Some(target) -> on_capture(g2, target, jt.target_idx)
+          end
+        end
     end
   end
 
   -- X activates whichever special is equipped. TrajectoryPreview is passive
   -- (drawn continuously by Task 10, not triggered) so its arm is a no-op here.
+  -- A no-op whenever a JumpTransit is already in progress -- can't retrigger
+  -- (or trigger any other special) mid-travel-pause.
   pfn apply_special(game : Game, keys : List(String)) : Game do
-    let pressed = List.any(keys, fn k -> k == "x" || k == "X")
-    if !pressed || game.special_charges <= 0 do
-      game
-    else
-      match game.special do
-        None -> game
-        Some(StarThrust) ->
-          match nearest_star_dir(game) do
+    match game.jump do
+      Some(_) -> game
+      None ->
+        let pressed = List.any(keys, fn k -> k == "x" || k == "X")
+        if !pressed || game.special_charges <= 0 do
+          game
+        else
+          match game.special do
             None -> game
-            Some(pair) ->
-              let (dx, dy) = pair
-              match game.mode do
-                Flying(vx, vy) -> { game with mode: Flying(vx + dx * star_thrust_strength(), vy + dy * star_thrust_strength()), special_charges: game.special_charges - 1 }
-                Orbiting(_, _, _) -> game
+            Some(StarThrust) ->
+              match nearest_star_dir(game) do
+                None -> game
+                Some(pair) ->
+                  let (dx, dy) = pair
+                  match game.mode do
+                    Flying(vx, vy) -> { game with mode: Flying(vx + dx * star_thrust_strength(), vy + dy * star_thrust_strength()), special_charges: game.special_charges - 1 }
+                    Orbiting(_, _, _) -> game
+                  end
               end
+            Some(StarJump) ->
+              apply_star_jump(game)
+            Some(TrajectoryPreview) ->
+              game -- passive; X does nothing (Task 10 draws the preview line)
           end
-        Some(StarJump) ->
-          apply_star_jump(game)
-        Some(TrajectoryPreview) ->
-          game -- passive; X does nothing (Task 10 draws the preview line)
-      end
+        end
     end
   end
 
@@ -376,24 +423,33 @@ mod Perihelion.Core do
   end
 
   pfn step_playing(game : Game, tapped : Bool, keys : List(String), cursor : (Int, Int), dt_s : Float) : Game do
-    let g0 = match game.mode do
-      Orbiting(idx, ring, angle) -> step_orbit(game, idx, ring, angle, tapped, keys, dt_s)
-      Flying(vx, vy)             -> step_flight(game, vx, vy, dt_s)
+    -- While a JumpTransit is in progress the ball is frozen/uncontrollable
+    -- (see JumpTransit's doc comment) -- skip mode-based movement (which is
+    -- also how W/S ring-change and tap-to-release are gated, since those
+    -- only ever happen inside step_orbit) entirely rather than stepping it.
+    let g0 = match game.jump do
+      Some(_) -> game
+      None ->
+        match game.mode do
+          Orbiting(idx, ring, angle) -> step_orbit(game, idx, ring, angle, tapped, keys, dt_s)
+          Flying(vx, vy)             -> step_flight(game, vx, vy, dt_s)
+        end
     end
     let n = List.length(g0.owned_weapons)
     let g1a = { g0 with active_weapon_idx: adjust_weapon(g0.active_weapon_idx, keys, n) }
     let g1 = { g1a with starkiller_target_offset: adjust_starkiller_target(g1a.starkiller_target_offset, keys) }
     let g1x = apply_special(g1, keys)
-    match g1x.phase do
+    let g1y = step_jump_transit(g1x, dt_s)
+    match g1y.phase do
       Playing ->
-        let g2 = Perihelion.Combat.step(g1x, dt_s)
+        let g2 = Perihelion.Combat.step(g1y, dt_s)
         let g3 = Perihelion.Combat.fire(g2, keys, cursor, dt_s)
         let g4 = Perihelion.Combat.collide(g3)
         match g4.phase do
           Playing -> top_up(step_camera(g4, dt_s))
           _ -> g4
         end
-      _ -> g1x
+      _ -> g1y
     end
   end
 
@@ -773,7 +829,8 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
+          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone,
+          jump: None }
       Cons(s0, _) ->
         { seed: seed, phase: Ready,
           ball_x: s0.x + Math.cos(start_angle) * s0.capture_radius,
@@ -800,7 +857,8 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
+          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone,
+          jump: None }
     end
   end
 

@@ -383,6 +383,104 @@ void main() {
 }
 `;
 
+const MAX_WORMHOLES = 4;
+
+// A rotating, noise-turbulent vortex ring spiraling toward a dark hole at
+// the center -- StarJump's departure/arrival effect. Each instance's own
+// `progress` (0..1, computed March-side) drives a sin(progress*pi) open ->
+// peak -> close envelope (same shape as the coronal ejection's grow/retract
+// curve): the vortex's own radius scales with that envelope, so it visibly
+// dilates open then collapses shut rather than just fading in place. The
+// "dark hole" at the center isn't drawn -- it's just low alpha there,
+// letting the black game background already underneath show through.
+// Shares the hash/valueNoise/fbm building blocks with the nebula/star/
+// explosion shaders (not literally shared source).
+const WORMHOLE_FRAGMENT_SRC = `
+precision mediump float;
+#define MAX_WORMHOLES ${MAX_WORMHOLES}
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform int u_wormholeCount;
+uniform vec2 u_wormholePos[MAX_WORMHOLES];
+uniform float u_wormholeRadius[MAX_WORMHOLES];
+uniform float u_wormholeProgress[MAX_WORMHOLES];
+uniform float u_wormholeSeed[MAX_WORMHOLES];
+
+varying vec2 vUv;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+  float sum = 0.0;
+  float amp = 0.5;
+  float freq = 1.0;
+  for (int i = 0; i < 4; i++) {
+    sum += amp * valueNoise(p * freq);
+    freq *= 2.0;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+float wormhole(vec2 rel, float dist, float radius, float progress, float seed) {
+  float envelope = sin(clamp(progress, 0.0, 1.0) * 3.14159265);
+  if (envelope <= 0.002) return 0.0;
+
+  float curRadius = radius * envelope;
+  if (dist > curRadius) return 0.0;
+
+  float nd = dist / max(curRadius, 0.001);
+  float angle = atan(rel.y, rel.x);
+
+  // Inner rings spiral further than outer ones, plus a continuous spin over
+  // time -- the classic "being pulled into the vortex" look.
+  float spin = u_time * 2.4 + seed * 6.2831853;
+  float spiralAngle = angle + spin - (1.0 - nd) * 5.0;
+
+  float turb = fbm(vec2(cos(spiralAngle), sin(spiralAngle)) * 3.0 + nd * 4.0 + seed * 11.0);
+
+  // soft-edged annulus: fades in past the dark center hole, fades out
+  // before the outer edge, so the ring never has a hard boundary.
+  float inner = smoothstep(0.24, 0.4, nd);
+  float outer = 1.0 - smoothstep(0.75, 1.0, nd);
+  float ringMask = inner * outer;
+
+  return ringMask * (0.35 + 0.65 * turb) * envelope;
+}
+
+void main() {
+  vec2 fragCoord = vec2(vUv.x, 1.0 - vUv.y) * u_resolution;
+  float intensity = 0.0;
+
+  for (int i = 0; i < MAX_WORMHOLES; i++) {
+    if (i >= u_wormholeCount) break;
+    vec2 rel = fragCoord - u_wormholePos[i];
+    float dist = length(rel);
+    float radius = u_wormholeRadius[i];
+    if (dist > radius) continue;
+
+    float w = wormhole(rel, dist, radius, u_wormholeProgress[i], u_wormholeSeed[i]);
+    intensity = max(intensity, w);
+  }
+
+  gl_FragColor = vec4(1.0, 1.0, 1.0, clamp(intensity, 0.0, 1.0));
+}
+`;
+
 const __starState = new WeakMap();
 
 function starStateFor(gl) {
@@ -590,6 +688,85 @@ export function march_webgl_draw_nebula(gl, clouds, viewW, viewH, _t) {
   gl.uniform1fv(st.uniforms.cloudRadius, radius);
   gl.uniform1fv(st.uniforms.cloudStrength, strength);
   gl.uniform1fv(st.uniforms.cloudSeed, seed);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+const __wormholeState = new WeakMap();
+
+function wormholeStateFor(gl) {
+  let st = __wormholeState.get(gl);
+  if (st !== undefined) return st;
+
+  const program = linkProgram(gl, VERTEX_SRC, WORMHOLE_FRAGMENT_SRC);
+
+  const quad = new Float32Array([
+    -1, -1, 1, -1, -1, 1,
+    -1, 1, 1, -1, 1, 1,
+  ]);
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, "a_position");
+  const uniforms = {
+    resolution: gl.getUniformLocation(program, "u_resolution"),
+    time: gl.getUniformLocation(program, "u_time"),
+    wormholeCount: gl.getUniformLocation(program, "u_wormholeCount"),
+    wormholePos: gl.getUniformLocation(program, "u_wormholePos"),
+    wormholeRadius: gl.getUniformLocation(program, "u_wormholeRadius"),
+    wormholeProgress: gl.getUniformLocation(program, "u_wormholeProgress"),
+    wormholeSeed: gl.getUniformLocation(program, "u_wormholeSeed"),
+  };
+
+  st = { program, buffer, aPosition, uniforms };
+  __wormholeState.set(gl, st);
+  return st;
+}
+
+// Walks a March List(WormholeGl) into flat Float32Arrays sized
+// MAX_WORMHOLES, capping silently past that count -- same shape as
+// starsToArrays/cloudsToArrays.
+function wormholesToArrays(wormholes) {
+  const pos = new Float32Array(MAX_WORMHOLES * 2);
+  const radius = new Float32Array(MAX_WORMHOLES);
+  const progress = new Float32Array(MAX_WORMHOLES);
+  const seed = new Float32Array(MAX_WORMHOLES);
+  let node = wormholes;
+  let count = 0;
+  while (node.$ === "Cons" && count < MAX_WORMHOLES) {
+    const w = node._0;
+    pos[count * 2] = w.x;
+    pos[count * 2 + 1] = w.y;
+    radius[count] = w.radius;
+    progress[count] = w.progress;
+    seed[count] = w.seed;
+    count++;
+    node = node._1;
+  }
+  return { pos, radius, progress, seed, count };
+}
+
+export function march_webgl_draw_wormholes(gl, wormholes, viewW, viewH, t) {
+  const st = wormholeStateFor(gl);
+  const { pos, radius, progress, seed, count } = wormholesToArrays(wormholes);
+
+  gl.useProgram(st.program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, st.buffer);
+  gl.enableVertexAttribArray(st.aPosition);
+  gl.vertexAttribPointer(st.aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  gl.uniform2f(st.uniforms.resolution, viewW, viewH);
+  gl.uniform1f(st.uniforms.time, t);
+  gl.uniform1i(st.uniforms.wormholeCount, count);
+  gl.uniform2fv(st.uniforms.wormholePos, pos);
+  gl.uniform1fv(st.uniforms.wormholeRadius, radius);
+  gl.uniform1fv(st.uniforms.wormholeProgress, progress);
+  gl.uniform1fv(st.uniforms.wormholeSeed, seed);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

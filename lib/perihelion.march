@@ -79,7 +79,22 @@ mod Perihelion do
     explosion_x : Float,
     explosion_y : Float,
     explosion_time_left : Float,
-    shake_time_left : Float
+    shake_time_left : Float,
+    -- StarJump wormholes: A plays at the departure point (world-space
+    -- position captured from Core.JumpTransit.start_x/y the frame the jump
+    -- activates), B at the arrival point (the ball's new position the frame
+    -- the transit resolves) -- see step_fx's `just_jumped`/`jump_landed`
+    -- params, same "tick() detects the transition, step_fx can't" shape as
+    -- just_died/explosion above. Each *_time_left counts down independently
+    -- of Core's own JumpTransit.time_left (this is a purely cosmetic
+    -- duration, same relationship explosion_duration() has to
+    -- shake_duration()).
+    wormhole_a_x : Float,
+    wormhole_a_y : Float,
+    wormhole_a_time_left : Float,
+    wormhole_b_x : Float,
+    wormhole_b_y : Float,
+    wormhole_b_time_left : Float
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -360,7 +375,9 @@ mod Perihelion do
       explosion_x: 0.0,
       explosion_y: 0.0,
       explosion_time_left: 0.0,
-      shake_time_left: 0.0 }
+      shake_time_left: 0.0,
+      wormhole_a_x: 0.0, wormhole_a_y: 0.0, wormhole_a_time_left: 0.0,
+      wormhole_b_x: 0.0, wormhole_b_y: 0.0, wormhole_b_time_left: 0.0 }
   end
 
   pfn flash_duration() : Float do 0.45 end
@@ -538,9 +555,14 @@ mod Perihelion do
   fn shake_duration() : Float do 0.4 end
   fn shake_magnitude() : Float do 10.0 end
   fn explosion_radius() : Float do 90.0 end
+  -- Purely cosmetic per-wormhole-instance duration -- independent of
+  -- Core.jump_transit_duration() (the actual travel-pause length), same
+  -- relationship explosion_duration() has to Core's own death handling.
+  fn wormhole_duration() : Float do 0.45 end
+  fn wormhole_radius() : Float do 70.0 end
 
-  doc "`just_died` is computed by tick() (was_playing(game) && is_over_phase(g2) on the pre/post-update pair) since step_fx only ever sees the post-update Game and so can't detect the Playing -> Over transition itself."
-  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float, just_died : Bool) : Fx do
+  doc "`just_died`/`just_jumped`/`jump_landed` are computed by tick() (comparing the pre/post-update Game pair) since step_fx only ever sees the post-update Game and so can't detect any of these transitions itself."
+  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float, just_died : Bool, just_jumped : Bool, jump_landed : Bool) : Fx do
     -- Freeze everything cosmetic while paused -- no time advance (stars
     -- stop twinkling), no particle spawn/step (thrust particles would
     -- otherwise re-spawn with an unchanged seed every frame, since t
@@ -568,9 +590,30 @@ mod Perihelion do
       else if fx.shake_time_left > 0.0 do fx.shake_time_left - dt_s else 0.0 end end
     let explosion_x2 = if just_died do game.ball_x else fx.explosion_x end
     let explosion_y2 = if just_died do game.ball_y else fx.explosion_y end
+    -- Wormhole A's position comes from the JumpTransit itself (the ball's
+    -- own ball_x/ball_y is meaningless as a departure point once landing
+    -- resolves -- it's already the ARRIVAL position by then). Falls back to
+    -- fx's own held value if just_jumped is somehow true without a live
+    -- jump (shouldn't happen, but avoids an unreachable-match panic).
+    let (jump_start_x, jump_start_y) = match game.jump do
+      Some(jt) -> (jt.start_x, jt.start_y)
+      None -> (fx.wormhole_a_x, fx.wormhole_a_y)
+    end
+    let wormhole_a_time_left2 =
+      if just_jumped do wormhole_duration()
+      else if fx.wormhole_a_time_left > 0.0 do fx.wormhole_a_time_left - dt_s else 0.0 end end
+    let wormhole_a_x2 = if just_jumped do jump_start_x else fx.wormhole_a_x end
+    let wormhole_a_y2 = if just_jumped do jump_start_y else fx.wormhole_a_y end
+    let wormhole_b_time_left2 =
+      if jump_landed do wormhole_duration()
+      else if fx.wormhole_b_time_left > 0.0 do fx.wormhole_b_time_left - dt_s else 0.0 end end
+    let wormhole_b_x2 = if jump_landed do game.ball_x else fx.wormhole_b_x end
+    let wormhole_b_y2 = if jump_landed do game.ball_y else fx.wormhole_b_y end
     { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target,
               explosion_x: explosion_x2, explosion_y: explosion_y2,
-              explosion_time_left: explosion_time_left2, shake_time_left: shake_time_left2 }
+              explosion_time_left: explosion_time_left2, shake_time_left: shake_time_left2,
+              wormhole_a_x: wormhole_a_x2, wormhole_a_y: wormhole_a_y2, wormhole_a_time_left: wormhole_a_time_left2,
+              wormhole_b_x: wormhole_b_x2, wormhole_b_y: wormhole_b_y2, wormhole_b_time_left: wormhole_b_time_left2 }
     end
   end
 
@@ -966,6 +1009,41 @@ mod Perihelion do
           let progress = 1.0 - fx.explosion_time_left / explosion_duration()
           let seed = hashf(fx.explosion_x, fx.explosion_y)
           WebGL.draw_explosion(gl, sx, sy, explosion_radius() * zoom, progress, seed, view_w, view_h)
+          Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+      end
+    end
+  end
+
+  pfn to_screen_wormholes(fx : Fx, focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.WormholeGl) do
+    let a = if fx.wormhole_a_time_left <= 0.0 do Nil else
+        Cons({ x: (fx.wormhole_a_x - focus_x) * zoom + view_w / 2.0,
+               y: (fx.wormhole_a_y - focus_y) * zoom + view_h / 2.0,
+               radius: wormhole_radius() * zoom,
+               progress: 1.0 - fx.wormhole_a_time_left / wormhole_duration(),
+               seed: hashf(fx.wormhole_a_x, fx.wormhole_a_y) }, Nil)
+      end
+    let b = if fx.wormhole_b_time_left <= 0.0 do Nil else
+        Cons({ x: (fx.wormhole_b_x - focus_x) * zoom + view_w / 2.0,
+               y: (fx.wormhole_b_y - focus_y) * zoom + view_h / 2.0,
+               radius: wormhole_radius() * zoom,
+               progress: 1.0 - fx.wormhole_b_time_left / wormhole_duration(),
+               seed: hashf(fx.wormhole_b_x, fx.wormhole_b_y) + 41.0 }, Nil)
+      end
+    List.append(a, b)
+  end
+
+  doc "Composites the StarJump departure (A) / arrival (B) wormhole instances -- reuses the same offscreen GL canvas draw_nebula_gl/draw_explosion_gl do, so this OVERWRITES whatever was last rendered into it; safe here since it's always called after both nebula passes and the explosion have already been blitted onto ctx for this frame. Both instances batch into one WebGL.draw_wormholes call (see docs/superpowers/specs/2026-07-16-star-jump-wormhole-design.md)."
+  pfn draw_wormholes_gl(ctx, gl_opt : Option(WebGL.Context), fx : Fx, cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float) : Unit do
+    if fx.wormhole_a_time_left <= 0.0 && fx.wormhole_b_time_left <= 0.0 do
+      ()
+    else
+      match gl_opt do
+        None -> ()
+        Some(gl) ->
+          let focus_x = cam_x + view_w / 2.0
+          let focus_y = cam_y + view_h / 2.0
+          let wormholes = to_screen_wormholes(fx, focus_x, focus_y, zoom, view_w, view_h)
+          WebGL.draw_wormholes(gl, wormholes, view_w, view_h, fx.t)
           Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
       end
     end
@@ -1600,10 +1678,19 @@ mod Perihelion do
     draw_particles(ctx, fx.particles)
     draw_debris(ctx, fx, fx.debris)
     Canvas.set_global_alpha(ctx, 1.0)
-    draw_ball(ctx, game, fx)
+    -- The ball isn't drawn at all while a StarJump transit is in progress
+    -- (Core freezes its position/mode but doesn't hide it -- that's a draw
+    -- concern) -- it reappears the instant `jump` resolves back to None,
+    -- which is also exactly when wormhole B blooms in around it (see
+    -- draw_wormholes_gl / step_fx's jump_landed).
+    match game.jump do
+      Some(_) -> ()
+      None -> draw_ball(ctx, game, fx)
+    end
     Canvas.restore(ctx)
     draw_nebula_gl(ctx, fx.gl, fg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
     draw_explosion_gl(ctx, fx.gl, fx, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom)
+    draw_wormholes_gl(ctx, fx.gl, fx, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom)
     draw_hud(ctx, el, game, fx)
   end
 
@@ -1911,8 +1998,22 @@ mod Perihelion do
       _ -> true
     end
     let just_exploded = just_died && died_by_impact
+    let just_jumped = match game.jump do
+      None -> match g2.jump do
+        Some(_) -> true
+        None -> false
+      end
+      Some(_) -> false
+    end
+    let jump_landed = match game.jump do
+      Some(_) -> match g2.jump do
+        None -> true
+        Some(_) -> false
+      end
+      None -> false
+    end
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_exploded)
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_exploded, just_jumped, jump_landed)
     let fx2 = { fx1 with muted: muted2 }
     if just_died do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))
