@@ -1365,14 +1365,46 @@ mod Perihelion do
     Canvas.set_global_alpha(ctx, 1.0)
   end
 
-  doc "A short 'what killed you' line for the Over screen -- None for DeathNone (shouldn't happen once a run has actually ended, but a missing cause just omits the line rather than showing something wrong)."
-  pfn death_cause_text(c : DeathCause) : Option(String) do
+  pfn death_cause_messages(c : DeathCause) : List(String) do
     match c do
-      DeathNone -> None
-      DeathMissed -> Some("missed the capture")
-      DeathAsteroid -> Some("hit an asteroid")
-      DeathEnemyShip -> Some("hit an enemy ship")
-      DeathEnemyShot -> Some("hit by enemy fire")
+      DeathNone -> Nil
+      DeathMissed ->
+        Cons("escape velocity: unlocked",
+        Cons("achievement unlocked: deep space",
+        Cons("that maneuver just cost you a few billion years", Nil)))
+      DeathAsteroid ->
+        Cons("they might name this asteroid after you",
+        Cons("congratulations on becoming two dimensional", Nil))
+      DeathEnemyShip ->
+        Cons("space is big. you still found it.", Nil)
+      DeathEnemyShot ->
+        Cons("shot down in your prime",
+        Cons("rail guns aren't toys", Nil))
+    end
+  end
+
+  pfn nth_message(msgs : List(String), i : Int) : String do
+    match msgs do
+      Nil -> ""
+      Cons(m, rest) -> if i <= 0 do m else nth_message(rest, i - 1) end
+    end
+  end
+
+  pfn message_count(msgs : List(String)) : Int do
+    match msgs do
+      Nil -> 0
+      Cons(_, rest) -> 1 + message_count(rest)
+    end
+  end
+
+  doc "A short, randomly-picked 'what killed you' line for the Over screen -- None for DeathNone (shouldn't happen once a run has actually ended, but a missing cause just omits the line rather than showing something wrong). `seed` varies which line from the pool shows; callers pass the death position so it's stable for a given death but varies run to run."
+  pfn death_cause_text(c : DeathCause, seed : Float) : Option(String) do
+    let msgs = death_cause_messages(c)
+    match msgs do
+      Nil -> None
+      Cons(_, _) ->
+        let idx = float_to_int(hashf(seed, 37.0) * int_to_float(message_count(msgs)))
+        Some(nth_message(msgs, idx))
     end
   end
 
@@ -1425,7 +1457,7 @@ mod Perihelion do
           Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
                            game.view_w / 2.0, game.view_h / 2.0)
           Canvas.set_fill_style(ctx, "#cfcfcf")
-          match death_cause_text(game.death_cause) do
+          match death_cause_text(game.death_cause, hashf(game.ball_x, game.ball_y)) do
             None -> ()
             Some(text) ->
               Canvas.set_font(ctx, "13px sans-serif")
