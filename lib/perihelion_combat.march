@@ -82,11 +82,14 @@ mod Perihelion.Combat do
   -- of just dying into cosmetic debris -- fragments spawn below that radius,
   -- so they don't split again when killed (see collide_shots_asteroids).
   fn asteroid_split_count() : Int do 2 end
+  -- Only this fraction of full-size kills split; the rest just die into
+  -- cosmetic debris like before.
+  fn asteroid_split_chance() : Float do 0.5 end
   fn asteroid_fragment_radius() : Float do asteroid_radius() * 0.6 end
   fn asteroid_fragment_speed_mult() : Float do 1.3 end
   -- Each fragment's heading is the parent's own heading rotated by a random
-  -- offset in [-spread, spread] radians -- ~51 degrees each side at 0.9.
-  fn asteroid_fragment_spread() : Float do 0.9 end
+  -- offset in [-spread, spread] radians -- ~69 degrees each side at 1.2.
+  fn asteroid_fragment_spread() : Float do 1.2 end
   -- Gravity-like arc toward the nearest star within range (matches the
   -- player's own assisted_velocity shape: bend, then renormalize so bending
   -- never changes speed).
@@ -959,15 +962,22 @@ mod Perihelion.Combat do
     end
   end
 
-  -- Only asteroids at/above asteroid_radius() split (fragments spawn
-  -- smaller, so this naturally terminates the chain after one level).
+  -- Only asteroids at/above asteroid_radius() are eligible to split
+  -- (fragments spawn smaller, so this naturally terminates the chain after
+  -- one level), and even then only asteroid_split_chance() of the time --
+  -- the rest just die into cosmetic debris like before.
   pfn spawn_fragments_for_dead(dead : List(Asteroid), rng : Random.Rng, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
     match dead do
       Nil -> (rng, acc)
       Cons(a, rest) ->
         if a.radius >= asteroid_radius() do
-          let (rng2, acc2) = spawn_fragments_n(a.x, a.y, a.vx, a.vy, rng, asteroid_split_count(), acc)
-          spawn_fragments_for_dead(rest, rng2, acc2)
+          let (r1, chance_f) = draw(rng)
+          if chance_f < asteroid_split_chance() do
+            let (rng2, acc2) = spawn_fragments_n(a.x, a.y, a.vx, a.vy, r1, asteroid_split_count(), acc)
+            spawn_fragments_for_dead(rest, rng2, acc2)
+          else
+            spawn_fragments_for_dead(rest, r1, acc)
+          end
         else
           spawn_fragments_for_dead(rest, rng, acc)
         end

@@ -620,7 +620,9 @@ mod TestPerihelionCombat do
       let g0 = base_game(0.0)
       let ast = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
       let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
-      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), multiplier: 3 }
+      -- Random.seed(0) is a fixed seed known to roll a split on the first
+      -- asteroid_split_chance() draw -- base_game's own seed(7) doesn't.
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), multiplier: 3, rng: Random.seed(0) }
       let g2 = Perihelion.Combat.collide(g)
       -- the killed full-size (radius 10.0 == asteroid_radius()) asteroid
       -- splits into asteroid_split_count() smaller live fragments, not an
@@ -648,11 +650,23 @@ mod TestPerihelionCombat do
       assert (List.is_empty(g2.asteroids))
     end
 
+    test "a full-size kill that fails the asteroid_split_chance() roll just dies, no fragments" do
+      let g0 = base_game(0.0)
+      let ast = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      -- base_game's own rng seed(7) is known to roll >= asteroid_split_chance()
+      -- on the first draw (see the seed(0) override used by the sibling
+      -- "...splits into fragments" test, which needs a seed that DOES split).
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (List.is_empty(g2.asteroids))
+    end
+
     test "fragment velocities are deterministic and diverge from each other" do
       let g0 = base_game(0.0)
       let ast = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
       let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
-      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), rng: Random.seed(0) }
       let g2a = Perihelion.Combat.collide(g)
       let g2b = Perihelion.Combat.collide(g)
       match g2a.asteroids do
