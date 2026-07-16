@@ -74,6 +74,9 @@ mod Perihelion.Combat do
   fn asteroid_jitter() : Float do 1.0 end
   fn asteroid_speed() : Float do 90.0 end
   fn asteroid_radius() : Float do 10.0 end
+  -- Splitting means a shot kill nets +1 live asteroid (1 dies, 2 spawn), so
+  -- population would climb unbounded over a run without a cap.
+  fn asteroid_max_count() : Int do 10 end
   -- A shot-killed asteroid at/above asteroid_radius() (i.e. hasn't already
   -- split) breaks into asteroid_split_count() smaller live asteroids instead
   -- of just dying into cosmetic debris -- fragments spawn below that radius,
@@ -182,6 +185,8 @@ mod Perihelion.Combat do
     let t = game.spawn_timer - dt_s
     if t > 0.0 do
       { game with spawn_timer: t }
+    else if List.length(game.asteroids) >= asteroid_max_count() do
+      { game with spawn_timer: 0.0 }
     else
       let (r1, side_f) = draw(game.rng)
       let (r2, y_f) = draw(r1)
@@ -201,6 +206,7 @@ mod Perihelion.Combat do
           asteroids: Cons(a, game.asteroids),
           rng: r5,
           spawn_timer: asteroid_interval() + (next_f - 0.5) * 2.0 * asteroid_jitter() }
+    end
     end
   end
 
