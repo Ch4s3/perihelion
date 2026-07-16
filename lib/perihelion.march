@@ -762,12 +762,8 @@ mod Perihelion do
     end
     -- gameplay cue: highlight a star the ball is approaching
     if star_targeted(s, aim) do draw_target_pulse(ctx, s, t) else () end
-    -- star core
-    Canvas.set_global_alpha(ctx, 1.0)
-    Canvas.set_fill_style(ctx, "#f2f2f2")
-    Canvas.begin_path(ctx)
-    Canvas.arc(ctx, s.x, s.y, s.radius, 0.0, two_pi())
-    Canvas.fill(ctx)
+    -- star core itself is rendered by the batched WebGL pass (draw_star_orbs_gl)
+    -- after every star's rings/pulses have been drawn -- see draw().
   end
 
   -- Single-pass "sin of a dot product" hash, same GLSL-style trick as
@@ -915,6 +911,42 @@ mod Perihelion do
         let focus_y = cam_y + view_h / 2.0
         let screen_clouds = to_screen_clouds(clouds, focus_x, focus_y, zoom, view_w, view_h)
         WebGL.draw_nebula(gl, screen_clouds, view_w, view_h, seed)
+        Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+    end
+  end
+
+  -- Stars at/above this world-space radius additionally get periodic
+  -- coronal-ejection flares (see WebGL.StarGl.ejections) -- radii range
+  -- 6.0..26.0 (see Level.radius_min/radius_max), so this is the top ~30%,
+  -- a minority of stars.
+  pfn star_ejection_min_radius() : Float do 20.0 end
+
+  pfn to_screen_stars(stars : List(Star), focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.StarGl) do
+    match stars do
+      Nil -> Nil
+      Cons(s, rest) ->
+        Cons({ x: (s.x - focus_x) * zoom + view_w / 2.0, y: (s.y - focus_y) * zoom + view_h / 2.0,
+               radius: s.radius * zoom, seed: hashf(s.x, s.y), ejections: s.radius >= star_ejection_min_radius() },
+             to_screen_stars(rest, focus_x, focus_y, zoom, view_w, view_h))
+    end
+  end
+
+  pfn star_visible(s : Star, cam : Float, view_h : Float) : Bool do
+    s.y < cam + view_h + 100.0 && s.y > cam - 100.0
+  end
+
+  doc "Renders every visible star's swirling orb (+ coronal ejections on the biggest stars) via WebGL and composites it onto ctx -- called after draw_stars' Canvas-2D pass has drawn every star's orbit rings/pulses, so the batched orb composite lands on top of all of them (see docs/superpowers/specs/2026-07-16-swirling-star-shader-design.md). Filters to the same on-screen window draw_stars uses (game.stars is the whole ladder, not just what's visible, and the shader's per-star uniform arrays are capped). Callers must wrap this in `Canvas.save`/`Canvas.reset_transform`/`Canvas.restore` if called while the camera translate/scale is active -- like draw_nebula_gl/draw_explosion_gl, this composites via Canvas.draw_node (drawImage under the hood), which would get double-transformed by an active camera transform since the coordinates below are already mapped to screen space manually. `focus_x`/`focus_y` should already include any death-shake offset (see draw()'s shake_dx/shake_dy) so the orb shakes along with everything else the camera transform affects."
+  pfn draw_star_orbs_gl(ctx, gl_opt : Option(WebGL.Context), stars : List(Star), cam : Float, view_h : Float, focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, t : Float) : Unit do
+    match gl_opt do
+      None -> ()
+      Some(gl) ->
+        let visible = List.filter(stars, fn s -> star_visible(s, cam, view_h))
+        let screen_stars = to_screen_stars(visible, focus_x, focus_y, zoom, view_w, view_h)
+        WebGL.draw_stars(gl, screen_stars, view_w, view_h, t)
+        -- draw_stars' 2D pass (orbit rings/pulses) can leave ctx.globalAlpha
+        -- at whatever a low-alpha stroke last set it to -- reset it so the
+        -- composite blit isn't unintentionally dimmed by leftover state.
+        Canvas.set_global_alpha(ctx, 1.0)
         Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
     end
   end
@@ -1517,6 +1549,10 @@ mod Perihelion do
       Orbiting(_, _, _)  -> None
     end
     draw_stars(ctx, game.stars, game.camera_y, game.view_h, fx.t, aim)
+    Canvas.save(ctx)
+    Canvas.reset_transform(ctx)
+    draw_star_orbs_gl(ctx, fx.gl, game.stars, game.camera_y, game.view_h, focus_x - shake_dx, focus_y - shake_dy, fx.zoom, game.view_w, fx.t)
+    Canvas.restore(ctx)
     match Perihelion.Core.active_weapon(game) do
       StarKiller -> draw_starkiller_reticle(ctx, game)
       _ -> ()

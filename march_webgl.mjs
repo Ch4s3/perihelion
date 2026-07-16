@@ -206,6 +206,212 @@ void main() {
 }
 `;
 
+const MAX_STARS = 12;
+
+// Every star gets a slowly-advected domain-warped fbm swirl clipped to its
+// disc (roiling plasma read, brighter toward the limb). Stars flagged
+// `ejections` additionally get up to 2 loop-shaped filament flares per star,
+// timed by a per-star seeded cycle (fract(t * speed + offset), same
+// pure-function-of-time shape as the March-side pulse_speed/pulse_phase
+// pattern) so different stars' flares desync. Shares the hash/valueNoise/fbm
+// building blocks with the nebula/explosion shaders (not literally shared
+// source -- each fragment shader is its own self-contained string).
+const STAR_FRAGMENT_SRC = `
+precision mediump float;
+#define MAX_STARS ${MAX_STARS}
+
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform int u_starCount;
+uniform vec2 u_starPos[MAX_STARS];
+uniform float u_starRadius[MAX_STARS];
+uniform float u_starSeed[MAX_STARS];
+uniform float u_starEjections[MAX_STARS];
+
+varying vec2 vUv;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+  float sum = 0.0;
+  float amp = 0.5;
+  float freq = 1.0;
+  for (int i = 0; i < 4; i++) {
+    sum += amp * valueNoise(p * freq);
+    freq *= 2.0;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+float smoothFalloff(float dist, float radius) {
+  if (radius <= 0.0) return 0.0;
+  if (dist >= radius) return 0.0;
+  float t = 1.0 - dist / radius;
+  return t * t * (3.0 - 2.0 * t);
+}
+
+vec2 rotate(vec2 v, float a) {
+  float c = cos(a);
+  float s = sin(a);
+  return vec2(c * v.x - s * v.y, s * v.x + c * v.y);
+}
+
+// A single loop-shaped coronal filament: anchored at angle baseAngle on
+// the rim, stretching out to reach * radius at the cycle's peak and
+// curling as it extends (curl bends the target angle proportionally to how
+// far out the fragment is), envelope fades in/hold/out across phase.
+float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSign, float phase) {
+  // Fade in over the first third of the cycle, hold briefly, fade out over
+  // the last half -- reads as a flare erupting and subsiding rather than a
+  // linear pulse.
+  float envelope = smoothstep(0.0, 0.32, phase) * (1.0 - smoothstep(0.55, 1.0, phase));
+  if (envelope <= 0.0) return 0.0;
+
+  float reach = radius * (0.5 + 0.9 * envelope);
+  float outer = radius + reach;
+  if (dist < radius * 0.85 || dist > outer) return 0.0;
+
+  float ext = clamp((dist - radius) / reach, 0.0, 1.0);
+  float curl = curlSign * 0.9 * ext * ext;
+  float targetAngle = baseAngle + curl;
+
+  float angle = atan(rel.y, rel.x);
+  float angleDiff = mod(angle - targetAngle + 3.14159265, 6.2831853) - 3.14159265;
+  // Tapering width: wide at the base, narrowing toward the tip.
+  float width = 0.5 - 0.38 * ext;
+  float angular = exp(-(angleDiff * angleDiff) / (width * width));
+  float radialFade = 1.0 - ext;
+
+  return angular * radialFade * envelope;
+}
+
+void main() {
+  vec2 fragCoord = vec2(vUv.x, 1.0 - vUv.y) * u_resolution;
+  float intensity = 0.0;
+
+  for (int i = 0; i < MAX_STARS; i++) {
+    if (i >= u_starCount) break;
+    vec2 pos = u_starPos[i];
+    float radius = u_starRadius[i];
+    float seed = u_starSeed[i];
+    bool hasEjections = u_starEjections[i] > 0.5;
+
+    vec2 rel = fragCoord - pos;
+    float dist = length(rel);
+    float maxReach = hasEjections ? radius * 2.0 : radius * 1.05;
+    if (dist > maxReach) continue;
+
+    float starIntensity = 0.0;
+
+    if (dist < radius) {
+      vec2 uv = rel / radius;
+      vec2 rotated = rotate(uv, u_time * 0.08 + seed * 6.2831853);
+      vec2 warpOffset = vec2(
+        fbm(rotated * 2.2 + vec2(seed * 13.0, u_time * 0.05)) - 0.5,
+        fbm(rotated * 2.2 + vec2(seed * 29.0, u_time * 0.05 + 5.0)) - 0.5
+      ) * 0.5;
+      float surface = fbm(rotated * 3.0 + warpOffset + vec2(seed * 7.0, u_time * 0.07));
+
+      // Limb brightening: darker/lower-contrast near the center, brighter
+      // toward the edge, so the swirl reads as a lit plasma surface rather
+      // than a flat noisy disc.
+      float limb = smoothstep(radius * 0.3, radius, dist);
+      float shade = mix(0.72, 1.0, mix(surface, 1.0, limb * 0.5));
+
+      // Crisp antialiased disc edge.
+      float edge = smoothstep(radius + 1.5, radius - 1.5, dist);
+      starIntensity = max(starIntensity, shade * edge);
+    }
+
+    if (hasEjections) {
+      float period1 = 5.0 + 3.0 * fract(seed * 17.0);
+      float phase1 = fract(u_time / period1 + fract(seed * 31.0));
+      float baseAngle1 = fract(seed * 53.0) * 6.2831853;
+      float f1 = filament(rel, dist, radius, baseAngle1, sign(fract(seed * 71.0) - 0.5), phase1);
+
+      float period2 = 6.0 + 4.0 * fract(seed * 23.0 + 0.5);
+      float phase2 = fract(u_time / period2 + fract(seed * 41.0) + 0.5);
+      float baseAngle2 = baseAngle1 + 3.14159265 + (fract(seed * 61.0) - 0.5) * 1.5;
+      float f2 = filament(rel, dist, radius, baseAngle2, sign(fract(seed * 83.0) - 0.5), phase2);
+
+      starIntensity = max(starIntensity, max(f1, f2));
+    }
+
+    intensity = max(intensity, starIntensity);
+  }
+
+  gl_FragColor = vec4(1.0, 1.0, 1.0, clamp(intensity, 0.0, 1.0));
+}
+`;
+
+const __starState = new WeakMap();
+
+function starStateFor(gl) {
+  let st = __starState.get(gl);
+  if (st !== undefined) return st;
+
+  const program = linkProgram(gl, VERTEX_SRC, STAR_FRAGMENT_SRC);
+
+  const quad = new Float32Array([
+    -1, -1, 1, -1, -1, 1,
+    -1, 1, 1, -1, 1, 1,
+  ]);
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, "a_position");
+  const uniforms = {
+    resolution: gl.getUniformLocation(program, "u_resolution"),
+    time: gl.getUniformLocation(program, "u_time"),
+    starCount: gl.getUniformLocation(program, "u_starCount"),
+    starPos: gl.getUniformLocation(program, "u_starPos"),
+    starRadius: gl.getUniformLocation(program, "u_starRadius"),
+    starSeed: gl.getUniformLocation(program, "u_starSeed"),
+    starEjections: gl.getUniformLocation(program, "u_starEjections"),
+  };
+
+  st = { program, buffer, aPosition, uniforms };
+  __starState.set(gl, st);
+  return st;
+}
+
+// Walks a March List(StarGl) into flat Float32Arrays sized MAX_STARS,
+// capping silently past that count -- same shape as cloudsToArrays.
+function starsToArrays(stars) {
+  const pos = new Float32Array(MAX_STARS * 2);
+  const radius = new Float32Array(MAX_STARS);
+  const seed = new Float32Array(MAX_STARS);
+  const ejections = new Float32Array(MAX_STARS);
+  let node = stars;
+  let count = 0;
+  while (node.$ === "Cons" && count < MAX_STARS) {
+    const s = node._0;
+    pos[count * 2] = s.x;
+    pos[count * 2 + 1] = s.y;
+    radius[count] = s.radius;
+    seed[count] = s.seed;
+    ejections[count] = s.ejections ? 1.0 : 0.0;
+    count++;
+    node = node._1;
+  }
+  return { pos, radius, seed, ejections, count };
+}
+
 const __explosionState = new WeakMap();
 
 function explosionStateFor(gl) {
@@ -359,6 +565,30 @@ export function march_webgl_draw_nebula(gl, clouds, viewW, viewH, _t) {
   gl.uniform1fv(st.uniforms.cloudRadius, radius);
   gl.uniform1fv(st.uniforms.cloudStrength, strength);
   gl.uniform1fv(st.uniforms.cloudSeed, seed);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+export function march_webgl_draw_stars(gl, stars, viewW, viewH, t) {
+  const st = starStateFor(gl);
+  const { pos, radius, seed, ejections, count } = starsToArrays(stars);
+
+  gl.useProgram(st.program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, st.buffer);
+  gl.enableVertexAttribArray(st.aPosition);
+  gl.vertexAttribPointer(st.aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  gl.uniform2f(st.uniforms.resolution, viewW, viewH);
+  gl.uniform1f(st.uniforms.time, t);
+  gl.uniform1i(st.uniforms.starCount, count);
+  gl.uniform2fv(st.uniforms.starPos, pos);
+  gl.uniform1fv(st.uniforms.starRadius, radius);
+  gl.uniform1fv(st.uniforms.starSeed, seed);
+  gl.uniform1fv(st.uniforms.starEjections, ejections);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
