@@ -281,9 +281,14 @@ float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSi
   float envelope = smoothstep(0.0, 0.32, phase) * (1.0 - smoothstep(0.55, 1.0, phase));
   if (envelope <= 0.0) return 0.0;
 
-  float reach = radius * (0.5 + 0.9 * envelope);
+  // Reach and width both kept modest so this reads as a thin curling
+  // tongue of plasma, not a soft blob the size of the star itself.
+  float reach = radius * (0.35 + 0.55 * envelope);
   float outer = radius + reach;
-  if (dist < radius * 0.85 || dist > outer) return 0.0;
+  // Smooth base instead of a hard dist < radius*0.85 cutoff -- avoids a
+  // seam where the filament would otherwise pop in abruptly.
+  float baseFade = smoothstep(radius * 0.8, radius * 0.95, dist);
+  if (dist > outer || baseFade <= 0.0) return 0.0;
 
   float ext = clamp((dist - radius) / reach, 0.0, 1.0);
   float curl = curlSign * 0.9 * ext * ext;
@@ -291,12 +296,12 @@ float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSi
 
   float angle = atan(rel.y, rel.x);
   float angleDiff = mod(angle - targetAngle + 3.14159265, 6.2831853) - 3.14159265;
-  // Tapering width: wide at the base, narrowing toward the tip.
-  float width = 0.5 - 0.38 * ext;
+  // Tapering width: narrow at the base, narrowing further toward the tip.
+  float width = 0.32 - 0.2 * ext;
   float angular = exp(-(angleDiff * angleDiff) / (width * width));
-  float radialFade = 1.0 - ext;
+  float radialFade = pow(1.0 - ext, 1.6);
 
-  return angular * radialFade * envelope;
+  return angular * radialFade * envelope * baseFade;
 }
 
 void main() {
@@ -317,7 +322,7 @@ void main() {
 
     float starIntensity = 0.0;
 
-    if (dist < radius) {
+    if (dist < radius + 1.5) {
       vec2 uv = rel / radius;
       vec2 rotated = rotate(uv, u_time * 0.08 + seed * 6.2831853);
       vec2 warpOffset = vec2(
