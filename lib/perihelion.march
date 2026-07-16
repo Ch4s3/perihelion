@@ -57,7 +57,7 @@ mod Perihelion do
     icon_trajectory_preview : Option(Canvas.Image),
     -- Purely cosmetic view zoom, toggled by Z (see toggle_zoom_target):
     -- `zoom` is the current rendered scale, eased each frame toward
-    -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
+    -- `zoom_target` (1.0 or 2.0) the same way the camera eases its pan.
     zoom : Float,
     zoom_target : Float,
     -- asteroid_01..05.png, indexed by a per-asteroid roll of shape_seed (see
@@ -69,7 +69,17 @@ mod Perihelion do
     -- spawn_chunk_debris) -- None entries fall back to a plain dot, same
     -- graceful-degradation shape as asteroid_sprites.
     chunk_sprites : List(Option(Canvas.Image)),
-    debris : List(Debris)
+    debris : List(Debris),
+    -- Death explosion + screen shake, both triggered together the frame
+    -- Playing -> Over (see step_fx's `just_died` param -- step_fx can't
+    -- detect that transition itself, since it only ever sees the
+    -- post-update Game, so tick() computes it and passes it in explicitly).
+    -- *_time_left counts down to 0 (inactive); world-space explosion_x/y is
+    -- captured once at the moment of death and held steady while it plays.
+    explosion_x : Float,
+    explosion_y : Float,
+    explosion_time_left : Float,
+    shake_time_left : Float
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -346,7 +356,11 @@ mod Perihelion do
       zoom_target: 1.0,
       asteroid_sprites: load_numbered_sprites("asteroid_sprites/asteroids", "asteroid_", ".png", 5, 1, Nil),
       chunk_sprites: load_numbered_sprites("asteroid_sprites/chunks", "chunk_", ".png", 9, 1, Nil),
-      debris: Nil }
+      debris: Nil,
+      explosion_x: 0.0,
+      explosion_y: 0.0,
+      explosion_time_left: 0.0,
+      shake_time_left: 0.0 }
   end
 
   pfn flash_duration() : Float do 0.45 end
@@ -520,7 +534,13 @@ mod Perihelion do
 
   fn zoom_ease() : Float do 6.0 end
 
-  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float) : Fx do
+  fn explosion_duration() : Float do 0.7 end
+  fn shake_duration() : Float do 0.4 end
+  fn shake_magnitude() : Float do 10.0 end
+  fn explosion_radius() : Float do 90.0 end
+
+  doc "`just_died` is computed by tick() (was_playing(game) && is_over_phase(g2) on the pre/post-update pair) since step_fx only ever sees the post-update Game and so can't detect the Playing -> Over transition itself."
+  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float, just_died : Bool) : Fx do
     -- Freeze everything cosmetic while paused -- no time advance (stars
     -- stop twinkling), no particle spawn/step (thrust particles would
     -- otherwise re-spawn with an unchanged seed every frame, since t
@@ -540,7 +560,17 @@ mod Perihelion do
         Some((x, y, flash_duration()))
     end
     let zoom2 = fx.zoom + (zoom_target - fx.zoom) * zoom_ease() * dt_s
-    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
+    let explosion_time_left2 =
+      if just_died do explosion_duration()
+      else if fx.explosion_time_left > 0.0 do fx.explosion_time_left - dt_s else 0.0 end end
+    let shake_time_left2 =
+      if just_died do shake_duration()
+      else if fx.shake_time_left > 0.0 do fx.shake_time_left - dt_s else 0.0 end end
+    let explosion_x2 = if just_died do game.ball_x else fx.explosion_x end
+    let explosion_y2 = if just_died do game.ball_y else fx.explosion_y end
+    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target,
+              explosion_x: explosion_x2, explosion_y: explosion_y2,
+              explosion_time_left: explosion_time_left2, shake_time_left: shake_time_left2 }
     end
   end
 
@@ -663,19 +693,24 @@ mod Perihelion do
   -- the capture boundary -- a gameplay-critical read, so it stays the most
   -- legible; inner rings (multi-orbit stars only) are fainter guides the
   -- player can drop to with S.
+  -- Outer (capture) ring vs. inner guide rings get more contrast than they
+  -- used to -- brighter/thicker outer, dimmer inner -- so a multi-ring star
+  -- reads as distinct concentric circles instead of a smoky blur once
+  -- zoomed in (the old 0.28/0.16 alphas sat close enough together that
+  -- overlapping strokes blended into an even haze at 3x).
   pfn draw_orbit_rings(ctx, s : Star, orbits : List(Orbit)) : Unit do
     match orbits do
       Nil -> ()
       Cons(o, Nil) ->
-        Canvas.set_global_alpha(ctx, 0.28)
-        Canvas.set_stroke_style(ctx, "#9a9a9a")
-        Canvas.set_line_width(ctx, 1.0)
+        Canvas.set_global_alpha(ctx, 0.34)
+        Canvas.set_stroke_style(ctx, "#aaaaaa")
+        Canvas.set_line_width(ctx, 1.2)
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, s.x, s.y, o.radius, 0.0, two_pi())
         Canvas.stroke(ctx)
       Cons(o, rest) ->
-        Canvas.set_global_alpha(ctx, 0.16)
-        Canvas.set_stroke_style(ctx, "#8a8a8a")
+        Canvas.set_global_alpha(ctx, 0.11)
+        Canvas.set_stroke_style(ctx, "#787878")
         Canvas.set_line_width(ctx, 1.0)
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, s.x, s.y, o.radius, 0.0, two_pi())
@@ -884,6 +919,26 @@ mod Perihelion do
     end
   end
 
+  doc "Composites the death-explosion shockwave (see WebGL.draw_explosion) at its captured world position -- reuses the same offscreen GL canvas draw_nebula_gl does, so this OVERWRITES whatever draw_nebula_gl last rendered into it; safe here since it's always called after both nebula passes have already been blitted onto ctx for this frame."
+  pfn draw_explosion_gl(ctx, gl_opt : Option(WebGL.Context), fx : Fx, cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float) : Unit do
+    if fx.explosion_time_left <= 0.0 do
+      ()
+    else
+      match gl_opt do
+        None -> ()
+        Some(gl) ->
+          let focus_x = cam_x + view_w / 2.0
+          let focus_y = cam_y + view_h / 2.0
+          let sx = (fx.explosion_x - focus_x) * zoom + view_w / 2.0
+          let sy = (fx.explosion_y - focus_y) * zoom + view_h / 2.0
+          let progress = 1.0 - fx.explosion_time_left / explosion_duration()
+          let seed = hashf(fx.explosion_x, fx.explosion_y)
+          WebGL.draw_explosion(gl, sx, sy, explosion_radius() * zoom, progress, seed, view_w, view_h)
+          Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+      end
+    end
+  end
+
   pfn draw_stars(ctx, stars : List(Star), cam : Float, view_h : Float, t : Float, aim : Option((Float, Float, Float, Float))) : Unit do
     match stars do
       Nil -> ()
@@ -961,20 +1016,6 @@ mod Perihelion do
     Canvas.rotate(ctx, angle)
     Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
     Canvas.restore(ctx)
-    -- The sprite art itself doesn't distinguish drifting vs. permanently
-    -- orbiting (unlike the procedural fallback's color swap), so a thin
-    -- bright ring keeps that gameplay-relevant read alive.
-    match a.mode do
-      AsteroidDrifting -> ()
-      AsteroidOrbiting(_, _) ->
-        Canvas.set_global_alpha(ctx, 0.6)
-        Canvas.set_stroke_style(ctx, "#e8e8e8")
-        Canvas.set_line_width(ctx, 1.5)
-        Canvas.begin_path(ctx)
-        Canvas.arc(ctx, a.x, a.y, a.radius * 1.3, 0.0, two_pi())
-        Canvas.stroke(ctx)
-        Canvas.set_global_alpha(ctx, 1.0)
-    end
   end
 
   pfn draw_asteroids(ctx, fx : Fx, asteroids : List(Asteroid)) : Unit do
@@ -1057,6 +1098,10 @@ mod Perihelion do
     end
   end
 
+  pfn star_word(n : Int) : String do
+    if n == 1 do "star" else "stars" end
+  end
+
   pfn draw_runs(ctx, runs : List(RunRecord), view_w : Float, y : Float, i : Int) : Unit do
     if i >= 5 do
       ()
@@ -1067,7 +1112,7 @@ mod Perihelion do
           Canvas.set_font(ctx, "14px sans-serif")
           Canvas.fill_text(ctx,
             int_to_string(r.score) ++ " x" ++ int_to_string(r.max_mult)
-              ++ " · " ++ int_to_string(r.stars) ++ " stars",
+              ++ " · " ++ int_to_string(r.stars) ++ " " ++ star_word(r.stars),
             view_w / 2.0, y)
           draw_runs(ctx, rest, view_w, y + 20.0, i + 1)
       end
@@ -1309,7 +1354,29 @@ mod Perihelion do
     end
   end
 
-  pfn draw_hud(ctx, game : Game, fx : Fx) : Unit do
+  doc "Blurs everything drawn to `ctx` so far by redrawing the canvas onto itself with a CSS blur filter active, then lays a dark translucent rect on top -- used behind the Milestone/Over overlays so their text stays readable over a busy scene instead of sitting directly on top of it. `el` is the game canvas's own Dom.Node (Canvas.draw_node accepts any canvas-like source, including the canvas ctx itself belongs to)."
+  pfn draw_dim_blur_backdrop(ctx, el, view_w : Float, view_h : Float) : Unit do
+    Canvas.set_filter(ctx, "blur(10px)")
+    Canvas.draw_node(ctx, el, 0.0, 0.0)
+    Canvas.set_filter(ctx, "none")
+    Canvas.set_global_alpha(ctx, 0.55)
+    Canvas.set_fill_style(ctx, "#000000")
+    Canvas.fill_rect(ctx, 0.0, 0.0, view_w, view_h)
+    Canvas.set_global_alpha(ctx, 1.0)
+  end
+
+  doc "A short 'what killed you' line for the Over screen -- None for DeathNone (shouldn't happen once a run has actually ended, but a missing cause just omits the line rather than showing something wrong)."
+  pfn death_cause_text(c : DeathCause) : Option(String) do
+    match c do
+      DeathNone -> None
+      DeathMissed -> Some("missed the capture")
+      DeathAsteroid -> Some("hit an asteroid")
+      DeathEnemyShip -> Some("hit an enemy ship")
+      DeathEnemyShot -> Some("hit by enemy fire")
+    end
+  end
+
+  pfn draw_hud(ctx, el, game : Game, fx : Fx) : Unit do
     Canvas.set_fill_style(ctx, "#eeeeee")
     Canvas.set_font(ctx, "18px sans-serif")
     Canvas.set_text_align(ctx, "left")
@@ -1349,10 +1416,17 @@ mod Perihelion do
         Canvas.fill_text(ctx, "tap to start",
                          game.view_w / 2.0, game.view_h / 2.0)
       Over ->
+        draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
         Canvas.set_font(ctx, "22px sans-serif")
         Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
                          game.view_w / 2.0, game.view_h / 2.0)
-        draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 36.0, 0)
+        match death_cause_text(game.death_cause) do
+          None -> ()
+          Some(text) ->
+            Canvas.set_font(ctx, "13px sans-serif")
+            Canvas.fill_text(ctx, text, game.view_w / 2.0, game.view_h / 2.0 + 20.0)
+        end
+        draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 40.0, 0)
       Playing ->
         draw_pause_button(ctx, game, game.view_w, game.view_h)
         if game.paused do
@@ -1365,13 +1439,14 @@ mod Perihelion do
           ()
         end
       Milestone ->
+        draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
         draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, fx, 0)
     end
   end
 
-  pfn draw(ctx, game : Game, fx : Fx) : Unit do
+  pfn draw(ctx, el, game : Game, fx : Fx) : Unit do
     Canvas.set_global_alpha(ctx, 1.0)
     Canvas.set_fill_style(ctx, "#0a0a0a")
     Canvas.fill_rect(ctx, 0.0, 0.0, game.view_w, game.view_h)
@@ -1384,11 +1459,18 @@ mod Perihelion do
     -- Focus-preserving zoom: translate to viewport center, scale, then
     -- translate back by the pre-zoom view center -- at zoom 1.0 this is
     -- exactly equivalent to the old flat `translate(-camera_x, -camera_y)`.
+    -- A death shake rides along as an extra jitter on that final
+    -- translate -- shake_time_left is already clamped to exactly 0.0 when
+    -- inactive, so the ratio (and therefore the jitter) is a clean 0 with
+    -- no separate on/off branch needed.
     let focus_x = game.camera_x + game.view_w / 2.0
     let focus_y = game.camera_y + game.view_h / 2.0
+    let shake_amount = shake_magnitude() * (fx.shake_time_left / shake_duration())
+    let shake_dx = (hashf(fx.t, 91.0) - 0.5) * 2.0 * shake_amount
+    let shake_dy = (hashf(fx.t, 92.0) - 0.5) * 2.0 * shake_amount
     Canvas.translate(ctx, game.view_w / 2.0, game.view_h / 2.0)
     Canvas.scale(ctx, fx.zoom, fx.zoom)
-    Canvas.translate(ctx, 0.0 - focus_x, 0.0 - focus_y)
+    Canvas.translate(ctx, 0.0 - focus_x + shake_dx, 0.0 - focus_y + shake_dy)
     draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t, clouds)
     -- while flying, mark the stars the ball is heading toward (see star_targeted)
     let aim = match game.mode do
@@ -1425,7 +1507,8 @@ mod Perihelion do
     draw_ball(ctx, game, fx)
     Canvas.restore(ctx)
     draw_nebula_gl(ctx, fx.gl, fg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
-    draw_hud(ctx, game, fx)
+    draw_explosion_gl(ctx, fx.gl, fx, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom)
+    draw_hud(ctx, el, game, fx)
   end
 
   pfn draw_starkiller_reticle(ctx, game : Game) : Unit do
@@ -1526,7 +1609,7 @@ mod Perihelion do
   end
 
   fn zoom_target_low() : Float do 1.0 end
-  fn zoom_target_high() : Float do 3.0 end
+  fn zoom_target_high() : Float do 2.0 end
 
   pfn toggle_zoom_target(target : Float, keys : List(String)) : Float do
     if List.any(keys, fn k -> k == "z" || k == "Z") do
@@ -1539,6 +1622,17 @@ mod Perihelion do
   -- Every trigger here reuses an event the Combat/Core layer already reports
   -- for the visual-effects system (fx_bursts, capture_flash, phase/mode
   -- transitions) -- no game logic exists solely to drive sound.
+  pfn is_shot_orbiting(s : Shot) : Bool do
+    match s.mode do
+      ShotOrbiting(_, _, _) -> true
+      ShotFlying -> false
+    end
+  end
+
+  pfn count_orbiting_shots(shots : List(Shot)) : Int do
+    List.length(List.filter(shots, is_shot_orbiting))
+  end
+
   pfn play_sfx(actx, muted : Bool, game : Game, g2 : Game) : Unit do
     if muted do
       ()
@@ -1552,9 +1646,17 @@ mod Perihelion do
       else
         ()
       end
+      -- Forward progress vs. a backward "rescue" capture get distinct
+      -- tones -- both still flash the same ring, but a rescue is a save,
+      -- not advancement, and reads better as a different sound.
       match g2.capture_flash do
         None -> ()
-        Some(_) -> Audio.sweep(actx, 400.0, 900.0, 0.12, "sine")
+        Some(_) ->
+          if g2.current > game.current do
+            Audio.sweep(actx, 400.0, 900.0, 0.12, "sine")
+          else
+            Audio.sweep(actx, 500.0, 350.0, 0.15, "sine")
+          end
       end
       if List.length(g2.player_shots) > List.length(game.player_shots) do
         Audio.beep(actx, 900.0, 0.05, "square")
@@ -1578,6 +1680,21 @@ mod Perihelion do
       end
       if game.shield == 0 && g2.shield > 0 do
         Audio.beep(actx, 700.0, 0.06, "sine")
+      else
+        ()
+      end
+      if g2.pickup_collected do
+        Audio.beep(actx, 1100.0, 0.05, "sine")
+      else
+        ()
+      end
+      if is_milestone_phase(g2.phase) && !is_milestone_phase(game.phase) do
+        Audio.sweep(actx, 600.0, 1200.0, 0.25, "sine")
+      else
+        ()
+      end
+      if count_orbiting_shots(g2.player_shots) > count_orbiting_shots(game.player_shots) do
+        Audio.sweep(actx, 900.0, 1400.0, 0.18, "square")
       else
         ()
       end
@@ -1691,15 +1808,16 @@ mod Perihelion do
     end
     let muted2 = toggle_mute(fx.muted, keys)
     let zoom_target2 = toggle_zoom_target(fx.zoom_target, keys)
+    let just_died = was_playing(game) && is_over_phase(g2)
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2)
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_died)
     let fx2 = { fx1 with muted: muted2 }
-    if was_playing(game) && is_over_phase(g2) do
+    if just_died do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))
     else
       ()
     end
-    draw(ctx, g2, fx2)
+    draw(ctx, el, g2, fx2)
     Dom.on_frame(fn _ -> tick(ctx, el, g2, fx2))
   end
 

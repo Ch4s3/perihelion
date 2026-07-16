@@ -60,7 +60,7 @@ mod TestPerihelionCore do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None, paused: false }
+      fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
   end
 
   pfn is_playing(p : Phase) : Bool do
@@ -492,6 +492,18 @@ mod TestPerihelionCore do
       let g2 = Perihelion.Core.update(g, no_taps(), no_keys(), (999, 999), 400.0, 640.0, Perihelion.Core.dt())
       assert (is_over(g2.phase))
       assert (g2.best == 5)
+      match g2.death_cause do
+        DeathMissed -> assert true
+        _ -> assert false
+      end
+    end
+
+    test "a fresh game starts with no death cause" do
+      let g = mk_game(0.0)
+      match g.death_cause do
+        DeathNone -> assert true
+        _ -> assert false
+      end
     end
 
     test "exiting a side ends the run" do

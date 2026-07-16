@@ -60,7 +60,7 @@ mod TestPerihelionCombat do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None, paused: false }
+      fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
   end
 
   pfn space() : List(String) do
@@ -619,6 +619,27 @@ mod TestPerihelionCombat do
       assert (g2.score == 3)
     end
 
+    -- fx_bursts is the shell's only signal for "an asteroid died here" --
+    -- both the pre-existing dust-spark burst and the newer chunk-debris
+    -- sprites (Perihelion module, not tested here) key off this list being
+    -- non-empty. A regression that silently stopped populating it would
+    -- otherwise only show up as "debris never renders", easy to miss.
+    test "player shot killing an asteroid populates fx_bursts at the death position" do
+      let g0 = base_game(0.0)
+      let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (List.length(g2.fx_bursts) == 1)
+      match g2.fx_bursts do
+        Cons(pt, Nil) ->
+          let (burst_x, burst_y) = pt
+          assert (approx(burst_x, 300.0))
+          assert (approx(burst_y, 400.0))
+        _ -> assert false
+      end
+    end
+
     test "shot misses outside radii sum" do
       let g0 = base_game(0.0)
       let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
@@ -684,6 +705,30 @@ mod TestPerihelionCombat do
       let g2 = Perihelion.Combat.collide(g)
       assert (g2.shield == 2)
       assert (List.is_empty(g2.pickups))
+    end
+  end
+
+  describe "ball hazard death (no shield)" do
+    test "flying into an asteroid ends the run with DeathAsteroid" do
+      let g0 = base_game(0.0)
+      let ast = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let g = { g0 with asteroids: Cons(ast, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (is_over(g2))
+      match g2.death_cause do
+        DeathAsteroid -> assert true
+        _ -> assert false
+      end
+    end
+
+    test "a shield charge absorbs the hit instead of ending the run" do
+      let g0 = { base_game(0.0) with shield: 1 }
+      let ast = { x: g0.ball_x, y: g0.ball_y, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let g = { g0 with asteroids: Cons(ast, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (!is_over(g2))
+      assert (g2.shield == 0)
+      assert (List.is_empty(g2.asteroids))
     end
   end
 
@@ -858,6 +903,25 @@ mod TestPerihelionCombat do
   end
 
   describe "generalized pickups" do
+    -- pickup_collected is a read-once signal (same shape as fx_bursts/
+    -- capture_flash) the shell keys a collection sound off of -- easy to
+    -- silently break since nothing else observes it.
+    test "flying through a pickup sets pickup_collected and applies the upgrade" do
+      let g0 = base_game(0.0)
+      let pickup = { x: g0.ball_x, y: g0.ball_y, ttl: 5.0, kind: Perihelion.Upgrades.OffenseFireRate }
+      let g = { g0 with pickups: Cons(pickup, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (g2.pickup_collected)
+      assert (List.is_empty(g2.pickups))
+      assert (g2.fire_rate_stacks == 1)
+    end
+
+    test "no pickup nearby leaves pickup_collected false" do
+      let g0 = base_game(0.0)
+      let g2 = Perihelion.Combat.collide(g0)
+      assert (!g2.pickup_collected)
+    end
+
     test "roll_drops can drop a non-shield upgrade kind" do
       let g0 = { base_game(0.0) with rng: Random.seed(1) }
       let sh = { star_idx: 0, x: 50.0, y: 50.0, mode: Perihelion.Combat.ShipOrbiting(0, 0.0), fire_cooldown: 0.0, idle_timer: 0.0, hunter: false, top_idx: 0, mid_idx: 0, bot_idx: 0 }

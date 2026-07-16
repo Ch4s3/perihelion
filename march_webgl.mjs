@@ -127,6 +127,115 @@ void main() {
 }
 `;
 
+// A noise-turbulent expanding ring (shockwave) plus a fast-fading core
+// flash, both driven by u_progress going 0 (birth) -> 1 (fully faded).
+// Shares the hash/valueNoise/fbm/smoothFalloff building blocks with the
+// nebula shader above (same GLSL, just not literally shared source since
+// each fragment shader is its own self-contained string).
+const EXPLOSION_FRAGMENT_SRC = `
+precision mediump float;
+
+uniform vec2 u_resolution;
+uniform vec2 u_center;
+uniform float u_radius;
+uniform float u_progress;
+uniform float u_seed;
+
+varying vec2 vUv;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+  float sum = 0.0;
+  float amp = 0.5;
+  float freq = 1.0;
+  for (int i = 0; i < 4; i++) {
+    sum += amp * valueNoise(p * freq);
+    freq *= 2.0;
+    amp *= 0.5;
+  }
+  return sum;
+}
+
+float smoothFalloff(float dist, float radius) {
+  if (radius <= 0.0) return 0.0;
+  if (dist >= radius) return 0.0;
+  float t = 1.0 - dist / radius;
+  return t * t * (3.0 - 2.0 * t);
+}
+
+void main() {
+  vec2 fragCoord = vec2(vUv.x, 1.0 - vUv.y) * u_resolution;
+  vec2 rel = fragCoord - u_center;
+  float dist = length(rel);
+  float angle = atan(rel.y, rel.x);
+
+  // The ring expands outward from the center as progress advances, its
+  // own width narrowing slightly so it reads as a sharpening shockwave
+  // rather than a static soft blob.
+  float ringRadius = u_progress * u_radius;
+  float ringWidth = u_radius * 0.22 * (1.0 - u_progress * 0.4);
+  float ring = smoothFalloff(abs(dist - ringRadius), ringWidth);
+
+  // Angle-dependent turbulence roughens the ring's edge into something
+  // jagged/energetic instead of a perfect circle.
+  float turb = fbm(vec2(cos(angle), sin(angle)) * 3.5 + u_seed * 17.0 + u_progress * 2.5);
+  ring *= 0.55 + 0.45 * turb;
+
+  // A bright core flash at the center, shrinking and fading fast --
+  // reads as the initial blast before the shockwave takes over.
+  float core = smoothFalloff(dist, u_radius * 0.3 * (1.0 - u_progress));
+  core *= (1.0 - u_progress) * (1.0 - u_progress);
+
+  float intensity = clamp(ring + core, 0.0, 1.0);
+  float fade = 1.0 - u_progress;
+  gl_FragColor = vec4(1.0, 1.0, 1.0, intensity * fade);
+}
+`;
+
+const __explosionState = new WeakMap();
+
+function explosionStateFor(gl) {
+  let st = __explosionState.get(gl);
+  if (st !== undefined) return st;
+
+  const program = linkProgram(gl, VERTEX_SRC, EXPLOSION_FRAGMENT_SRC);
+
+  const quad = new Float32Array([
+    -1, -1, 1, -1, -1, 1,
+    -1, 1, 1, -1, 1, 1,
+  ]);
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, "a_position");
+  const uniforms = {
+    resolution: gl.getUniformLocation(program, "u_resolution"),
+    center: gl.getUniformLocation(program, "u_center"),
+    radius: gl.getUniformLocation(program, "u_radius"),
+    progress: gl.getUniformLocation(program, "u_progress"),
+    seed: gl.getUniformLocation(program, "u_seed"),
+  };
+
+  st = { program, buffer, aPosition, uniforms };
+  __explosionState.set(gl, st);
+  return st;
+}
+
 function compileShader(gl, type, src) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, src);
@@ -250,6 +359,27 @@ export function march_webgl_draw_nebula(gl, clouds, viewW, viewH, _t) {
   gl.uniform1fv(st.uniforms.cloudRadius, radius);
   gl.uniform1fv(st.uniforms.cloudStrength, strength);
   gl.uniform1fv(st.uniforms.cloudSeed, seed);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+export function march_webgl_draw_explosion(gl, x, y, radius, progress, seed, viewW, viewH) {
+  const st = explosionStateFor(gl);
+
+  gl.useProgram(st.program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, st.buffer);
+  gl.enableVertexAttribArray(st.aPosition);
+  gl.vertexAttribPointer(st.aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  gl.uniform2f(st.uniforms.resolution, viewW, viewH);
+  gl.uniform2f(st.uniforms.center, x, y);
+  gl.uniform1f(st.uniforms.radius, radius);
+  gl.uniform1f(st.uniforms.progress, progress);
+  gl.uniform1f(st.uniforms.seed, seed);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

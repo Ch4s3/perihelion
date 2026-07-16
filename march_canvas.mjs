@@ -28,6 +28,7 @@ export function march_canvas_set_stroke_style(ctx, color) { ctx.strokeStyle = co
 export function march_canvas_set_line_width(ctx, w) { ctx.lineWidth = w; }
 export function march_canvas_set_global_alpha(ctx, a) { ctx.globalAlpha = a; }
 export function march_canvas_set_font(ctx, font) { ctx.font = font; }
+export function march_canvas_set_filter(ctx, filter) { ctx.filter = filter; }
 
 // ── Rects ──────────────────────────────────────────────────────────────────
 

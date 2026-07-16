@@ -63,6 +63,13 @@ mod Perihelion.Core do
 
   type Phase = Ready | Playing | Over | Milestone
 
+  -- Why the current/last run ended -- DeathNone until end_run sets a real
+  -- cause, so the shell can show a "hit an asteroid"-style line on the Over
+  -- screen instead of just "score X". DeathMissed covers every check_death
+  -- condition (fell off, overshot, ...); the others come from
+  -- Combat.collide_ball_hazards_shield_or_die.
+  type DeathCause = DeathNone | DeathMissed | DeathAsteroid | DeathEnemyShip | DeathEnemyShot
+
   type RunRecord = { score : Int, stars : Int, max_mult : Int }
 
   type Game = {
@@ -143,7 +150,15 @@ mod Perihelion.Core do
     -- Freezes step_playing entirely while true (see update) -- toggled by
     -- P (or the shell's on-screen button) only during Playing. Not its own
     -- Phase variant so every existing Phase match arm stays untouched.
-    paused : Bool
+    paused : Bool,
+    -- Another read-once signal, same shape as fx_bursts/capture_flash: true
+    -- for exactly the one frame the ball flew through a pickup (Combat's
+    -- collide_ball_pickups), so the shell can play a collection sound.
+    pickup_collected : Bool,
+    -- Set once by end_run when the run ends; DeathNone the rest of the
+    -- time (not read-once/reset-per-frame like the signals above, since
+    -- the Over screen needs it to stay put for as long as it's shown).
+    death_cause : DeathCause
   }
 
   -- ── Helpers ──────────────────────────────────────────────────────────
@@ -318,11 +333,11 @@ mod Perihelion.Core do
 
   doc "The only state transition: advance `game` by `dt_s` seconds, consuming this frame's taps, key presses, live cursor position, and viewport size."
   fn update(game : Game, taps : List((Int, Int)), keys : List(String), cursor : (Int, Int), view_w : Float, view_h : Float, dt_s : Float) : Game do
-    -- fx_bursts/capture_flash are read-once signals: reset here so a frame
-    -- with no new event never re-serves a stale one; Combat.collide /
-    -- on_capture overwrite them later THIS SAME pipeline call if something
-    -- actually happens.
-    let g0 = { game with view_w: view_w, view_h: view_h, fx_bursts: Nil, capture_flash: None }
+    -- fx_bursts/capture_flash/pickup_collected are read-once signals: reset
+    -- here so a frame with no new event never re-serves a stale one;
+    -- Combat.collide / on_capture overwrite them later THIS SAME pipeline
+    -- call if something actually happens.
+    let g0 = { game with view_w: view_w, view_h: view_h, fx_bursts: Nil, capture_flash: None, pickup_collected: false }
     -- R hard-resets from ANY phase (including while paused): abandon the
     -- current run and return to a fresh "tap to start" board. Persisted
     -- best + run history are kept (a reset is not a finished run, so it
@@ -586,7 +601,7 @@ mod Perihelion.Core do
     -- without it capture_flash/fx_bursts from the triggering capture would
     -- stay `Some(...)`/non-empty for the whole time the overlay is up
     -- instead of just the one frame it was set on.
-    let g0 = { game with fx_bursts: Nil, capture_flash: None }
+    let g0 = { game with fx_bursts: Nil, capture_flash: None, pickup_collected: false }
     match choice_idx do
       None -> g0
       Some(i) ->
@@ -663,13 +678,14 @@ mod Perihelion.Core do
     if a > b do a else b end
   end
 
-  doc "End the current run: record it, update best, enter Over. The ONLY writer of run records."
-  fn end_run(game : Game) : Game do
+  doc "End the current run: record it, update best, enter Over. The ONLY writer of run records. `cause` is shown on the Over screen (see the shell's death_cause_text)."
+  fn end_run(game : Game, cause : DeathCause) : Game do
     let rec = { score: game.score, stars: game.stars_chained, max_mult: game.max_mult }
     { game with
         phase: Over,
         best: max2(game.best, game.score),
-        runs: List.take(Cons(rec, game.runs), 10) }
+        runs: List.take(Cons(rec, game.runs), 10),
+        death_cause: cause }
   end
 
   pfn check_death(game : Game) : Game do
@@ -689,7 +705,7 @@ mod Perihelion.Core do
       None -> false
       Some(c) -> game.ball_y > c.y + fall_margin()
     end
-    if below || off_side || overshot || fallen do end_run(game) else game end
+    if below || off_side || overshot || fallen do end_run(game, DeathMissed) else game end
   end
 
   -- Camera: anchored to the current star while orbiting; chases the BALL
@@ -757,7 +773,7 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None, paused: false }
+          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
       Cons(s0, _) ->
         { seed: seed, phase: Ready,
           ball_x: s0.x + Math.cos(start_angle) * s0.capture_radius,
@@ -784,7 +800,7 @@ mod Perihelion.Core do
           loop_angle: 0.0, fire_cooldown: 0.0,
           spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
           view_w: view_w, view_h: view_h,
-          fx_bursts: Nil, capture_flash: None, paused: false }
+          fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone }
     end
   end
 
