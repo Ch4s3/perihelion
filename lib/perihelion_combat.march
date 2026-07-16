@@ -90,6 +90,10 @@ mod Perihelion.Combat do
   -- Each fragment's heading is the parent's own heading rotated by a random
   -- offset in [-spread, spread] radians -- ~69 degrees each side at 1.2.
   fn asteroid_fragment_spread() : Float do 1.2 end
+  -- How much of the killing shot's own velocity gets added to the parent's
+  -- velocity before fragments are spawned -- a fast/glancing shot visibly
+  -- knocks fragments off in its own direction, not just the parent's.
+  fn asteroid_shot_momentum_mult() : Float do 0.5 end
   -- Gravity-like arc toward the nearest star within range (matches the
   -- player's own assisted_velocity shape: bend, then renormalize so bending
   -- never changes speed).
@@ -962,24 +966,37 @@ mod Perihelion.Combat do
     end
   end
 
+  -- The killing shot's own velocity, blended into the parent's before
+  -- fragments are spawned -- falls back to the parent's own velocity
+  -- untouched if no shot matched (shouldn't happen for a `dead` asteroid,
+  -- but keeps this total).
+  pfn momentum_velocity(a : Asteroid, killer_shots : List(Shot)) : (Float, Float) do
+    match List.find(killer_shots, fn s -> shot_hits_at(s, a.x, a.y, a.radius)) do
+      None -> (a.vx, a.vy)
+      Some(s) ->
+        (a.vx + s.vx * asteroid_shot_momentum_mult(), a.vy + s.vy * asteroid_shot_momentum_mult())
+    end
+  end
+
   -- Only asteroids at/above asteroid_radius() are eligible to split
   -- (fragments spawn smaller, so this naturally terminates the chain after
   -- one level), and even then only asteroid_split_chance() of the time --
   -- the rest just die into cosmetic debris like before.
-  pfn spawn_fragments_for_dead(dead : List(Asteroid), rng : Random.Rng, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
+  pfn spawn_fragments_for_dead(dead : List(Asteroid), killer_shots : List(Shot), rng : Random.Rng, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
     match dead do
       Nil -> (rng, acc)
       Cons(a, rest) ->
         if a.radius >= asteroid_radius() do
           let (r1, chance_f) = draw(rng)
           if chance_f < asteroid_split_chance() do
-            let (rng2, acc2) = spawn_fragments_n(a.x, a.y, a.vx, a.vy, r1, asteroid_split_count(), acc)
-            spawn_fragments_for_dead(rest, rng2, acc2)
+            let (mvx, mvy) = momentum_velocity(a, killer_shots)
+            let (rng2, acc2) = spawn_fragments_n(a.x, a.y, mvx, mvy, r1, asteroid_split_count(), acc)
+            spawn_fragments_for_dead(rest, killer_shots, rng2, acc2)
           else
-            spawn_fragments_for_dead(rest, r1, acc)
+            spawn_fragments_for_dead(rest, killer_shots, r1, acc)
           end
         else
-          spawn_fragments_for_dead(rest, rng, acc)
+          spawn_fragments_for_dead(rest, killer_shots, rng, acc)
         end
     end
   end
@@ -991,7 +1008,7 @@ mod Perihelion.Combat do
     let shots = List.filter(game.player_shots, fn s ->
       !List.any(game.asteroids, fn a -> shot_hits_at(s, a.x, a.y, a.radius)))
     let killed = List.length(dead)
-    let (rng2, fragments) = spawn_fragments_for_dead(dead, game.rng, Nil)
+    let (rng2, fragments) = spawn_fragments_for_dead(dead, game.player_shots, game.rng, Nil)
     let alive2 = List.append(alive, fragments)
     if killed == 0 do
       { game with asteroids: alive2, player_shots: shots, fx_bursts: burst_points(dead), rng: rng2 }

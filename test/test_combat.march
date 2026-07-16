@@ -684,6 +684,26 @@ mod TestPerihelionCombat do
       end
     end
 
+    test "fragments inherit some of the killing shot's own velocity" do
+      let g0 = base_game(0.0)
+      -- a stationary asteroid: with no momentum blending, fragment speed
+      -- would fall back to asteroid_speed() (90.0) regardless of the shot.
+      let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let shot = { x: 305.0, y: 400.0, vx: 100.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), rng: Random.seed(0) }
+      let g2 = Perihelion.Combat.collide(g)
+      match g2.asteroids do
+        Cons(frag, _) ->
+          -- rotation (spread) never changes magnitude, so the fragment's
+          -- speed should reflect the blended (0,0) + (100,0)*momentum_mult
+          -- base velocity, not asteroid_speed()'s fallback.
+          let expected_speed = 100.0 * Perihelion.Combat.asteroid_shot_momentum_mult() * Perihelion.Combat.asteroid_fragment_speed_mult()
+          let actual_speed = Math.sqrt(frag.vx * frag.vx + frag.vy * frag.vy)
+          assert (approx(actual_speed, expected_speed))
+        _ -> assert false
+      end
+    end
+
     -- fx_bursts is the shell's only signal for "an asteroid died here" --
     -- both the pre-existing dust-spark burst and the newer chunk-debris
     -- sprites (Perihelion module, not tested here) key off this list being
