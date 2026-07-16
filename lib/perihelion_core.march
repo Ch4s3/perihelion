@@ -256,7 +256,13 @@ mod Perihelion.Core do
   end
 
   -- ── Special (X) ──────────────────────────────────────────────────────
-  fn star_thrust_strength() : Float do 60.0 end
+  -- Fraction of the way StarThrust turns the ball's HEADING toward the
+  -- nearest star, blending current-direction and toward-star unit vectors
+  -- before renormalizing back to fly_speed() -- a fixed heading fraction
+  -- (not a raw velocity add) so it reliably corrects course regardless of
+  -- current speed/direction, instead of a small nudge that barely bends a
+  -- fast-moving trajectory (see step_playing's StarThrust arm).
+  fn star_thrust_blend() : Float do 0.55 end
 
   pfn dist2(ax : Float, ay : Float, bx : Float, by_ : Float) : Float do
     let dx = ax - bx
@@ -354,7 +360,12 @@ mod Perihelion.Core do
                 Some(pair) ->
                   let (dx, dy) = pair
                   match game.mode do
-                    Flying(vx, vy) -> { game with mode: Flying(vx + dx * star_thrust_strength(), vy + dy * star_thrust_strength()), special_charges: game.special_charges - 1 }
+                    Flying(vx, vy) ->
+                      let speed = Math.sqrt(vx * vx + vy * vy)
+                      let (ux, uy) = if speed > 0.0 do (vx / speed, vy / speed) else (dx, dy) end
+                      let blend = star_thrust_blend()
+                      let (fvx, fvy) = renormalize(ux * (1.0 - blend) + dx * blend, uy * (1.0 - blend) + dy * blend)
+                      { game with mode: Flying(fvx, fvy), special_charges: game.special_charges - 1 }
                     Orbiting(_, _, _) -> game
                   end
               end

@@ -968,6 +968,20 @@ mod TestPerihelionCore do
       let g2 = step_keys(g0, Cons("x", Nil))
       assert (g2.special_charges == 0)
     end
+
+    test "moving directly away from the nearest star: X corrects course to head toward it, at unchanged speed" do
+      -- ball at (200, 300) moving straight -y (away from star1 at (200, 360),
+      -- the nearer of mk_game's two stars) -- exactly the "off track" case
+      -- the old fixed-magnitude nudge couldn't reliably correct.
+      let g0 = { mk_flying(200.0, 300.0, 0.0, 0.0 - Perihelion.Core.fly_speed()) with special: Some(Perihelion.Upgrades.StarThrust), special_charges: 1 }
+      let g2 = step_keys(g0, Cons("x", Nil))
+      match g2.mode do
+        Flying(vx, vy) ->
+          assert (vy > 0.0) -- now heading toward star1 (+y), not away from it
+          assert (approx(Math.sqrt(vx * vx + vy * vy), Perihelion.Core.fly_speed()))
+        Orbiting(_, _, _) -> assert false
+      end
+    end
   end
 
   describe "special: star jump" do
