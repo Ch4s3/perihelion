@@ -74,6 +74,16 @@ mod Perihelion.Combat do
   fn asteroid_jitter() : Float do 1.0 end
   fn asteroid_speed() : Float do 90.0 end
   fn asteroid_radius() : Float do 10.0 end
+  -- A shot-killed asteroid at/above asteroid_radius() (i.e. hasn't already
+  -- split) breaks into asteroid_split_count() smaller live asteroids instead
+  -- of just dying into cosmetic debris -- fragments spawn below that radius,
+  -- so they don't split again when killed (see collide_shots_asteroids).
+  fn asteroid_split_count() : Int do 2 end
+  fn asteroid_fragment_radius() : Float do asteroid_radius() * 0.6 end
+  fn asteroid_fragment_speed_mult() : Float do 1.3 end
+  -- Each fragment's heading is the parent's own heading rotated by a random
+  -- offset in [-spread, spread] radians -- ~51 degrees each side at 0.9.
+  fn asteroid_fragment_spread() : Float do 0.9 end
   -- Gravity-like arc toward the nearest star within range (matches the
   -- player's own assisted_velocity shape: bend, then renormalize so bending
   -- never changes speed).
@@ -918,28 +928,71 @@ mod Perihelion.Combat do
     if raw > Perihelion.Core.mult_cap() do Perihelion.Core.mult_cap() else raw end
   end
 
-  doc "Kills of one type without an intervening kill of the OTHER type build a streak; crossing every ship_kill_streak_threshold()/asteroid_kill_streak_threshold() re-bumps the multiplier (capped, same field/decay as the star-capture combo -- a slow/backward capture resets it to 1)."
+  -- Rotates (vx, vy)'s heading by a random offset in [-spread, spread]
+  -- (drawn from rng) and scales it by asteroid_fragment_speed_mult(),
+  -- falling back to asteroid_speed() if the parent was somehow stationary.
+  pfn spawn_fragment(x : Float, y : Float, vx : Float, vy : Float, rng : Random.Rng) : (Random.Rng, Asteroid) do
+    let (r1, angle_f) = draw(rng)
+    let (r2, shape_f) = draw(r1)
+    let speed = Math.sqrt(vx * vx + vy * vy)
+    let s = if speed > 0.0 do speed else asteroid_speed() end
+    let base_angle = Math.atan2(vy, vx)
+    let offset = (angle_f - 0.5) * 2.0 * asteroid_fragment_spread()
+    let a2 = base_angle + offset
+    let fvx = Math.cos(a2) * s * asteroid_fragment_speed_mult()
+    let fvy = Math.sin(a2) * s * asteroid_fragment_speed_mult()
+    (r2, { x: x, y: y, vx: fvx, vy: fvy, radius: asteroid_fragment_radius(), shape_seed: shape_f, mode: AsteroidDrifting })
+  end
+
+  pfn spawn_fragments_n(x : Float, y : Float, vx : Float, vy : Float, rng : Random.Rng, n : Int, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
+    if n <= 0 do
+      (rng, acc)
+    else
+      let (rng2, frag) = spawn_fragment(x, y, vx, vy, rng)
+      spawn_fragments_n(x, y, vx, vy, rng2, n - 1, Cons(frag, acc))
+    end
+  end
+
+  -- Only asteroids at/above asteroid_radius() split (fragments spawn
+  -- smaller, so this naturally terminates the chain after one level).
+  pfn spawn_fragments_for_dead(dead : List(Asteroid), rng : Random.Rng, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
+    match dead do
+      Nil -> (rng, acc)
+      Cons(a, rest) ->
+        if a.radius >= asteroid_radius() do
+          let (rng2, acc2) = spawn_fragments_n(a.x, a.y, a.vx, a.vy, rng, asteroid_split_count(), acc)
+          spawn_fragments_for_dead(rest, rng2, acc2)
+        else
+          spawn_fragments_for_dead(rest, rng, acc)
+        end
+    end
+  end
+
+  doc "Kills of one type without an intervening kill of the OTHER type build a streak; crossing every ship_kill_streak_threshold()/asteroid_kill_streak_threshold() re-bumps the multiplier (capped, same field/decay as the star-capture combo -- a slow/backward capture resets it to 1). Full-size kills also spawn live fragments (see spawn_fragments_for_dead) -- scoring is unchanged either way, since fragments are just new Asteroid entries added to `alive`, not scored on spawn."
   pfn collide_shots_asteroids(game : Game) : Game do
     let (dead, alive) = List.partition(game.asteroids, fn a ->
       List.any(game.player_shots, fn s -> shot_hits_at(s, a.x, a.y, a.radius)))
     let shots = List.filter(game.player_shots, fn s ->
       !List.any(game.asteroids, fn a -> shot_hits_at(s, a.x, a.y, a.radius)))
     let killed = List.length(dead)
+    let (rng2, fragments) = spawn_fragments_for_dead(dead, game.rng, Nil)
+    let alive2 = List.append(alive, fragments)
     if killed == 0 do
-      { game with asteroids: alive, player_shots: shots, fx_bursts: burst_points(dead) }
+      { game with asteroids: alive2, player_shots: shots, fx_bursts: burst_points(dead), rng: rng2 }
     else
       let new_streak = game.asteroid_kill_streak + killed
       let bumps = streak_bumps(game.asteroid_kill_streak, new_streak, asteroid_kill_streak_threshold())
       let new_mult = bump_multiplier(game.multiplier, bumps)
       { game with
-          asteroids: alive,
+          asteroids: alive2,
           player_shots: shots,
           score: game.score + killed * new_mult,
           fx_bursts: burst_points(dead),
           asteroid_kill_streak: new_streak,
           ship_kill_streak: 0,
           multiplier: new_mult,
-          max_mult: if new_mult > game.max_mult do new_mult else game.max_mult end }
+          max_mult: if new_mult > game.max_mult do new_mult else game.max_mult end,
+          rng: rng2 }
     end
   end
 

@@ -616,15 +616,58 @@ mod TestPerihelionCombat do
   end
 
   describe "collide" do
-    test "player shot kills asteroid and scores multiplier" do
+    test "player shot kills a full-size asteroid, scores multiplier, and it splits into fragments" do
       let g0 = base_game(0.0)
-      let ast = { x: 300.0, y: 400.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let ast = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
       let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
       let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil), multiplier: 3 }
       let g2 = Perihelion.Combat.collide(g)
-      assert (List.is_empty(g2.asteroids))
+      -- the killed full-size (radius 10.0 == asteroid_radius()) asteroid
+      -- splits into asteroid_split_count() smaller live fragments, not an
+      -- empty list -- see docs/superpowers/specs/2026-07-16-asteroid-split-design.md.
+      assert (List.length(g2.asteroids) == Perihelion.Combat.asteroid_split_count())
+      match g2.asteroids do
+        Nil -> assert false
+        Cons(frag, _) ->
+          assert (approx(frag.radius, Perihelion.Combat.asteroid_fragment_radius()))
+          match frag.mode do
+            AsteroidDrifting -> assert true
+            _ -> assert false
+          end
+      end
       assert (List.is_empty(g2.player_shots))
       assert (g2.score == 3)
+    end
+
+    test "killing a fragment (already below split size) does not spawn more asteroids" do
+      let g0 = base_game(0.0)
+      let frag = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: Perihelion.Combat.asteroid_fragment_radius(), shape_seed: 0.0, mode: AsteroidDrifting }
+      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      let g = { g0 with asteroids: Cons(frag, Nil), player_shots: Cons(shot, Nil) }
+      let g2 = Perihelion.Combat.collide(g)
+      assert (List.is_empty(g2.asteroids))
+    end
+
+    test "fragment velocities are deterministic and diverge from each other" do
+      let g0 = base_game(0.0)
+      let ast = { x: 300.0, y: 400.0, vx: 20.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
+      let shot = { x: 305.0, y: 400.0, vx: 0.0, vy: 0.0, ttl: 1.0, homing: false, star_killer: false, target_x: 0.0, target_y: 0.0, mode: Perihelion.Combat.ShotFlying }
+      let g = { g0 with asteroids: Cons(ast, Nil), player_shots: Cons(shot, Nil) }
+      let g2a = Perihelion.Combat.collide(g)
+      let g2b = Perihelion.Combat.collide(g)
+      match g2a.asteroids do
+        Cons(a1, Cons(a2, Nil)) ->
+          match g2b.asteroids do
+            Cons(b1, Cons(b2, Nil)) ->
+              -- same inputs (same shape_seed, same rng) -> identical output
+              assert (approx(a1.vx, b1.vx) && approx(a1.vy, b1.vy))
+              assert (approx(a2.vx, b2.vx) && approx(a2.vy, b2.vy))
+              -- the two fragments from ONE kill head in different directions
+              assert (!(approx(a1.vx, a2.vx) && approx(a1.vy, a2.vy)))
+            _ -> assert false
+          end
+        _ -> assert false
+      end
     end
 
     -- fx_bursts is the shell's only signal for "an asteroid died here" --
