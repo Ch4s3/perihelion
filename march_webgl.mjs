@@ -207,18 +207,21 @@ void main() {
 `;
 
 const MAX_STARS = 12;
+const EJECTION_SLOTS = 5;
 
 // Every star gets a slowly-advected domain-warped fbm swirl clipped to its
 // disc (roiling plasma read, brighter toward the limb). Stars flagged
-// `ejections` additionally get up to 2 loop-shaped filament flares per star,
-// timed by a per-star seeded cycle (fract(t * speed + offset), same
-// pure-function-of-time shape as the March-side pulse_speed/pulse_phase
-// pattern) so different stars' flares desync. Shares the hash/valueNoise/fbm
-// building blocks with the nebula/explosion shaders (not literally shared
-// source -- each fragment shader is its own self-contained string).
+// ejections additionally get up to EJECTION_SLOTS loop-shaped filament
+// flares, each cycling on its own period; every time a slot's cycle rolls
+// over it reseeds a fresh random angle/direction/reach, so eruptions land
+// all around the rim instead of the same couple of fixed spots. Shares the
+// hash/valueNoise/fbm building blocks with the nebula/explosion shaders
+// (not literally shared source -- each fragment shader is its own
+// self-contained string).
 const STAR_FRAGMENT_SRC = `
 precision mediump float;
 #define MAX_STARS ${MAX_STARS}
+#define EJECTION_SLOTS ${EJECTION_SLOTS}
 
 uniform vec2 u_resolution;
 uniform float u_time;
@@ -270,11 +273,17 @@ vec2 rotate(vec2 v, float a) {
   return vec2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 
+float hash1(float x) {
+  return hash(vec2(x, x * 0.7919));
+}
+
 // A single loop-shaped coronal filament: anchored at angle baseAngle on
 // the rim, stretching out to reach * radius at the cycle's peak and
 // curling as it extends (curl bends the target angle proportionally to how
 // far out the fragment is), envelope fades in/hold/out across phase.
-float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSign, float phase) {
+// reachMul varies how far a given eruption reaches (0.6-1.3x the base
+// reach) so successive eruptions at the same star don't all look identical.
+float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSign, float phase, float reachMul) {
   // Fade in over the first third of the cycle, hold briefly, fade out over
   // the last half -- reads as a flare erupting and subsiding rather than a
   // linear pulse.
@@ -283,7 +292,7 @@ float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSi
 
   // Reach and width both kept modest so this reads as a thin curling
   // tongue of plasma, not a soft blob the size of the star itself.
-  float reach = radius * (0.35 + 0.55 * envelope);
+  float reach = radius * reachMul * (0.35 + 0.55 * envelope);
   float outer = radius + reach;
   // Smooth base instead of a hard dist < radius*0.85 cutoff -- avoids a
   // seam where the filament would otherwise pop in abruptly.
@@ -343,17 +352,27 @@ void main() {
     }
 
     if (hasEjections) {
-      float period1 = 5.0 + 3.0 * fract(seed * 17.0);
-      float phase1 = fract(u_time / period1 + fract(seed * 31.0));
-      float baseAngle1 = fract(seed * 53.0) * 6.2831853;
-      float f1 = filament(rel, dist, radius, baseAngle1, sign(fract(seed * 71.0) - 0.5), phase1);
+      // EJECTION_SLOTS independent eruption "sites", each cycling on its
+      // own period. Every time a slot's cycle rolls over, cycleIndex
+      // changes, which reseeds baseAngle/curl/reach -- so eruptions land at
+      // a fresh random point around the whole rim and shoot off in a fresh
+      // random direction each time, rather than the same two fixed spots
+      // repeating forever.
+      float filTotal = 0.0;
+      for (int slot = 0; slot < EJECTION_SLOTS; slot++) {
+        float slotf = float(slot);
+        float period = 2.6 + 2.6 * hash1(seed * 97.0 + slotf * 13.0);
+        float rawT = u_time / period + hash1(seed * 61.0 + slotf * 7.0) * 20.0;
+        float cycleIndex = floor(rawT);
+        float phase = fract(rawT);
+        float cseed = seed * 131.0 + slotf * 29.0 + cycleIndex * 17.0;
+        float baseAngle = hash1(cseed) * 6.2831853;
+        float curlSign = hash1(cseed + 3.7) > 0.5 ? 1.0 : -1.0;
+        float reachMul = 0.6 + 0.7 * hash1(cseed + 9.1);
+        filTotal = max(filTotal, filament(rel, dist, radius, baseAngle, curlSign, phase, reachMul));
+      }
 
-      float period2 = 6.0 + 4.0 * fract(seed * 23.0 + 0.5);
-      float phase2 = fract(u_time / period2 + fract(seed * 41.0) + 0.5);
-      float baseAngle2 = baseAngle1 + 3.14159265 + (fract(seed * 61.0) - 0.5) * 1.5;
-      float f2 = filament(rel, dist, radius, baseAngle2, sign(fract(seed * 83.0) - 0.5), phase2);
-
-      starIntensity = max(starIntensity, max(f1, f2));
+      starIntensity = max(starIntensity, filTotal);
     }
 
     intensity = max(intensity, starIntensity);
