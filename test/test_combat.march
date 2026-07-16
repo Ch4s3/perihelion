@@ -87,6 +87,18 @@ mod TestPerihelionCombat do
     end
   end
 
+  -- Step Combat `n` times at a caller-chosen dt, WITHOUT collide -- so the
+  -- director's phase cycle isn't perturbed by kills (which reset streaks) or
+  -- ball-vs-hazard collisions (which could end the run). Used to drive the
+  -- director through simulated time in the integration tests below.
+  pfn step_times(game : Game, n : Int, d : Float) : Game do
+    if n == 0 do
+      game
+    else
+      step_times(Perihelion.Combat.step(game, d), n - 1, d)
+    end
+  end
+
   -- A homing shot 40px directly above star 1 (200, 360, capture_radius
   -- 54), moving purely +x -- perpendicular to the radial (straight up),
   -- i.e. a tangential pass, not a dive toward the center. No asteroids/
@@ -567,6 +579,49 @@ mod TestPerihelionCombat do
       let g = { g0 with score: 3, rng: Random.seed(1) }    -- below ship_score_min (4)
       let g2 = spawn_n(g, 40)
       assert (List.is_empty(g2.ships))
+    end
+  end
+
+  -- Multi-tick integration: drives the FULL Combat.step loop over simulated
+  -- time and checks the director actually cycles and spawns end-to-end
+  -- (advance() is unit-tested in isolation in test_director; this proves the
+  -- integrated game loop wiring).
+  describe "director integration (multi-tick)" do
+    test "drives Relax -> BuildUp -> Peak over time and spawns a hunter at peak entry" do
+      let g0 = base_game(0.0)
+      -- score gate open, a hot ship streak, no kills happening so it holds
+      let g = { g0 with score: 50, ship_kill_streak: 5, rng: Random.seed(7) }
+      -- 14s of ticks: relax(8s) -> buildup(5s) -> peak entered ~13s
+      let g2 = step_times(g, 140, 0.1)
+      assert (Perihelion.Director.state_name(g2.director) == "peak")
+      -- guaranteed hunter at peak entry (score >= gate) => at least one ship
+      assert (!List.is_empty(g2.ships))
+    end
+
+    test "stays in Relax across the same span when no streak is hot" do
+      let g0 = base_game(0.0)
+      let g = { g0 with score: 50, ship_kill_streak: 0, asteroid_kill_streak: 0, rng: Random.seed(7) }
+      let g2 = step_times(g, 140, 0.1)
+      assert (Perihelion.Director.state_name(g2.director) == "relax")
+    end
+
+    test "taking damage during a peak drops the director to fade" do
+      let g0 = base_game(0.0)
+      let g = { g0 with score: 50, ship_kill_streak: 5, shield: 2, rng: Random.seed(7) }
+      let peak = step_times(g, 140, 0.1)
+      assert (Perihelion.Director.state_name(peak.director) == "peak")
+      -- simulate a shield hit: shield now below director.prev_shield (2)
+      let hit = { peak with shield: peak.shield - 1 }
+      let g2 = Perihelion.Combat.step(hit, 0.1)
+      assert (Perihelion.Director.state_name(g2.director) == "fade")
+    end
+
+    test "the asteroid timer spawns an asteroid end-to-end through step" do
+      let g0 = base_game(0.0)
+      let g = { g0 with rng: Random.seed(7) }
+      -- first asteroid fires when the primed 4.0s timer elapses (~tick 40)
+      let g2 = step_times(g, 45, 0.1)
+      assert (!List.is_empty(g2.asteroids))
     end
   end
 
