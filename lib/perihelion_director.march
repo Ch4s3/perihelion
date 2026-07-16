@@ -1,0 +1,177 @@
+-- Perihelion.Director — an L4D-style pacing state machine. Pure: no Game
+-- dependency. Cycles Relax -> BuildUp -> Peak -> Fade -> Relax based on the
+-- player's live kill-streak and shield signals. The spawn *driver* lives in
+-- Perihelion.Combat (which owns the private ship-construction helpers); this
+-- module only decides the pacing phase and per-phase spawn multipliers.
+-- (`state` is a reserved keyword, so the phase field is named `phase`.)
+mod Perihelion.Director do
+
+  type DirectorState = Relax | BuildUp | Peak | Fade
+
+  -- state_timer: counts UP toward relax_min_duration() in Relax; counts DOWN
+  -- to 0 in the fixed-duration phases (BuildUp/Peak/Fade).
+  -- asteroid_spawn_timer / ship_spawn_timer: owned by Combat's driver, carried
+  -- here so all spawn timing lives in one record. prev_shield: last tick's
+  -- shield, to detect damage (a decrease). peak_softened: latched at Peak
+  -- entry when shield == 0, boosting drop chance for that peak.
+  type Director = {
+    phase : DirectorState,
+    state_timer : Float,
+    asteroid_spawn_timer : Float,
+    ship_spawn_timer : Float,
+    prev_shield : Int,
+    peak_softened : Bool
+  }
+
+  -- ── Tuning constants ─────────────────────────────────────────────────
+  fn relax_min_duration() : Float do 8.0 end
+  fn build_min_duration() : Float do 5.0 end
+  fn peak_duration() : Float do 10.0 end
+  fn fade_duration() : Float do 4.0 end
+  -- Base cadence for the director-owned ship spawn roll (tunable by
+  -- inspection). Ship spawning is no longer tied to star generation.
+  fn ship_spawn_interval() : Float do 3.5 end
+
+  fn relax_asteroid_mult() : Float do 1.3 end
+  fn relax_ship_mult() : Float do 0.7 end
+  fn relax_ship_cap() : Float do 0.45 end
+  fn peak_asteroid_mult() : Float do 0.4 end
+  fn peak_ship_mult() : Float do 1.6 end
+  fn peak_ship_cap() : Float do 0.65 end
+  fn peak_drop_mult() : Float do 1.5 end
+  fn baseline_ship_cap() : Float do 0.45 end
+
+  doc "A fresh director: calm (Relax), with spawn timers primed to today's initial values."
+  fn initial() : Director do
+    { phase: Relax, state_timer: 0.0,
+      asteroid_spawn_timer: Perihelion.Combat.asteroid_interval(),
+      ship_spawn_timer: ship_spawn_interval(),
+      prev_shield: 0, peak_softened: false }
+  end
+
+  pfn is_peak(s : DirectorState) : Bool do
+    match s do
+      Peak -> true
+      _ -> false
+    end
+  end
+
+  doc "Human-readable phase tag: relax | buildup | peak | fade."
+  fn state_name(d : Director) : String do
+    match d.phase do
+      Relax -> "relax"
+      BuildUp -> "buildup"
+      Peak -> "peak"
+      Fade -> "fade"
+    end
+  end
+
+  -- The escalation gate: past min relax AND at least one streak at/over its
+  -- existing threshold. A level check (streak value >= threshold), not the
+  -- edge event Combat.streak_bumps computes, since a per-tick director can
+  -- only read the current value.
+  pfn streak_hot(ship_streak : Int, ast_streak : Int) : Bool do
+    ship_streak >= Perihelion.Combat.ship_kill_streak_threshold()
+    || ast_streak >= Perihelion.Combat.asteroid_kill_streak_threshold()
+  end
+
+  pfn advance_phase(d : Director, ship_streak : Int, ast_streak : Int,
+                    shield : Int, took_damage : Bool, dt : Float) : Director do
+    match d.phase do
+      Relax ->
+        let t = d.state_timer + dt
+        if t >= relax_min_duration() && streak_hot(ship_streak, ast_streak) do
+          { d with phase: BuildUp, state_timer: build_min_duration() }
+        else
+          { d with state_timer: t }
+        end
+      BuildUp ->
+        if took_damage do
+          { d with phase: Fade, state_timer: fade_duration() }
+        else
+          let t = d.state_timer - dt
+          if t <= 0.0 do
+            { d with phase: Peak, state_timer: peak_duration(), peak_softened: shield == 0 }
+          else
+            { d with state_timer: t }
+          end
+        end
+      Peak ->
+        if took_damage do
+          { d with phase: Fade, state_timer: fade_duration() }
+        else
+          let t = d.state_timer - dt
+          if t <= 0.0 do
+            { d with phase: Fade, state_timer: fade_duration() }
+          else
+            { d with state_timer: t }
+          end
+        end
+      Fade ->
+        let t = d.state_timer - dt
+        if t <= 0.0 do
+          { d with phase: Relax, state_timer: 0.0, peak_softened: false }
+        else
+          { d with state_timer: t }
+        end
+    end
+  end
+
+  doc "Advance the director one tick. Handles phase timers, transitions, and the damage-taken early-exit. Pure — does not spawn; the spawn timers are advanced by Combat's driver."
+  fn advance(d : Director, ship_streak : Int, ast_streak : Int, shield : Int, dt : Float) : Director do
+    let took_damage = shield < d.prev_shield
+    let d2 = advance_phase(d, ship_streak, ast_streak, shield, took_damage, dt)
+    { d2 with prev_shield: shield }
+  end
+
+  -- During Fade, state_timer counts down from fade_duration() to 0: frac goes
+  -- 0 (just entered, still at the peak value) -> 1 (about to relax).
+  pfn fade_lerp(d : Director, peak_val : Float, relax_val : Float) : Float do
+    let frac = 1.0 - d.state_timer / fade_duration()
+    peak_val + frac * (relax_val - peak_val)
+  end
+
+  doc "Multiplier applied to asteroid_interval() this tick (higher = slower spawns)."
+  fn asteroid_interval_mult(d : Director) : Float do
+    match d.phase do
+      Relax -> relax_asteroid_mult()
+      BuildUp -> 1.0
+      Peak -> peak_asteroid_mult()
+      Fade -> fade_lerp(d, peak_asteroid_mult(), relax_asteroid_mult())
+    end
+  end
+
+  doc "Multiplier applied to the ship spawn chance this tick."
+  fn ship_chance_mult(d : Director) : Float do
+    match d.phase do
+      Relax -> relax_ship_mult()
+      BuildUp -> 1.0
+      Peak -> peak_ship_mult()
+      Fade -> fade_lerp(d, peak_ship_mult(), relax_ship_mult())
+    end
+  end
+
+  doc "Cap on the (post-multiplier) ship spawn chance this tick."
+  fn ship_chance_cap(d : Director) : Float do
+    match d.phase do
+      Relax -> relax_ship_cap()
+      BuildUp -> baseline_ship_cap()
+      Peak -> peak_ship_cap()
+      Fade -> fade_lerp(d, peak_ship_cap(), relax_ship_cap())
+    end
+  end
+
+  doc "Multiplier applied to drop_chance(): 1.5 during a softened peak, else 1.0."
+  fn drop_chance_mult(d : Director) : Float do
+    match d.phase do
+      Peak -> if d.peak_softened do peak_drop_mult() else 1.0 end
+      _ -> 1.0
+    end
+  end
+
+  doc "True only on the tick the director transitions BuildUp -> Peak (used to fire the guaranteed hunter)."
+  fn entered_peak(before : Director, after : Director) : Bool do
+    !is_peak(before.phase) && is_peak(after.phase)
+  end
+
+end

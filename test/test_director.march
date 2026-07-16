@@ -1,0 +1,124 @@
+-- Tests for Perihelion.Director — pure pacing state machine.
+-- Run from repo root:
+--   MARCH_ROOT=~/code/march/.claude/worktrees/perihelion-fixes ./run-tests.sh
+mod TestPerihelionDirector do
+
+  pfn fabs(x : Float) : Float do
+    if x < 0.0 do 0.0 - x else x end
+  end
+
+  pfn approx(a : Float, b : Float) : Bool do
+    fabs(a - b) < 0.001
+  end
+
+  -- Build a director in an arbitrary phase; spawn timers are irrelevant to
+  -- the pure state machine, so they're zeroed here.
+  pfn dir(phase : DirectorState, timer : Float, prev_shield : Int, softened : Bool) : Director do
+    { phase: phase, state_timer: timer, asteroid_spawn_timer: 0.0, ship_spawn_timer: 0.0,
+      prev_shield: prev_shield, peak_softened: softened }
+  end
+
+  describe "advance: Relax" do
+    test "holds in Relax before min duration even with a hot streak" do
+      let d = dir(Relax, 0.0, 0, false)
+      -- ship_streak 5 (>= threshold 2), but only 0.1s elapsed
+      let d2 = Perihelion.Director.advance(d, 5, 0, 3, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "relax")
+    end
+
+    test "escalates to BuildUp once min duration elapsed and a streak is hot" do
+      -- state_timer already at the min minus a hair; dt pushes it over
+      let d = dir(Relax, Perihelion.Director.relax_min_duration() - 0.01, 0, false)
+      let d2 = Perihelion.Director.advance(d, 2, 0, 3, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "buildup")
+      assert (approx(d2.state_timer, Perihelion.Director.build_min_duration()))
+    end
+
+    test "stays in Relax past min duration when no streak is hot" do
+      let d = dir(Relax, Perihelion.Director.relax_min_duration() + 5.0, 0, false)
+      let d2 = Perihelion.Director.advance(d, 1, 4, 3, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "relax")
+    end
+  end
+
+  describe "advance: BuildUp" do
+    test "advances to Peak after build_min elapses, latching softened when fragile" do
+      let d = dir(BuildUp, 0.05, 0, false)
+      let d2 = Perihelion.Director.advance(d, 2, 0, 0, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "peak")
+      assert (d2.peak_softened)
+    end
+
+    test "Peak is not softened when shielded at entry" do
+      let d = dir(BuildUp, 0.05, 1, false)
+      let d2 = Perihelion.Director.advance(d, 2, 0, 1, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "peak")
+      assert (!d2.peak_softened)
+    end
+
+    test "damage taken drops BuildUp straight to Fade" do
+      let d = dir(BuildUp, 3.0, 2, false)
+      -- shield dropped 2 -> 1 this tick
+      let d2 = Perihelion.Director.advance(d, 2, 0, 1, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "fade")
+    end
+  end
+
+  describe "advance: Peak and Fade" do
+    test "Peak fades after peak_duration" do
+      let d = dir(Peak, 0.05, 1, true)
+      let d2 = Perihelion.Director.advance(d, 2, 0, 1, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "fade")
+    end
+
+    test "damage taken drops Peak straight to Fade" do
+      let d = dir(Peak, 8.0, 2, true)
+      let d2 = Perihelion.Director.advance(d, 2, 0, 1, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "fade")
+    end
+
+    test "Fade returns to Relax and clears softening" do
+      let d = dir(Fade, 0.05, 0, true)
+      let d2 = Perihelion.Director.advance(d, 0, 0, 0, 0.1)
+      assert (Perihelion.Director.state_name(d2) == "relax")
+      assert (!d2.peak_softened)
+    end
+  end
+
+  describe "multiplier lookups" do
+    test "BuildUp reproduces baseline (1.0 / 1.0 / 0.45)" do
+      let d = dir(BuildUp, 1.0, 0, false)
+      assert (approx(Perihelion.Director.asteroid_interval_mult(d), 1.0))
+      assert (approx(Perihelion.Director.ship_chance_mult(d), 1.0))
+      assert (approx(Perihelion.Director.ship_chance_cap(d), 0.45))
+    end
+
+    test "Peak cranks asteroid interval down and ship chance up" do
+      let d = dir(Peak, 5.0, 0, false)
+      assert (Perihelion.Director.asteroid_interval_mult(d) < 1.0)
+      assert (Perihelion.Director.ship_chance_mult(d) > 1.0)
+      assert (Perihelion.Director.ship_chance_cap(d) > 0.45)
+    end
+
+    test "Fade lerps from Peak toward Relax at the midpoint" do
+      let d = dir(Fade, Perihelion.Director.fade_duration() / 2.0, 0, false)
+      -- midpoint of peak(0.4) -> relax(1.3) = 0.85
+      assert (approx(Perihelion.Director.asteroid_interval_mult(d), 0.85))
+    end
+
+    test "drop-chance softening only in Peak while softened" do
+      assert (approx(Perihelion.Director.drop_chance_mult(dir(Peak, 5.0, 0, true)), 1.5))
+      assert (approx(Perihelion.Director.drop_chance_mult(dir(Peak, 5.0, 0, false)), 1.0))
+      assert (approx(Perihelion.Director.drop_chance_mult(dir(Relax, 5.0, 0, true)), 1.0))
+    end
+  end
+
+  describe "entered_peak" do
+    test "true only on the BuildUp->Peak edge" do
+      assert (Perihelion.Director.entered_peak(dir(BuildUp, 0.0, 0, false), dir(Peak, 10.0, 0, false)))
+      assert (!Perihelion.Director.entered_peak(dir(Peak, 5.0, 0, false), dir(Peak, 4.9, 0, false)))
+      assert (!Perihelion.Director.entered_peak(dir(Relax, 0.0, 0, false), dir(BuildUp, 5.0, 0, false)))
+    end
+  end
+
+end
