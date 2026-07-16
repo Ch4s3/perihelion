@@ -163,15 +163,34 @@ mod Perihelion.Combat do
   -- ── step: timers, movement, ship fire, despawns ─────────────────────
   doc "Advance combat entities by dt: spawn timers, movement, ship firing, despawns."
   fn step(game : Game, dt_s : Float) : Game do
-    let g1 = step_spawn(game, dt_s)
+    let g1 = step_director(game, dt_s)
     let g2 = step_entities(g1, dt_s)
     step_ships(g2, dt_s)
   end
 
-  pfn step_spawn(game : Game, dt_s : Float) : Game do
-    let t = game.spawn_timer - dt_s
+  -- Director-driven spawn driver (replaces step_spawn + maybe_spawn_ship).
+  -- Advances the pacing director, fires the guaranteed hunter on Peak entry,
+  -- then runs the asteroid and ship spawn timers scaled by the current phase.
+  fn step_director(game : Game, dt_s : Float) : Game do
+    let d0 = game.director
+    let d1 = Perihelion.Director.advance(d0, game.ship_kill_streak, game.asteroid_kill_streak, game.shield, dt_s)
+    let g1 = { game with director: d1 }
+    let g2 = if Perihelion.Director.entered_peak(d0, d1) && game.score >= ship_score_min() do
+               spawn_hunter(g1, g1.rng)
+             else
+               g1
+             end
+    let g3 = step_asteroid_spawn(g2, dt_s)
+    step_ship_spawn(g3, dt_s)
+  end
+
+  -- Asteroid spawn timer (was step_spawn's body). Interval scaled by the
+  -- director's asteroid multiplier; jitter unchanged.
+  pfn step_asteroid_spawn(game : Game, dt_s : Float) : Game do
+    let d = game.director
+    let t = d.asteroid_spawn_timer - dt_s
     if t > 0.0 do
-      { game with spawn_timer: t }
+      { game with director: { d with asteroid_spawn_timer: t } }
     else
       let (r1, side_f) = draw(game.rng)
       let (r2, y_f) = draw(r1)
@@ -187,10 +206,24 @@ mod Perihelion.Combat do
       let vx = dir_x * asteroid_speed() * Math.cos(jitter)
       let vy = asteroid_speed() * Math.sin(jitter)
       let a = { x: x, y: y, vx: vx, vy: vy, radius: asteroid_radius(), shape_seed: shape_f, mode: AsteroidDrifting }
+      let interval = asteroid_interval() * Perihelion.Director.asteroid_interval_mult(d)
       { game with
           asteroids: Cons(a, game.asteroids),
           rng: r5,
-          spawn_timer: asteroid_interval() + (next_f - 0.5) * 2.0 * asteroid_jitter() }
+          director: { d with asteroid_spawn_timer: interval + (next_f - 0.5) * 2.0 * asteroid_jitter() } }
+    end
+  end
+
+  -- Ship spawn timer. On expiry, roll the score-gated chance (below) and
+  -- reset the timer to the director's base cadence.
+  pfn step_ship_spawn(game : Game, dt_s : Float) : Game do
+    let d = game.director
+    let t = d.ship_spawn_timer - dt_s
+    if t > 0.0 do
+      { game with director: { d with ship_spawn_timer: t } }
+    else
+      let g1 = { game with director: { d with ship_spawn_timer: Perihelion.Director.ship_spawn_interval() } }
+      maybe_spawn_ship_now(g1)
     end
   end
 
@@ -976,7 +1009,7 @@ mod Perihelion.Combat do
         let pos = ship_pos(sh)
         let (sx, sy) = pos
         let (rng2, roll) = draw(game.rng)
-        let g2 = if roll < drop_chance() do
+        let g2 = if roll < drop_chance() * Perihelion.Director.drop_chance_mult(game.director) do
           -- Star-killer's own independent, rarer roll -- see
           -- starkiller_drop_chance() above. Only rolled for when the ship
           -- isn't already carrying it; on success the pickup is StarKiller
@@ -1136,20 +1169,23 @@ mod Perihelion.Combat do
     end
   end
 
-  doc "Roll a chance to spawn an enemy ship (score-gated, ramping). hunter_chance() spawn as a hunter (on a lower star, jumping toward the player); the rest as a turret on `star_idx` (jumping to whatever star is nearest itself)."
-  fn maybe_spawn_ship(game : Game, star_idx : Int) : Game do
+  doc "The per-tick ship spawn roll (was maybe_spawn_ship, previously called per generated star from Core.top_up). Score-gated and ramping; chance scaled by the director's ship multiplier and cap. hunter_chance() spawn as a hunter (on a lower star, jumping toward the player); the rest as a turret on the top star (jumping to whatever star is nearest itself)."
+  pfn maybe_spawn_ship_now(game : Game) : Game do
     if game.score < ship_score_min() do
       game
     else
+      let d = game.director
       let (rng2, roll) = draw(game.rng)
-      let chance_raw = 0.16 + 0.04 * int_to_float(game.score - ship_score_min())
-      let chance = if chance_raw > 0.45 do 0.45 else chance_raw end
+      let base = 0.16 + 0.04 * int_to_float(game.score - ship_score_min())
+      let scaled = base * Perihelion.Director.ship_chance_mult(d)
+      let cap = Perihelion.Director.ship_chance_cap(d)
+      let chance = if scaled > cap do cap else scaled end
       if roll < chance do
         let (rng3, kind_roll) = draw(rng2)
         if kind_roll < hunter_chance() do
           spawn_hunter(game, rng3)
         else
-          spawn_star_turret(game, star_idx, rng3)
+          spawn_star_turret(game, List.length(game.stars) - 1, rng3)
         end
       else
         { game with rng: rng2 }

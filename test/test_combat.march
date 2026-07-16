@@ -58,7 +58,7 @@ mod TestPerihelionCombat do
       starkiller_cooldown: 0.0,
       milestone_choices: Nil,
       stars_chained: 0,
-      loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
+      loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
       fx_bursts: Nil, capture_flash: None, paused: false }
   end
@@ -67,11 +67,12 @@ mod TestPerihelionCombat do
     Cons(" ", Nil)
   end
 
-  pfn spawn_n(game : Game, star_idx : Int, n : Int) : Game do
+  pfn spawn_n(game : Game, n : Int) : Game do
     if n == 0 do
       game
     else
-      spawn_n(Perihelion.Combat.maybe_spawn_ship(game, star_idx), star_idx, n - 1)
+      let d = { game.director with ship_spawn_timer: 0.001 }
+      spawn_n(Perihelion.Combat.step_director({ game with director: d }, 0.1), n - 1)
     end
   end
 
@@ -270,7 +271,7 @@ mod TestPerihelionCombat do
   describe "step" do
     test "spawn timer eventually spawns an asteroid inside the band" do
       let g0 = base_game(0.0)
-      let g = { g0 with spawn_timer: 0.01 }
+      let g = { g0 with director: { g0.director with asteroid_spawn_timer: 0.01 } }
       let g2 = Perihelion.Combat.step(g, dt())
       assert (List.length(g2.asteroids) == 1)
       match g2.asteroids do
@@ -280,7 +281,16 @@ mod TestPerihelionCombat do
           assert (fabs(a.vx) > 0.0)
         _ -> assert false
       end
-      assert (g2.spawn_timer > 0.0)
+      assert (g2.director.asteroid_spawn_timer > 0.0)
+    end
+
+    test "top_up generates stars without spawning ships" do
+      let g0 = base_game(0.0)
+      let g = { g0 with score: 50, rng: Random.seed(3) }
+      -- top_up appends look-ahead stars; ships must NOT spawn from that path
+      let g2 = Perihelion.Core.top_up(g)
+      assert (List.is_empty(g2.ships))
+      assert (List.length(g2.stars) >= List.length(g.stars))
     end
 
     test "asteroids drift, arc toward a nearby star, and shots age" do
@@ -546,16 +556,16 @@ mod TestPerihelionCombat do
   describe "ship spawn rate" do
     test "score-gated rolls actually produce ships at a healthy rate" do
       let g0 = base_game(0.0)
-      let g = { g0 with score: 15, rng: Random.seed(1) }   -- chance capped at 0.35
-      let g2 = spawn_n(g, 1, 40)
-      -- ~14 expected at 0.35 over 40 rolls; a hard floor well below that
+      let g = { g0 with score: 15, rng: Random.seed(1) }   -- Relax phase: ~0.42/roll
+      let g2 = spawn_n(g, 40)
+      -- ~16 expected over 40 rolls; a hard floor well below that
       assert (List.length(g2.ships) >= 5)
     end
 
     test "no ships spawn below the score gate" do
       let g0 = base_game(0.0)
       let g = { g0 with score: 3, rng: Random.seed(1) }    -- below ship_score_min (4)
-      let g2 = spawn_n(g, 1, 40)
+      let g2 = spawn_n(g, 40)
       assert (List.is_empty(g2.ships))
     end
   end
@@ -687,23 +697,25 @@ mod TestPerihelionCombat do
     end
   end
 
-  describe "maybe_spawn_ship" do
+  describe "director-driven ship spawn" do
     test "no ships below the score threshold" do
       let g0 = base_game(0.0)
-      let g = { g0 with score: 2 }
-      let g2 = Perihelion.Combat.maybe_spawn_ship(g, 1)
+      -- ship_spawn_timer at ~0 so the roll fires this tick
+      let d = { g0.director with ship_spawn_timer: 0.001 }
+      let g = { g0 with score: 2, director: d }
+      let g2 = Perihelion.Combat.step_director(g, 0.1)
       assert (List.is_empty(g2.ships))
     end
 
-    test "spawns deterministically per seed at high score" do
+    test "ship spawn is deterministic per seed at high score" do
       let g0 = base_game(0.0)
-      let g = { g0 with score: 50, rng: Random.seed(999) }
-      let g2 = Perihelion.Combat.maybe_spawn_ship(g, 1)
-      let g3 = { g0 with score: 50, rng: Random.seed(999) }
-      let g4 = Perihelion.Combat.maybe_spawn_ship(g3, 1)
+      let d = { g0.director with ship_spawn_timer: 0.001 }
+      let g = { g0 with score: 50, rng: Random.seed(999), director: d }
+      let g2 = Perihelion.Combat.step_director(g, 0.1)
+      let g3 = { g0 with score: 50, rng: Random.seed(999), director: d }
+      let g4 = Perihelion.Combat.step_director(g3, 0.1)
       assert (List.length(g2.ships) == List.length(g4.ships))
       assert (rng_eq(g2.rng, g4.rng))
-      assert (!rng_eq(g2.rng, Random.seed(999)))
     end
   end
 

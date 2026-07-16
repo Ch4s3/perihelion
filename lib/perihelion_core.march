@@ -127,7 +127,7 @@ mod Perihelion.Core do
     stars_chained : Int,
     loop_angle : Float,
     fire_cooldown : Float,
-    spawn_timer : Float,
+    director : Perihelion.Director.Director,
     runs : List(RunRecord),
     view_w : Float,
     view_h : Float,
@@ -632,11 +632,12 @@ mod Perihelion.Core do
   -- visible top edge -- distance-based rather than a fixed star count, so a
   -- tall full-screen viewport (which can see much further ahead than the
   -- original 640px design) never scrolls into a star that pops into
-  -- existence right as it enters view. Each appended star rolls an enemy-ship
-  -- spawn. Called both defensively every frame (step_playing) and eagerly
-  -- right after a capture (skip-a-rung captures can consume lookahead faster
-  -- than the per-frame call alone would replace it).
-  pfn top_up(game : Game) : Game do
+  -- existence right as it enters view. (Enemy-ship spawning is no longer tied
+  -- to star generation -- it's owned by the pacing director, see
+  -- Perihelion.Combat.step_director.) Called both defensively every frame
+  -- (step_playing) and eagerly right after a capture (skip-a-rung captures can
+  -- consume lookahead faster than the per-frame call alone would replace it).
+  fn top_up(game : Game) : Game do
     let fallback = { x: game.view_w / 2.0, y: 520.0, radius: 18.0, capture_radius: 54.0, speed_mult: 1.0,
                      orbits: Cons({ radius: 54.0, speed_mult: 1.0 }, Nil) }
     let top = top_star(game.stars, fallback)
@@ -645,7 +646,7 @@ mod Perihelion.Core do
       let g2 = { game with
           stars: List.append(game.stars, Cons(fresh, Nil)),
           rng: rng2 }
-      top_up(Perihelion.Combat.maybe_spawn_ship(g2, List.length(g2.stars) - 1))
+      top_up(g2)
     else
       game
     end
@@ -755,7 +756,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
-          spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
+          director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,
           fx_bursts: Nil, capture_flash: None, paused: false }
       Cons(s0, _) ->
@@ -782,7 +783,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
-          spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
+          director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,
           fx_bursts: Nil, capture_flash: None, paused: false }
     end

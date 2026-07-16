@@ -58,7 +58,7 @@ mod TestPerihelionCore do
       starkiller_cooldown: 0.0,
       milestone_choices: Nil,
       stars_chained: 0,
-      loop_angle: 0.0, fire_cooldown: 0.0, spawn_timer: 4.0, runs: Nil,
+      loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
       fx_bursts: Nil, capture_flash: None, paused: false }
   end
@@ -570,10 +570,10 @@ mod TestPerihelionCore do
     end
 
     test "a long untapped run stays safely Playing (scripted-run smoke)" do
-      -- spawn_timer pushed out so no asteroid interferes: this test isolates
-      -- the property that orbiting alone never ends a run.
+      -- asteroid spawn timer pushed out so no asteroid interferes: this test
+      -- isolates the property that orbiting alone never ends a run.
       let g0 = Perihelion.Core.new_game(42)
-      let g = { g0 with phase: Playing, spawn_timer: 100000.0 }
+      let g = { g0 with phase: Playing, director: { g0.director with asteroid_spawn_timer: 100000.0 } }
       assert (run_ticks(g, 600))
     end
   end

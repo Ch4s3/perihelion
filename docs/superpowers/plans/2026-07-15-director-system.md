@@ -16,6 +16,7 @@
 - **Cross-module visibility:** only `fn` (public) functions are callable from another module. Calling a `pfn` (private) across modules reports the *misleading* error ``Unknown module `Perihelion``` at the call site — not a clear visibility error. Every director function called from `Combat` or from tests MUST be `fn`, not `pfn`.
 - **Circular module references are allowed** in this codebase (`Core.top_up` calls `Combat.maybe_spawn_ship` while `Combat.spawn_star_turret` calls `Core.star_at`). So `Combat` calling `Director` while `Director` reads `Combat` constants is fine.
 - **Float literals need a decimal point** (`0.0`, `1.3`); negation of a float is written `0.0 - x`.
+- **`state` is a reserved keyword.** The `Director` pacing field is therefore named **`phase`** (not `state`). `state_timer`/`state_name`/`advance_state` are fine (longer identifiers, not the bare keyword). The code as implemented uses `phase`; where this plan's embedded code shows a bare `state` field, read it as `phase`.
 - **Behavior parity in BuildUp:** the BuildUp state must reproduce today's exact spawn behavior (asteroid interval ×1.0, ship chance ×1.0 capped at 0.45) so the baseline is unchanged.
 
 ---
