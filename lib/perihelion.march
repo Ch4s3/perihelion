@@ -1816,8 +1816,14 @@ mod Perihelion do
     let muted2 = toggle_mute(fx.muted, keys)
     let zoom_target2 = toggle_zoom_target(fx.zoom_target, keys)
     let just_died = was_playing(game) && is_over_phase(g2)
+    let died_by_impact = match g2.death_cause do
+      DeathMissed -> false
+      DeathNone -> false
+      _ -> true
+    end
+    let just_exploded = just_died && died_by_impact
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_died)
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_exploded)
     let fx2 = { fx1 with muted: muted2 }
     if just_died do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))

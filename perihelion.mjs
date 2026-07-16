@@ -30248,11 +30248,11 @@ function tick(ctx, el, game, fx) {
           return Dom$pointer_pos(el);
         })();
         {
-          const $p32114 = dom_window_size();
+          const $p32115 = dom_window_size();
           {
-            const win_w = $p32114._0;
+            const win_w = $p32115._0;
             {
-              const win_h = $p32114._1;
+              const win_h = $p32115._1;
               {
                 const view_w = win_w;
                 {
@@ -30458,42 +30458,65 @@ function tick(ctx, el, game, fx) {
                                       }
                                     }
                                   })();
-                                  (() => {
-                                    {
-                                      const $t32107 = fx.actx;
-                                      return play_sfx($t32107, muted2, game, g2);
-                                    }
-                                  })();
                                   {
-                                    const fx1 = step_fx(fx, g2, 0.0166667, zoom_target2, just_died);
+                                    const died_by_impact = (() => {
+                                      {
+                                        const $t32107 = g2.death_cause;
+                                        switch ($t32107.$) {
+                                          case "DeathMissed": {
+                                            return false;
+                                            break;
+                                          }
+                                          case "DeathNone": {
+                                            return false;
+                                            break;
+                                          }
+                                          default: {
+                                            return true;
+                                          }
+                                        }
+                                      }
+                                    })();
                                     {
-                                      const fx2 = ({ ...fx1, muted: muted2 });
+                                      const just_exploded = (just_died && died_by_impact);
                                       (() => {
-                                        if (just_died === true) {
-                                          return (() => {
-                                            {
-                                              const $t32111 = (() => {
-                                                {
-                                                  const $t32109 = g2.best;
-                                                  {
-                                                    const $t32110 = g2.runs;
-                                                    return Perihelion$Core$encode_save($t32109, $t32110);
-                                                  }
-                                                }
-                                              })();
-                                              return Dom$store_set("perihelion.v1", $t32111);
-                                            }
-                                          })();
-                                        } else {
-                                          return {  };
+                                        {
+                                          const $t32108 = fx.actx;
+                                          return play_sfx($t32108, muted2, game, g2);
                                         }
                                       })();
-                                      (() => {
-                                        return draw(ctx, el, g2, fx2);
-                                      })();
                                       {
-                                        const $t32113 = { $: "$Clo_$lam32112$3878", _0: $lam32112$apply$3878, _1: ctx, _2: el, _3: fx2, _4: g2 };
-                                        return Dom$on_frame($t32113);
+                                        const fx1 = step_fx(fx, g2, 0.0166667, zoom_target2, just_exploded);
+                                        {
+                                          const fx2 = ({ ...fx1, muted: muted2 });
+                                          (() => {
+                                            if (just_died === true) {
+                                              return (() => {
+                                                {
+                                                  const $t32112 = (() => {
+                                                    {
+                                                      const $t32110 = g2.best;
+                                                      {
+                                                        const $t32111 = g2.runs;
+                                                        return Perihelion$Core$encode_save($t32110, $t32111);
+                                                      }
+                                                    }
+                                                  })();
+                                                  return Dom$store_set("perihelion.v1", $t32112);
+                                                }
+                                              })();
+                                            } else {
+                                              return {  };
+                                            }
+                                          })();
+                                          (() => {
+                                            return draw(ctx, el, g2, fx2);
+                                          })();
+                                          {
+                                            const $t32114 = { $: "$Clo_$lam32113$3878", _0: $lam32113$apply$3878, _1: ctx, _2: el, _3: fx2, _4: g2 };
+                                            return Dom$on_frame($t32114);
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -30518,37 +30541,37 @@ const tick$clo = { _0: ($_, ctx, el, game, fx) => tick(ctx, el, game, fx) };
 
 async function boot(ctx, node, best, runs) {
   {
-    const $p32120 = dom_window_size();
+    const $p32121 = dom_window_size();
     {
-      const win_w = $p32120._0;
+      const win_w = $p32121._0;
       {
-        const win_h = $p32120._1;
+        const win_h = $p32121._1;
         {
           const view_w = win_w;
           {
             const view_h = win_h;
             (() => {
               {
-                const $t32115 = String(win_w);
-                return Dom$set_attr(node, "width", $t32115);
+                const $t32116 = String(win_w);
+                return Dom$set_attr(node, "width", $t32116);
               }
             })();
             (() => {
               {
-                const $t32116 = String(win_h);
-                return Dom$set_attr(node, "height", $t32116);
+                const $t32117 = String(win_h);
+                return Dom$set_attr(node, "height", $t32117);
               }
             })();
             {
-              const $t32118 = (() => {
+              const $t32119 = (() => {
                 {
-                  const $t32117 = boot_seed();
-                  return Perihelion$Core$fresh_run($t32117, best, runs, view_w, view_h);
+                  const $t32118 = boot_seed();
+                  return Perihelion$Core$fresh_run($t32118, best, runs, view_w, view_h);
                 }
               })();
               {
-                const $t32119 = (await fx_init());
-                return tick(ctx, node, $t32118, $t32119);
+                const $t32120 = (await fx_init());
+                return tick(ctx, node, $t32119, $t32120);
               }
             }
           }
@@ -30561,42 +30584,42 @@ const boot$clo = { _0: async ($_, ctx, node, best, runs) => boot(ctx, node, best
 
 async function main() {
   {
-    const $t32121 = Dom$find("game-canvas");
-    switch ($t32121.$) {
+    const $t32122 = Dom$find("game-canvas");
+    switch ($t32122.$) {
       case "None": {
         return println$String("no #game-canvas found");
         break;
       }
       case "Some": {
-        const $f32129 = $t32121._0;
+        const $f32130 = $t32122._0;
         {
-          const node = $f32129;
+          const node = $f32130;
           {
-            const $t32122 = (() => {
+            const $t32123 = (() => {
               return Canvas$get_context(node);
             })();
-            switch ($t32122.$) {
+            switch ($t32123.$) {
               case "None": {
                 return println$String("2d context unavailable");
                 break;
               }
               case "Some": {
-                const $f32128 = $t32122._0;
+                const $f32129 = $t32123._0;
                 {
-                  const ctx = $f32128;
+                  const ctx = $f32129;
                   {
                     const saved = (() => {
                       {
-                        const $t32123 = Dom$store_get("perihelion.v1");
-                        switch ($t32123.$) {
+                        const $t32124 = Dom$store_get("perihelion.v1");
+                        switch ($t32124.$) {
                           case "None": {
                             return "";
                             break;
                           }
                           case "Some": {
-                            const $f32124 = $t32123._0;
+                            const $f32125 = $t32124._0;
                             {
-                              const sv = $f32124;
+                              const sv = $f32125;
                               return sv;
                             }
                             break;
@@ -30608,21 +30631,21 @@ async function main() {
                       }
                     })();
                     {
-                      const $p32127 = (() => {
+                      const $p32128 = (() => {
                         {
                           const $rc_895 = Perihelion$Core$decode_save(saved);
                           return $rc_895;
                         }
                       })();
                       {
-                        const best = $p32127._0;
+                        const best = $p32128._0;
                         {
-                          const runs = $p32127._1;
+                          const runs = $p32128._1;
                           {
-                            const $t32126 = (await (async () => {
-                              return { $: "$Clo_$lam32125$3879", _0: $lam32125$apply$3879, _1: best, _2: ctx, _3: node, _4: runs };
+                            const $t32127 = (await (async () => {
+                              return { $: "$Clo_$lam32126$3879", _0: $lam32126$apply$3879, _1: best, _2: ctx, _3: node, _4: runs };
                             })());
-                            return Dom$on_frame($t32126);
+                            return Dom$on_frame($t32127);
                           }
                         }
                       }
@@ -32997,7 +33020,7 @@ function $jp32101$apply$3877($clo) {
 }
 const $jp32101$apply$3877$clo = { _0: ($_, $clo) => $jp32101$apply$3877($clo) };
 
-function $lam32112$apply$3878($clo, _) {
+function $lam32113$apply$3878($clo, _) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -33020,9 +33043,9 @@ function $lam32112$apply$3878($clo, _) {
     }
   }
 }
-const $lam32112$apply$3878$clo = { _0: ($_, $clo, _) => $lam32112$apply$3878($clo, _) };
+const $lam32113$apply$3878$clo = { _0: ($_, $clo, _) => $lam32113$apply$3878($clo, _) };
 
-async function $lam32125$apply$3879($clo, _) {
+async function $lam32126$apply$3879($clo, _) {
   {
     const best = (() => {
       return $clo._1;
@@ -33045,7 +33068,7 @@ async function $lam32125$apply$3879($clo, _) {
     }
   }
 }
-const $lam32125$apply$3879$clo = { _0: async ($_, $clo, _) => $lam32125$apply$3879($clo, _) };
+const $lam32126$apply$3879$clo = { _0: async ($_, $clo, _) => $lam32126$apply$3879($clo, _) };
 
 function go$apply$4140($clo, lst, acc) {
   {
