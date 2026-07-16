@@ -29574,6 +29574,9 @@ function draw(ctx, el, game, fx) {
                                           return Canvas$restore(ctx);
                                         })();
                                         (() => {
+                                          return Canvas$set_global_alpha(ctx, 1.);
+                                        })();
+                                        (() => {
                                           {
                                             const $t31967 = Perihelion$Core$active_weapon(game);
                                             switch ($t31967.$) {

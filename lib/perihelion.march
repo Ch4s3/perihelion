@@ -1565,6 +1565,15 @@ mod Perihelion do
     Canvas.reset_transform(ctx)
     draw_star_orbs_gl(ctx, fx.gl, game.stars, game.camera_y, game.view_h, focus_x - shake_dx, focus_y - shake_dy, fx.zoom, game.view_w, fx.t)
     Canvas.restore(ctx)
+    -- draw_stars' 2D pass (orbit rings/pulses) can leave ctx.globalAlpha at
+    -- a low value from the last pulse stroke, and Canvas.restore above only
+    -- undoes state from the nested save -- it doesn't touch that. The old
+    -- per-star flat circle fill used to reset this incidentally (it always
+    -- set alpha to 1.0 before filling); replacing it with the batched GL
+    -- orb pass dropped that reset, so everything drawn below (asteroids,
+    -- shots, ...) inherited whatever dim alpha was left over. Reset
+    -- explicitly instead of relying on a side effect.
+    Canvas.set_global_alpha(ctx, 1.0)
     match Perihelion.Core.active_weapon(game) do
       StarKiller -> draw_starkiller_reticle(ctx, game)
       _ -> ()
