@@ -278,39 +278,40 @@ float hash1(float x) {
 }
 
 // A single loop-shaped coronal filament: anchored at angle baseAngle on
-// the rim, stretching out to reach * radius at the cycle's peak and
-// curling as it extends (curl bends the target angle proportionally to how
-// far out the fragment is), envelope fades in/hold/out across phase.
-// reachMul varies how far a given eruption reaches (0.6-1.3x the base
-// reach) so successive eruptions at the same star don't all look identical.
+// the rim, curling as it extends (curl bends the target angle
+// proportionally to how far out the fragment is). growth -- a single
+// sin(phase*pi) arc spanning the WHOLE cycle, 0 at both ends and peaking
+// at phase 0.5 -- drives BOTH how far it currently reaches and its
+// opacity together, so the tip visibly extends outward over the first
+// half of the cycle and retracts back into the star over the second half,
+// rather than fading in place at a fixed size.
+// reachMul varies how far a given eruption reaches at its peak (0.5-1.0x
+// the base reach) so successive eruptions at the same star don't all look
+// identical.
 float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSign, float phase, float reachMul) {
-  // Fade in over the first third of the cycle, hold briefly, fade out over
-  // the last half -- reads as a flare erupting and subsiding rather than a
-  // linear pulse.
-  float envelope = smoothstep(0.0, 0.32, phase) * (1.0 - smoothstep(0.55, 1.0, phase));
-  if (envelope <= 0.0) return 0.0;
+  float growth = sin(phase * 3.14159265);
+  if (growth <= 0.002) return 0.0;
 
-  // Reach and width both kept modest so this reads as a thin curling
-  // tongue of plasma, not a soft blob the size of the star itself.
-  float reach = radius * reachMul * (0.35 + 0.55 * envelope);
+  // Small and thin -- a slender tongue of plasma, not a blob.
+  float reach = radius * reachMul * 0.5 * growth;
   float outer = radius + reach;
   // Smooth base instead of a hard dist < radius*0.85 cutoff -- avoids a
   // seam where the filament would otherwise pop in abruptly.
-  float baseFade = smoothstep(radius * 0.8, radius * 0.95, dist);
+  float baseFade = smoothstep(radius * 0.88, radius * 0.98, dist);
   if (dist > outer || baseFade <= 0.0) return 0.0;
 
-  float ext = clamp((dist - radius) / reach, 0.0, 1.0);
+  float ext = clamp((dist - radius) / max(reach, 0.001), 0.0, 1.0);
   float curl = curlSign * 0.9 * ext * ext;
   float targetAngle = baseAngle + curl;
 
   float angle = atan(rel.y, rel.x);
   float angleDiff = mod(angle - targetAngle + 3.14159265, 6.2831853) - 3.14159265;
   // Tapering width: narrow at the base, narrowing further toward the tip.
-  float width = 0.32 - 0.2 * ext;
+  float width = 0.24 - 0.14 * ext;
   float angular = exp(-(angleDiff * angleDiff) / (width * width));
   float radialFade = pow(1.0 - ext, 1.6);
 
-  return angular * radialFade * envelope * baseFade;
+  return angular * radialFade * growth * baseFade;
 }
 
 void main() {
@@ -368,7 +369,7 @@ void main() {
         float cseed = seed * 131.0 + slotf * 29.0 + cycleIndex * 17.0;
         float baseAngle = hash1(cseed) * 6.2831853;
         float curlSign = hash1(cseed + 3.7) > 0.5 ? 1.0 : -1.0;
-        float reachMul = 0.6 + 0.7 * hash1(cseed + 9.1);
+        float reachMul = 0.5 + 0.5 * hash1(cseed + 9.1);
         filTotal = max(filTotal, filament(rel, dist, radius, baseAngle, curlSign, phase, reachMul));
       }
 
