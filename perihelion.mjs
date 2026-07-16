@@ -23614,8 +23614,8 @@ function step_fx(fx, game, dt_s, zoom_target, just_died) {
           {
             const $t31068 = (() => {
               {
-                const $t31939_i4176 = game.phase;
-                switch ($t31939_i4176.$) {
+                const $t31941_i4176 = game.phase;
+                switch ($t31941_i4176.$) {
                   case "Playing": {
                     return true;
                     break;
@@ -28386,154 +28386,174 @@ function draw_hud(ctx, el, game, fx) {
           break;
         }
         case "Over": {
-          (() => {
-            {
-              const $t31751 = game.view_w;
+          {
+            const $t31752 = (() => {
               {
-                const $t31752 = game.view_h;
-                return draw_dim_blur_backdrop(ctx, el, $t31751, $t31752);
+                const $t31751 = fx.explosion_time_left;
+                return ($t31751 > 0.);
               }
-            }
-          })();
-          (() => {
-            return Canvas$set_font(ctx, "22px sans-serif");
-          })();
-          (() => {
-            {
-              const $t31756 = (() => {
-                {
-                  const $t31755 = (() => {
+            })();
+            if ($t31752 === true) {
+              return {  };
+            } else {
+              return (() => {
+                (() => {
+                  {
+                    const $t31753 = game.view_w;
                     {
-                      const $t31754 = (() => {
-                        {
-                          const $t31753 = game.score;
-                          return String($t31753);
-                        }
-                      })();
-                      {
-                        const $rc_876 = ("score " + $t31754);
-                        return $rc_876;
-                      }
+                      const $t31754 = game.view_h;
+                      return draw_dim_blur_backdrop(ctx, el, $t31753, $t31754);
                     }
-                  })();
-                  {
-                    const $rc_875 = ($t31755 + " — tap to retry");
-                    return $rc_875;
-                  }
-                }
-              })();
-              {
-                const $t31758 = (() => {
-                  {
-                    const $t31757 = game.view_w;
-                    return ($t31757 / 2.);
                   }
                 })();
-                {
-                  const $t31760 = (() => {
-                    {
-                      const $t31759 = game.view_h;
-                      return ($t31759 / 2.);
-                    }
-                  })();
-                  return Canvas$fill_text(ctx, $t31756, $t31758, $t31760);
-                }
-              }
-            }
-          })();
-          (() => {
-            {
-              const $t31762 = (() => {
-                {
-                  const $t31761 = game.death_cause;
-                  switch ($t31761.$) {
-                    case "DeathNone": {
-                      return { $: "None" };
-                      break;
-                    }
-                    case "DeathMissed": {
-                      return { $: "Some", _0: "missed the capture" };
-                      break;
-                    }
-                    case "DeathAsteroid": {
-                      return { $: "Some", _0: "hit an asteroid" };
-                      break;
-                    }
-                    case "DeathEnemyShip": {
-                      return { $: "Some", _0: "hit an enemy ship" };
-                      break;
-                    }
-                    case "DeathEnemyShot": {
-                      return { $: "Some", _0: "hit by enemy fire" };
-                      break;
-                    }
-                    default: {
-                      return (() => { throw new Error("non-exhaustive pattern match"); })();
-                    }
-                  }
-                }
-              })();
-              switch ($t31762.$) {
-                case "None": {
-                  return {  };
-                  break;
-                }
-                case "Some": {
-                  const $f31768 = $t31762._0;
+                (() => {
+                  return Canvas$set_fill_style(ctx, "#ffffff");
+                })();
+                (() => {
+                  return Canvas$set_font(ctx, "22px sans-serif");
+                })();
+                (() => {
                   {
-                    const text = $f31768;
-                    (() => {
-                      return Canvas$set_font(ctx, "13px sans-serif");
+                    const $t31758 = (() => {
+                      {
+                        const $t31757 = (() => {
+                          {
+                            const $t31756 = (() => {
+                              {
+                                const $t31755 = game.score;
+                                return String($t31755);
+                              }
+                            })();
+                            {
+                              const $rc_876 = ("score " + $t31756);
+                              return $rc_876;
+                            }
+                          }
+                        })();
+                        {
+                          const $rc_875 = ($t31757 + " — tap to retry");
+                          return $rc_875;
+                        }
+                      }
                     })();
                     {
-                      const $t31764 = (() => {
+                      const $t31760 = (() => {
                         {
-                          const $t31763 = game.view_w;
-                          return ($t31763 / 2.);
+                          const $t31759 = game.view_w;
+                          return ($t31759 / 2.);
                         }
                       })();
                       {
-                        const $t31767 = (() => {
+                        const $t31762 = (() => {
+                          {
+                            const $t31761 = game.view_h;
+                            return ($t31761 / 2.);
+                          }
+                        })();
+                        return Canvas$fill_text(ctx, $t31758, $t31760, $t31762);
+                      }
+                    }
+                  }
+                })();
+                (() => {
+                  return Canvas$set_fill_style(ctx, "#cfcfcf");
+                })();
+                (() => {
+                  {
+                    const $t31764 = (() => {
+                      {
+                        const $t31763 = game.death_cause;
+                        switch ($t31763.$) {
+                          case "DeathNone": {
+                            return { $: "None" };
+                            break;
+                          }
+                          case "DeathMissed": {
+                            return { $: "Some", _0: "missed the capture" };
+                            break;
+                          }
+                          case "DeathAsteroid": {
+                            return { $: "Some", _0: "hit an asteroid" };
+                            break;
+                          }
+                          case "DeathEnemyShip": {
+                            return { $: "Some", _0: "hit an enemy ship" };
+                            break;
+                          }
+                          case "DeathEnemyShot": {
+                            return { $: "Some", _0: "hit by enemy fire" };
+                            break;
+                          }
+                          default: {
+                            return (() => { throw new Error("non-exhaustive pattern match"); })();
+                          }
+                        }
+                      }
+                    })();
+                    switch ($t31764.$) {
+                      case "None": {
+                        return {  };
+                        break;
+                      }
+                      case "Some": {
+                        const $f31770 = $t31764._0;
+                        {
+                          const text = $f31770;
+                          (() => {
+                            return Canvas$set_font(ctx, "13px sans-serif");
+                          })();
                           {
                             const $t31766 = (() => {
                               {
-                                const $t31765 = game.view_h;
+                                const $t31765 = game.view_w;
                                 return ($t31765 / 2.);
                               }
                             })();
-                            return ($t31766 + 20.);
+                            {
+                              const $t31769 = (() => {
+                                {
+                                  const $t31768 = (() => {
+                                    {
+                                      const $t31767 = game.view_h;
+                                      return ($t31767 / 2.);
+                                    }
+                                  })();
+                                  return ($t31768 + 20.);
+                                }
+                              })();
+                              return Canvas$fill_text(ctx, text, $t31766, $t31769);
+                            }
                           }
-                        })();
-                        return Canvas$fill_text(ctx, text, $t31764, $t31767);
+                        }
+                        break;
+                      }
+                      default: {
+                        return (() => { throw new Error("non-exhaustive pattern match"); })();
                       }
                     }
                   }
-                  break;
-                }
-                default: {
-                  return (() => { throw new Error("non-exhaustive pattern match"); })();
-                }
-              }
-            }
-          })();
-          {
-            const $t31769 = game.runs;
-            {
-              const $t31770 = game.view_w;
-              {
-                const $t31773 = (() => {
-                  {
-                    const $t31772 = (() => {
-                      {
-                        const $t31771 = game.view_h;
-                        return ($t31771 / 2.);
-                      }
-                    })();
-                    return ($t31772 + 40.);
-                  }
                 })();
-                return draw_runs(ctx, $t31769, $t31770, $t31773, 0);
-              }
+                {
+                  const $t31771 = game.runs;
+                  {
+                    const $t31772 = game.view_w;
+                    {
+                      const $t31775 = (() => {
+                        {
+                          const $t31774 = (() => {
+                            {
+                              const $t31773 = game.view_h;
+                              return ($t31773 / 2.);
+                            }
+                          })();
+                          return ($t31774 + 40.);
+                        }
+                      })();
+                      return draw_runs(ctx, $t31771, $t31772, $t31775, 0);
+                    }
+                  }
+                }
+              })();
             }
           }
           break;
@@ -28541,36 +28561,36 @@ function draw_hud(ctx, el, game, fx) {
         case "Playing": {
           (() => {
             {
-              const $t31774 = game.view_w;
+              const $t31776 = game.view_w;
               {
-                const $t31775 = game.view_h;
-                return draw_pause_button(ctx, game, $t31774, $t31775);
+                const $t31777 = game.view_h;
+                return draw_pause_button(ctx, game, $t31776, $t31777);
               }
             }
           })();
           {
-            const $t31776 = game.paused;
-            if ($t31776 === true) {
+            const $t31778 = game.paused;
+            if ($t31778 === true) {
               return (() => {
                 (() => {
                   return Canvas$set_font(ctx, "22px sans-serif");
                 })();
                 (() => {
                   {
-                    const $t31778 = (() => {
+                    const $t31780 = (() => {
                       {
-                        const $t31777 = game.view_w;
-                        return ($t31777 / 2.);
+                        const $t31779 = game.view_w;
+                        return ($t31779 / 2.);
                       }
                     })();
                     {
-                      const $t31780 = (() => {
+                      const $t31782 = (() => {
                         {
-                          const $t31779 = game.view_h;
-                          return ($t31779 / 2.);
+                          const $t31781 = game.view_h;
+                          return ($t31781 / 2.);
                         }
                       })();
-                      return Canvas$fill_text(ctx, "Paused", $t31778, $t31780);
+                      return Canvas$fill_text(ctx, "Paused", $t31780, $t31782);
                     }
                   }
                 })();
@@ -28578,25 +28598,25 @@ function draw_hud(ctx, el, game, fx) {
                   return Canvas$set_font(ctx, "13px sans-serif");
                 })();
                 {
-                  const $t31782 = (() => {
+                  const $t31784 = (() => {
                     {
-                      const $t31781 = game.view_w;
-                      return ($t31781 / 2.);
+                      const $t31783 = game.view_w;
+                      return ($t31783 / 2.);
                     }
                   })();
                   {
-                    const $t31785 = (() => {
+                    const $t31787 = (() => {
                       {
-                        const $t31784 = (() => {
+                        const $t31786 = (() => {
                           {
-                            const $t31783 = game.view_h;
-                            return ($t31783 / 2.);
+                            const $t31785 = game.view_h;
+                            return ($t31785 / 2.);
                           }
                         })();
-                        return ($t31784 + 26.);
+                        return ($t31786 + 26.);
                       }
                     })();
-                    return Canvas$fill_text(ctx, "tap the corner button or press P to resume", $t31782, $t31785);
+                    return Canvas$fill_text(ctx, "tap the corner button or press P to resume", $t31784, $t31787);
                   }
                 }
               })();
@@ -28611,47 +28631,50 @@ function draw_hud(ctx, el, game, fx) {
         case "Milestone": {
           (() => {
             {
-              const $t31786 = game.view_w;
+              const $t31788 = game.view_w;
               {
-                const $t31787 = game.view_h;
-                return draw_dim_blur_backdrop(ctx, el, $t31786, $t31787);
+                const $t31789 = game.view_h;
+                return draw_dim_blur_backdrop(ctx, el, $t31788, $t31789);
               }
             }
+          })();
+          (() => {
+            return Canvas$set_fill_style(ctx, "#eeeeee");
           })();
           (() => {
             return Canvas$set_font(ctx, "20px sans-serif");
           })();
           (() => {
             {
-              const $t31789 = (() => {
+              const $t31791 = (() => {
                 {
-                  const $t31788 = game.view_w;
-                  return ($t31788 / 2.);
+                  const $t31790 = game.view_w;
+                  return ($t31790 / 2.);
                 }
               })();
               {
-                const $t31792 = (() => {
+                const $t31794 = (() => {
                   {
-                    const $t31791 = (() => {
+                    const $t31793 = (() => {
                       {
-                        const $t31790 = game.view_h;
-                        return ($t31790 / 2.);
+                        const $t31792 = game.view_h;
+                        return ($t31792 / 2.);
                       }
                     })();
-                    return ($t31791 - 90.);
+                    return ($t31793 - 90.);
                   }
                 })();
-                return Canvas$fill_text(ctx, "Choose an upgrade", $t31789, $t31792);
+                return Canvas$fill_text(ctx, "Choose an upgrade", $t31791, $t31794);
               }
             }
           })();
           {
-            const $t31793 = game.milestone_choices;
+            const $t31795 = game.milestone_choices;
             {
-              const $t31794 = game.view_w;
+              const $t31796 = game.view_w;
               {
-                const $t31795 = game.view_h;
-                return draw_milestone_cards(ctx, $t31793, $t31794, $t31795, fx, 0);
+                const $t31797 = game.view_h;
+                return draw_milestone_cards(ctx, $t31795, $t31796, $t31797, fx, 0);
               }
             }
           }
@@ -28675,38 +28698,38 @@ function draw(ctx, el, game, fx) {
   })();
   (() => {
     {
-      const $t31796 = game.view_w;
+      const $t31798 = game.view_w;
       {
-        const $t31797 = game.view_h;
-        return Canvas$fill_rect(ctx, 0., 0., $t31796, $t31797);
+        const $t31799 = game.view_h;
+        return Canvas$fill_rect(ctx, 0., 0., $t31798, $t31799);
       }
     }
   })();
   {
     const seedf = (() => {
       {
-        const $t31798 = game.seed;
-        return $t31798;
+        const $t31800 = game.seed;
+        return $t31800;
       }
     })();
     {
-      const $t31799 = game.stars;
+      const $t31801 = game.stars;
       {
-        const $t31800 = game.camera_y;
+        const $t31802 = game.camera_y;
         {
-          const $t31801 = game.view_h;
+          const $t31803 = game.view_h;
           {
-            const $t31802 = game.view_w;
+            const $t31804 = game.view_w;
             {
               const clouds = (() => {
-                return Perihelion$Nebula$visible_clouds($t31799, $t31800, $t31801, $t31802, seedf);
+                return Perihelion$Nebula$visible_clouds($t31801, $t31802, $t31803, $t31804, seedf);
               })();
               {
-                const $t31805 = { $: "$Clo_$lam31803$3855", _0: $lam31803$apply$3855 };
+                const $t31807 = { $: "$Clo_$lam31805$3855", _0: $lam31805$apply$3855 };
                 {
                   const bg_clouds = (() => {
                     {
-                      const pred_i4279 = $t31805;
+                      const pred_i4279 = $t31807;
                       {
                         const go_i4280 = { $: "$Clo_go$4899", _0: go$apply$4899, _1: pred_i4279 };
                         {
@@ -28717,11 +28740,11 @@ function draw(ctx, el, game, fx) {
                     }
                   })();
                   {
-                    const $t31807 = { $: "$Clo_$lam31806$3856", _0: $lam31806$apply$3856 };
+                    const $t31809 = { $: "$Clo_$lam31808$3856", _0: $lam31808$apply$3856 };
                     {
                       const fg_clouds = (() => {
                         {
-                          const pred_i4275 = $t31807;
+                          const pred_i4275 = $t31809;
                           {
                             const go_i4276 = { $: "$Clo_go$4899", _0: go$apply$4899, _1: pred_i4275 };
                             {
@@ -28733,18 +28756,18 @@ function draw(ctx, el, game, fx) {
                       })();
                       (() => {
                         {
-                          const $t31808 = fx.gl;
+                          const $t31810 = fx.gl;
                           {
-                            const $t31809 = game.camera_x;
+                            const $t31811 = game.camera_x;
                             {
-                              const $t31810 = game.camera_y;
+                              const $t31812 = game.camera_y;
                               {
-                                const $t31811 = game.view_w;
+                                const $t31813 = game.view_w;
                                 {
-                                  const $t31812 = game.view_h;
+                                  const $t31814 = game.view_h;
                                   {
-                                    const $t31813 = fx.zoom;
-                                    return draw_nebula_gl(ctx, $t31808, bg_clouds, $t31809, $t31810, $t31811, $t31812, $t31813, seedf);
+                                    const $t31815 = fx.zoom;
+                                    return draw_nebula_gl(ctx, $t31810, bg_clouds, $t31811, $t31812, $t31813, $t31814, $t31815, seedf);
                                   }
                                 }
                               }
@@ -28758,55 +28781,55 @@ function draw(ctx, el, game, fx) {
                       {
                         const focus_x = (() => {
                           {
-                            const $t31814 = game.camera_x;
+                            const $t31816 = game.camera_x;
                             {
-                              const $t31816 = (() => {
+                              const $t31818 = (() => {
                                 {
-                                  const $t31815 = game.view_w;
-                                  return ($t31815 / 2.);
+                                  const $t31817 = game.view_w;
+                                  return ($t31817 / 2.);
                                 }
                               })();
-                              return ($t31814 + $t31816);
+                              return ($t31816 + $t31818);
                             }
                           }
                         })();
                         {
                           const focus_y = (() => {
                             {
-                              const $t31817 = game.camera_y;
+                              const $t31819 = game.camera_y;
                               {
-                                const $t31819 = (() => {
+                                const $t31821 = (() => {
                                   {
-                                    const $t31818 = game.view_h;
-                                    return ($t31818 / 2.);
+                                    const $t31820 = game.view_h;
+                                    return ($t31820 / 2.);
                                   }
                                 })();
-                                return ($t31817 + $t31819);
+                                return ($t31819 + $t31821);
                               }
                             }
                           })();
                           {
                             const shake_amount = (() => {
                               {
-                                const $t31823 = (() => {
+                                const $t31825 = (() => {
                                   {
-                                    const $t31821 = fx.shake_time_left;
-                                    return ($t31821 / 0.4);
+                                    const $t31823 = fx.shake_time_left;
+                                    return ($t31823 / 0.4);
                                   }
                                 })();
-                                return (10. * $t31823);
+                                return (10. * $t31825);
                               }
                             })();
                             {
                               const shake_dx = (() => {
                                 {
-                                  const $t31827 = (() => {
+                                  const $t31829 = (() => {
                                     {
-                                      const $t31826 = (() => {
+                                      const $t31828 = (() => {
                                         {
-                                          const $t31825 = (() => {
+                                          const $t31827 = (() => {
                                             {
-                                              const $t31824 = fx.t;
+                                              const $t31826 = fx.t;
                                               {
                                                 const x_i11061 = (() => {
                                                   {
@@ -28814,7 +28837,7 @@ function draw(ctx, el, game, fx) {
                                                       {
                                                         const $t30893_i11059 = (() => {
                                                           {
-                                                            const $t30891_i11057 = ($t31824 * 12.9898);
+                                                            const $t30891_i11057 = ($t31826 * 12.9898);
                                                             {
                                                               const $t30892_i11058 = (91. * 78.233);
                                                               return ($t30891_i11057 + $t30892_i11058);
@@ -28839,25 +28862,25 @@ function draw(ctx, el, game, fx) {
                                               }
                                             }
                                           })();
-                                          return ($t31825 - 0.5);
+                                          return ($t31827 - 0.5);
                                         }
                                       })();
-                                      return ($t31826 * 2.);
+                                      return ($t31828 * 2.);
                                     }
                                   })();
-                                  return ($t31827 * shake_amount);
+                                  return ($t31829 * shake_amount);
                                 }
                               })();
                               {
                                 const shake_dy = (() => {
                                   {
-                                    const $t31831 = (() => {
+                                    const $t31833 = (() => {
                                       {
-                                        const $t31830 = (() => {
+                                        const $t31832 = (() => {
                                           {
-                                            const $t31829 = (() => {
+                                            const $t31831 = (() => {
                                               {
-                                                const $t31828 = fx.t;
+                                                const $t31830 = fx.t;
                                                 {
                                                   const x_i11052 = (() => {
                                                     {
@@ -28865,7 +28888,7 @@ function draw(ctx, el, game, fx) {
                                                         {
                                                           const $t30893_i11050 = (() => {
                                                             {
-                                                              const $t30891_i11048 = ($t31828 * 12.9898);
+                                                              const $t30891_i11048 = ($t31830 * 12.9898);
                                                               {
                                                                 const $t30892_i11049 = (92. * 78.233);
                                                                 return ($t30891_i11048 + $t30892_i11049);
@@ -28890,76 +28913,76 @@ function draw(ctx, el, game, fx) {
                                                 }
                                               }
                                             })();
-                                            return ($t31829 - 0.5);
+                                            return ($t31831 - 0.5);
                                           }
                                         })();
-                                        return ($t31830 * 2.);
+                                        return ($t31832 * 2.);
                                       }
                                     })();
-                                    return ($t31831 * shake_amount);
+                                    return ($t31833 * shake_amount);
                                   }
                                 })();
                                 (() => {
                                   {
-                                    const $t31833 = (() => {
+                                    const $t31835 = (() => {
                                       {
-                                        const $t31832 = game.view_w;
-                                        return ($t31832 / 2.);
+                                        const $t31834 = game.view_w;
+                                        return ($t31834 / 2.);
                                       }
                                     })();
                                     {
-                                      const $t31835 = (() => {
+                                      const $t31837 = (() => {
                                         {
-                                          const $t31834 = game.view_h;
-                                          return ($t31834 / 2.);
+                                          const $t31836 = game.view_h;
+                                          return ($t31836 / 2.);
                                         }
                                       })();
-                                      return Canvas$translate(ctx, $t31833, $t31835);
+                                      return Canvas$translate(ctx, $t31835, $t31837);
                                     }
                                   }
                                 })();
                                 (() => {
                                   {
-                                    const $t31836 = fx.zoom;
+                                    const $t31838 = fx.zoom;
                                     {
-                                      const $t31837 = fx.zoom;
-                                      return Canvas$scale(ctx, $t31836, $t31837);
+                                      const $t31839 = fx.zoom;
+                                      return Canvas$scale(ctx, $t31838, $t31839);
                                     }
                                   }
                                 })();
                                 (() => {
                                   {
-                                    const $t31839 = (() => {
+                                    const $t31841 = (() => {
                                       {
-                                        const $t31838 = (0. - focus_x);
-                                        return ($t31838 + shake_dx);
+                                        const $t31840 = (0. - focus_x);
+                                        return ($t31840 + shake_dx);
                                       }
                                     })();
                                     {
-                                      const $t31841 = (() => {
+                                      const $t31843 = (() => {
                                         {
-                                          const $t31840 = (0. - focus_y);
-                                          return ($t31840 + shake_dy);
+                                          const $t31842 = (0. - focus_y);
+                                          return ($t31842 + shake_dy);
                                         }
                                       })();
-                                      return Canvas$translate(ctx, $t31839, $t31841);
+                                      return Canvas$translate(ctx, $t31841, $t31843);
                                     }
                                   }
                                 })();
                                 (() => {
                                   {
-                                    const $t31842 = game.camera_x;
+                                    const $t31844 = game.camera_x;
                                     {
-                                      const $t31843 = game.camera_y;
+                                      const $t31845 = game.camera_y;
                                       {
-                                        const $t31844 = game.view_w;
+                                        const $t31846 = game.view_w;
                                         {
-                                          const $t31845 = game.view_h;
+                                          const $t31847 = game.view_h;
                                           {
-                                            const $t31846 = fx.t;
+                                            const $t31848 = fx.t;
                                             {
                                               const $rc_891 = (() => {
-                                                return draw_starfield(ctx, $t31842, $t31843, $t31844, $t31845, seedf, $t31846, clouds);
+                                                return draw_starfield(ctx, $t31844, $t31845, $t31846, $t31847, seedf, $t31848, clouds);
                                               })();
                                               return $rc_891;
                                             }
@@ -28972,39 +28995,39 @@ function draw(ctx, el, game, fx) {
                                 {
                                   const aim = (() => {
                                     {
-                                      const $t31847 = game.mode;
-                                      switch ($t31847.$) {
+                                      const $t31849 = game.mode;
+                                      switch ($t31849.$) {
                                         case "Flying": {
-                                          const $f31851 = $t31847._0;
-                                          const $f31852 = $t31847._1;
+                                          const $f31853 = $t31849._0;
+                                          const $f31854 = $t31849._1;
                                           {
                                             const vy = (() => {
-                                              return $f31852;
+                                              return $f31854;
                                             })();
                                             {
                                               const vx = (() => {
-                                                return $f31851;
+                                                return $f31853;
                                               })();
                                               {
-                                                const $t31850 = (() => {
+                                                const $t31852 = (() => {
                                                   {
-                                                    const $t31848 = game.ball_x;
+                                                    const $t31850 = game.ball_x;
                                                     {
-                                                      const $t31849 = game.ball_y;
-                                                      return { _0: $t31848, _1: $t31849, _2: vx, _3: vy };
+                                                      const $t31851 = game.ball_y;
+                                                      return { _0: $t31850, _1: $t31851, _2: vx, _3: vy };
                                                     }
                                                   }
                                                 })();
-                                                return { $: "Some", _0: $t31850 };
+                                                return { $: "Some", _0: $t31852 };
                                               }
                                             }
                                           }
                                           break;
                                         }
                                         case "Orbiting": {
-                                          const $f31857 = $t31847._0;
-                                          const $f31858 = $t31847._1;
-                                          const $f31859 = $t31847._2;
+                                          const $f31859 = $t31849._0;
+                                          const $f31860 = $t31849._1;
+                                          const $f31861 = $t31849._2;
                                           return { $: "None" };
                                           break;
                                         }
@@ -29016,16 +29039,16 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31868 = game.stars;
+                                      const $t31870 = game.stars;
                                       {
-                                        const $t31869 = game.camera_y;
+                                        const $t31871 = game.camera_y;
                                         {
-                                          const $t31870 = game.view_h;
+                                          const $t31872 = game.view_h;
                                           {
-                                            const $t31871 = fx.t;
+                                            const $t31873 = fx.t;
                                             {
                                               const $rc_890 = (() => {
-                                                return draw_stars(ctx, $t31868, $t31869, $t31870, $t31871, aim);
+                                                return draw_stars(ctx, $t31870, $t31871, $t31872, $t31873, aim);
                                               })();
                                               return $rc_890;
                                             }
@@ -29036,8 +29059,8 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31872 = Perihelion$Core$active_weapon(game);
-                                      switch ($t31872.$) {
+                                      const $t31874 = Perihelion$Core$active_weapon(game);
+                                      switch ($t31874.$) {
                                         case "StarKiller": {
                                           return draw_starkiller_reticle(ctx, game);
                                           break;
@@ -29050,36 +29073,36 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31875 = game.mode;
-                                      switch ($t31875.$) {
+                                      const $t31877 = game.mode;
+                                      switch ($t31877.$) {
                                         case "Orbiting": {
-                                          const $f31883 = $t31875._0;
-                                          const $f31884 = $t31875._1;
-                                          const $f31885 = $t31875._2;
+                                          const $f31885 = $t31877._0;
+                                          const $f31886 = $t31877._1;
+                                          const $f31887 = $t31877._2;
                                           {
                                             const angle = (() => {
-                                              return $f31885;
+                                              return $f31887;
                                             })();
                                             {
                                               const ring = (() => {
-                                                return $f31884;
+                                                return $f31886;
                                               })();
                                               {
                                                 const idx = (() => {
-                                                  return $f31883;
+                                                  return $f31885;
                                                 })();
                                                 {
-                                                  const $t31876 = game.special;
-                                                  switch ($t31876.$) {
+                                                  const $t31878 = game.special;
+                                                  switch ($t31878.$) {
                                                     case "Some": {
-                                                      const $f31878 = $t31876._0;
-                                                      switch ($f31878.$) {
+                                                      const $f31880 = $t31878._0;
+                                                      switch ($f31880.$) {
                                                         case "TrajectoryPreview": {
                                                           {
-                                                            const $t31877 = Perihelion$Core$predict_trajectory(game, idx, ring, angle);
+                                                            const $t31879 = Perihelion$Core$predict_trajectory(game, idx, ring, angle);
                                                             {
                                                               const $rc_889 = (() => {
-                                                                return draw_trajectory_preview(ctx, $t31877);
+                                                                return draw_trajectory_preview(ctx, $t31879);
                                                               })();
                                                               return $rc_889;
                                                             }
@@ -29103,8 +29126,8 @@ function draw(ctx, el, game, fx) {
                                           break;
                                         }
                                         case "Flying": {
-                                          const $f31894 = $t31875._0;
-                                          const $f31895 = $t31875._1;
+                                          const $f31896 = $t31877._0;
+                                          const $f31897 = $t31877._1;
                                           return {  };
                                           break;
                                         }
@@ -29116,50 +29139,50 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31900 = fx.flash;
-                                      return draw_flash(ctx, $t31900);
+                                      const $t31902 = fx.flash;
+                                      return draw_flash(ctx, $t31902);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31901 = game.asteroids;
-                                      return draw_asteroids(ctx, fx, $t31901);
+                                      const $t31903 = game.asteroids;
+                                      return draw_asteroids(ctx, fx, $t31903);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31902 = game.ships;
-                                      return draw_ships(ctx, fx, $t31902);
+                                      const $t31904 = game.ships;
+                                      return draw_ships(ctx, fx, $t31904);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31903 = game.player_shots;
-                                      return draw_shots(ctx, $t31903, "#ffffff", 3.);
+                                      const $t31905 = game.player_shots;
+                                      return draw_shots(ctx, $t31905, "#ffffff", 3.);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31904 = game.enemy_shots;
-                                      return draw_shots(ctx, $t31904, "#8a8a94", 2.5);
+                                      const $t31906 = game.enemy_shots;
+                                      return draw_shots(ctx, $t31906, "#8a8a94", 2.5);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31905 = game.pickups;
-                                      return draw_pickups(ctx, $t31905, fx);
+                                      const $t31907 = game.pickups;
+                                      return draw_pickups(ctx, $t31907, fx);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31906 = fx.particles;
-                                      return draw_particles(ctx, $t31906);
+                                      const $t31908 = fx.particles;
+                                      return draw_particles(ctx, $t31908);
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t31907 = fx.debris;
-                                      return draw_debris(ctx, fx, $t31907);
+                                      const $t31909 = fx.debris;
+                                      return draw_debris(ctx, fx, $t31909);
                                     }
                                   })();
                                   (() => {
@@ -29173,18 +29196,18 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31908 = fx.gl;
+                                      const $t31910 = fx.gl;
                                       {
-                                        const $t31909 = game.camera_x;
+                                        const $t31911 = game.camera_x;
                                         {
-                                          const $t31910 = game.camera_y;
+                                          const $t31912 = game.camera_y;
                                           {
-                                            const $t31911 = game.view_w;
+                                            const $t31913 = game.view_w;
                                             {
-                                              const $t31912 = game.view_h;
+                                              const $t31914 = game.view_h;
                                               {
-                                                const $t31913 = fx.zoom;
-                                                return draw_nebula_gl(ctx, $t31908, fg_clouds, $t31909, $t31910, $t31911, $t31912, $t31913, seedf);
+                                                const $t31915 = fx.zoom;
+                                                return draw_nebula_gl(ctx, $t31910, fg_clouds, $t31911, $t31912, $t31913, $t31914, $t31915, seedf);
                                               }
                                             }
                                           }
@@ -29194,18 +29217,18 @@ function draw(ctx, el, game, fx) {
                                   })();
                                   (() => {
                                     {
-                                      const $t31914 = fx.gl;
+                                      const $t31916 = fx.gl;
                                       {
-                                        const $t31915 = game.camera_x;
+                                        const $t31917 = game.camera_x;
                                         {
-                                          const $t31916 = game.camera_y;
+                                          const $t31918 = game.camera_y;
                                           {
-                                            const $t31917 = game.view_w;
+                                            const $t31919 = game.view_w;
                                             {
-                                              const $t31918 = game.view_h;
+                                              const $t31920 = game.view_h;
                                               {
-                                                const $t31919 = fx.zoom;
-                                                return draw_explosion_gl(ctx, $t31914, fx, $t31915, $t31916, $t31917, $t31918, $t31919);
+                                                const $t31921 = fx.zoom;
+                                                return draw_explosion_gl(ctx, $t31916, fx, $t31917, $t31918, $t31919, $t31920, $t31921);
                                               }
                                             }
                                           }
@@ -29235,21 +29258,21 @@ const draw$clo = { _0: ($_, ctx, el, game, fx) => draw(ctx, el, game, fx) };
 
 function draw_starkiller_reticle(ctx, game) {
   {
-    const $t31921 = (() => {
+    const $t31923 = (() => {
       {
-        const $t31920 = Perihelion$Combat$starkiller_target_idx(game);
-        return Perihelion$Core$star_at(game, $t31920);
+        const $t31922 = Perihelion$Combat$starkiller_target_idx(game);
+        return Perihelion$Core$star_at(game, $t31922);
       }
     })();
-    switch ($t31921.$) {
+    switch ($t31923.$) {
       case "None": {
         return {  };
         break;
       }
       case "Some": {
-        const $f31927 = $t31921._0;
+        const $f31929 = $t31923._0;
         {
-          const s = $f31927;
+          const s = $f31929;
           (() => {
             return Canvas$set_stroke_style(ctx, "#ff5555");
           })();
@@ -29261,17 +29284,17 @@ function draw_starkiller_reticle(ctx, game) {
           })();
           (() => {
             {
-              const $t31922 = s.x;
+              const $t31924 = s.x;
               {
-                const $t31923 = s.y;
+                const $t31925 = s.y;
                 {
-                  const $t31925 = (() => {
+                  const $t31927 = (() => {
                     {
-                      const $t31924 = s.capture_radius;
-                      return ($t31924 + 12.);
+                      const $t31926 = s.capture_radius;
+                      return ($t31926 + 12.);
                     }
                   })();
-                  return Canvas$arc(ctx, $t31922, $t31923, $t31925, 0., 6.28318530718);
+                  return Canvas$arc(ctx, $t31924, $t31925, $t31927, 0., 6.28318530718);
                 }
               }
             }
@@ -29303,15 +29326,15 @@ function draw_trajectory_dots(ctx, points, i) {
       break;
     }
     case "Cons": {
-      const $f31933 = points._0;
-      const $f31934 = points._1;
+      const $f31935 = points._0;
+      const $f31936 = points._1;
       {
         const rest = (() => {
-          return $f31934;
+          return $f31936;
         })();
         {
           const pt = (() => {
-            return $f31933;
+            return $f31935;
           })();
           {
             const x = pt._0;
@@ -29319,13 +29342,13 @@ function draw_trajectory_dots(ctx, points, i) {
               const y = pt._1;
               (() => {
                 {
-                  const $t31929 = (() => {
+                  const $t31931 = (() => {
                     {
-                      const $t31928 = march_int_mod(i, 3);
-                      return ($t31928 === 0);
+                      const $t31930 = march_int_mod(i, 3);
+                      return ($t31930 === 0);
                     }
                   })();
-                  if ($t31929 === true) {
+                  if ($t31931 === true) {
                     return (() => {
                       (() => {
                         return Canvas$begin_path(ctx);
@@ -29341,8 +29364,8 @@ function draw_trajectory_dots(ctx, points, i) {
                 }
               })();
               {
-                const $t31931 = (i + 1);
-                return draw_trajectory_dots(ctx, rest, $t31931);
+                const $t31933 = (i + 1);
+                return draw_trajectory_dots(ctx, rest, $t31933);
               }
             }
           }
@@ -29359,48 +29382,48 @@ const draw_trajectory_dots$clo = { _0: ($_, ctx, points, i) => draw_trajectory_d
 
 function resize_canvas(el, game, w, h) {
   {
-    const $t31945 = (() => {
+    const $t31947 = (() => {
       {
-        const $t31942 = (() => {
+        const $t31944 = (() => {
           {
-            const $t31941 = game.view_w;
-            return (w === $t31941);
+            const $t31943 = game.view_w;
+            return (w === $t31943);
           }
         })();
         {
-          const $t31944 = (() => {
+          const $t31946 = (() => {
             {
-              const $t31943 = game.view_h;
-              return (h === $t31943);
+              const $t31945 = game.view_h;
+              return (h === $t31945);
             }
           })();
-          return ($t31942 && $t31944);
+          return ($t31944 && $t31946);
         }
       }
     })();
-    if ($t31945 === true) {
+    if ($t31947 === true) {
       return {  };
     } else {
       return (() => {
         (() => {
           {
-            const $t31947 = (() => {
+            const $t31949 = (() => {
               {
-                const $t31946 = Math.trunc(w);
-                return String($t31946);
+                const $t31948 = Math.trunc(w);
+                return String($t31948);
               }
             })();
-            return Dom$set_attr(el, "width", $t31947);
+            return Dom$set_attr(el, "width", $t31949);
           }
         })();
         {
-          const $t31949 = (() => {
+          const $t31951 = (() => {
             {
-              const $t31948 = Math.trunc(h);
-              return String($t31948);
+              const $t31950 = Math.trunc(h);
+              return String($t31950);
             }
           })();
-          return Dom$set_attr(el, "height", $t31949);
+          return Dom$set_attr(el, "height", $t31951);
         }
       })();
     }
@@ -29415,9 +29438,9 @@ function resize_gl(gl_opt, w, h) {
       break;
     }
     case "Some": {
-      const $f31950 = gl_opt._0;
+      const $f31952 = gl_opt._0;
       {
-        const gl = $f31950;
+        const gl = $f31952;
         return WebGL$resize(gl, w, h);
       }
       break;
@@ -29431,12 +29454,12 @@ const resize_gl$clo = { _0: ($_, gl_opt, w, h) => resize_gl(gl_opt, w, h) };
 
 function is_shot_orbiting(s) {
   {
-    const $t31968 = s.mode;
-    switch ($t31968.$) {
+    const $t31970 = s.mode;
+    switch ($t31970.$) {
       case "ShotOrbiting": {
-        const $f31969 = $t31968._0;
-        const $f31970 = $t31968._1;
-        const $f31971 = $t31968._2;
+        const $f31971 = $t31970._0;
+        const $f31972 = $t31970._1;
+        const $f31973 = $t31970._2;
         return true;
         break;
       }
@@ -29459,12 +29482,12 @@ function play_sfx(actx, muted, game, g2) {
     return (() => {
       (() => {
         {
-          const $t31984 = (() => {
+          const $t31986 = (() => {
             {
-              const $t31982 = (() => {
+              const $t31984 = (() => {
                 {
-                  const $t31981 = game.phase;
-                  switch ($t31981.$) {
+                  const $t31983 = game.phase;
+                  switch ($t31983.$) {
                     case "Ready": {
                       return true;
                       break;
@@ -29476,10 +29499,10 @@ function play_sfx(actx, muted, game, g2) {
                 }
               })();
               {
-                const $t31983 = (() => {
+                const $t31985 = (() => {
                   {
-                    const $t31939_i4320 = g2.phase;
-                    switch ($t31939_i4320.$) {
+                    const $t31941_i4320 = g2.phase;
+                    switch ($t31941_i4320.$) {
                       case "Playing": {
                         return true;
                         break;
@@ -29490,11 +29513,11 @@ function play_sfx(actx, muted, game, g2) {
                     }
                   }
                 })();
-                return ($t31982 && $t31983);
+                return ($t31984 && $t31985);
               }
             }
           })();
-          if ($t31984 === true) {
+          if ($t31986 === true) {
             return (() => {
               return Audio$resume(actx);
             })();
@@ -29505,16 +29528,16 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t31989 = (() => {
+          const $t31991 = (() => {
             {
-              const $t31986 = (() => {
+              const $t31988 = (() => {
                 {
-                  const $t31985 = game.mode;
-                  switch ($t31985.$) {
+                  const $t31987 = game.mode;
+                  switch ($t31987.$) {
                     case "Orbiting": {
-                      const $f31951_i4316 = $t31985._0;
-                      const $f31952_i4317 = $t31985._1;
-                      const $f31953_i4318 = $t31985._2;
+                      const $f31953_i4316 = $t31987._0;
+                      const $f31954_i4317 = $t31987._1;
+                      const $f31955_i4318 = $t31987._2;
                       return true;
                       break;
                     }
@@ -29525,13 +29548,13 @@ function play_sfx(actx, muted, game, g2) {
                 }
               })();
               {
-                const $t31988 = (() => {
+                const $t31990 = (() => {
                   {
-                    const $t31987 = g2.mode;
-                    switch ($t31987.$) {
+                    const $t31989 = g2.mode;
+                    switch ($t31989.$) {
                       case "Flying": {
-                        const $f31954_i4313 = $t31987._0;
-                        const $f31955_i4314 = $t31987._1;
+                        const $f31956_i4313 = $t31989._0;
+                        const $f31957_i4314 = $t31989._1;
                         return true;
                         break;
                       }
@@ -29541,11 +29564,11 @@ function play_sfx(actx, muted, game, g2) {
                     }
                   }
                 })();
-                return ($t31986 && $t31988);
+                return ($t31988 && $t31990);
               }
             }
           })();
-          if ($t31989 === true) {
+          if ($t31991 === true) {
             return (() => {
               return Audio$beep(actx, 500., 0.04, "square");
             })();
@@ -29556,25 +29579,25 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t31990 = g2.capture_flash;
-          switch ($t31990.$) {
+          const $t31992 = g2.capture_flash;
+          switch ($t31992.$) {
             case "None": {
               return {  };
               break;
             }
             case "Some": {
-              const $f31994 = $t31990._0;
+              const $f31996 = $t31992._0;
               {
-                const $t31993 = (() => {
+                const $t31995 = (() => {
                   {
-                    const $t31991 = g2.current;
+                    const $t31993 = g2.current;
                     {
-                      const $t31992 = game.current;
-                      return ($t31991 > $t31992);
+                      const $t31994 = game.current;
+                      return ($t31993 > $t31994);
                     }
                   }
                 })();
-                if ($t31993 === true) {
+                if ($t31995 === true) {
                   return (() => {
                     return Audio$sweep(actx, 400., 900., 0.12, "sine");
                   })();
@@ -29594,32 +29617,32 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t31999 = (() => {
+          const $t32001 = (() => {
             {
-              const $t31996 = (() => {
+              const $t31998 = (() => {
                 {
-                  const $t31995 = g2.player_shots;
+                  const $t31997 = g2.player_shots;
                   {
                     const go_i4310 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                    return go$apply$4901(go_i4310, $t31995, 0);
+                    return go$apply$4901(go_i4310, $t31997, 0);
                   }
                 }
               })();
               {
-                const $t31998 = (() => {
+                const $t32000 = (() => {
                   {
-                    const $t31997 = game.player_shots;
+                    const $t31999 = game.player_shots;
                     {
                       const go_i4308 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                      return go$apply$4901(go_i4308, $t31997, 0);
+                      return go$apply$4901(go_i4308, $t31999, 0);
                     }
                   }
                 })();
-                return ($t31996 > $t31998);
+                return ($t31998 > $t32000);
               }
             }
           })();
-          if ($t31999 === true) {
+          if ($t32001 === true) {
             return (() => {
               return Audio$beep(actx, 900., 0.05, "square");
             })();
@@ -29630,32 +29653,32 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32004 = (() => {
+          const $t32006 = (() => {
             {
-              const $t32001 = (() => {
+              const $t32003 = (() => {
                 {
-                  const $t32000 = g2.enemy_shots;
+                  const $t32002 = g2.enemy_shots;
                   {
                     const go_i4306 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                    return go$apply$4901(go_i4306, $t32000, 0);
+                    return go$apply$4901(go_i4306, $t32002, 0);
                   }
                 }
               })();
               {
-                const $t32003 = (() => {
+                const $t32005 = (() => {
                   {
-                    const $t32002 = game.enemy_shots;
+                    const $t32004 = game.enemy_shots;
                     {
                       const go_i4304 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                      return go$apply$4901(go_i4304, $t32002, 0);
+                      return go$apply$4901(go_i4304, $t32004, 0);
                     }
                   }
                 })();
-                return ($t32001 > $t32003);
+                return ($t32003 > $t32005);
               }
             }
           })();
-          if ($t32004 === true) {
+          if ($t32006 === true) {
             return (() => {
               return Audio$beep(actx, 500., 0.05, "sawtooth");
             })();
@@ -29666,12 +29689,12 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32007 = (() => {
+          const $t32009 = (() => {
             {
-              const $t32006 = (() => {
+              const $t32008 = (() => {
                 {
-                  const $t32005 = g2.fx_bursts;
-                  switch ($t32005.$) {
+                  const $t32007 = g2.fx_bursts;
+                  switch ($t32007.$) {
                     case "Nil": {
                       return true;
                       break;
@@ -29682,10 +29705,10 @@ function play_sfx(actx, muted, game, g2) {
                   }
                 }
               })();
-              return (!$t32006);
+              return (!$t32008);
             }
           })();
-          if ($t32007 === true) {
+          if ($t32009 === true) {
             return (() => {
               return Audio$noise_burst(actx, 0.2, 900.);
             })();
@@ -29696,32 +29719,32 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32012 = (() => {
+          const $t32014 = (() => {
             {
-              const $t32009 = (() => {
+              const $t32011 = (() => {
                 {
-                  const $t32008 = g2.ships;
+                  const $t32010 = g2.ships;
                   {
                     const go_i4301 = { $: "$Clo_go$4839", _0: go$apply$4839 };
-                    return go$apply$4839(go_i4301, $t32008, 0);
+                    return go$apply$4839(go_i4301, $t32010, 0);
                   }
                 }
               })();
               {
-                const $t32011 = (() => {
+                const $t32013 = (() => {
                   {
-                    const $t32010 = game.ships;
+                    const $t32012 = game.ships;
                     {
                       const go_i4299 = { $: "$Clo_go$4839", _0: go$apply$4839 };
-                      return go$apply$4839(go_i4299, $t32010, 0);
+                      return go$apply$4839(go_i4299, $t32012, 0);
                     }
                   }
                 })();
-                return ($t32009 < $t32011);
+                return ($t32011 < $t32013);
               }
             }
           })();
-          if ($t32012 === true) {
+          if ($t32014 === true) {
             return (() => {
               return Audio$noise_burst(actx, 0.3, 400.);
             })();
@@ -29732,26 +29755,26 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32017 = (() => {
+          const $t32019 = (() => {
             {
-              const $t32014 = (() => {
+              const $t32016 = (() => {
                 {
-                  const $t32013 = game.shield;
-                  return ($t32013 === 0);
+                  const $t32015 = game.shield;
+                  return ($t32015 === 0);
                 }
               })();
               {
-                const $t32016 = (() => {
+                const $t32018 = (() => {
                   {
-                    const $t32015 = g2.shield;
-                    return ($t32015 > 0);
+                    const $t32017 = g2.shield;
+                    return ($t32017 > 0);
                   }
                 })();
-                return ($t32014 && $t32016);
+                return ($t32016 && $t32018);
               }
             }
           })();
-          if ($t32017 === true) {
+          if ($t32019 === true) {
             return (() => {
               return Audio$beep(actx, 700., 0.06, "sine");
             })();
@@ -29762,8 +29785,8 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32018 = g2.pickup_collected;
-          if ($t32018 === true) {
+          const $t32020 = g2.pickup_collected;
+          if ($t32020 === true) {
             return (() => {
               return Audio$beep(actx, 1100., 0.05, "sine");
             })();
@@ -29774,12 +29797,12 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32024 = (() => {
+          const $t32026 = (() => {
             {
-              const $t32020 = (() => {
+              const $t32022 = (() => {
                 {
-                  const $t32019 = g2.phase;
-                  switch ($t32019.$) {
+                  const $t32021 = g2.phase;
+                  switch ($t32021.$) {
                     case "Milestone": {
                       return true;
                       break;
@@ -29791,12 +29814,12 @@ function play_sfx(actx, muted, game, g2) {
                 }
               })();
               {
-                const $t32023 = (() => {
+                const $t32025 = (() => {
                   {
-                    const $t32022 = (() => {
+                    const $t32024 = (() => {
                       {
-                        const $t32021 = game.phase;
-                        switch ($t32021.$) {
+                        const $t32023 = game.phase;
+                        switch ($t32023.$) {
                           case "Milestone": {
                             return true;
                             break;
@@ -29807,14 +29830,14 @@ function play_sfx(actx, muted, game, g2) {
                         }
                       }
                     })();
-                    return (!$t32022);
+                    return (!$t32024);
                   }
                 })();
-                return ($t32020 && $t32023);
+                return ($t32022 && $t32025);
               }
             }
           })();
-          if ($t32024 === true) {
+          if ($t32026 === true) {
             return (() => {
               return Audio$sweep(actx, 600., 1200., 0.25, "sine");
             })();
@@ -29825,60 +29848,60 @@ function play_sfx(actx, muted, game, g2) {
       })();
       (() => {
         {
-          const $t32029 = (() => {
+          const $t32031 = (() => {
             {
-              const $t32026 = (() => {
+              const $t32028 = (() => {
                 {
-                  const $t32025 = g2.player_shots;
+                  const $t32027 = g2.player_shots;
                   {
-                    const $t31980_i11074 = (() => {
+                    const $t31982_i11074 = (() => {
                       {
                         const pred_i4289_i11071 = is_shot_orbiting$clo;
                         {
                           const go_i4290_i11072 = { $: "$Clo_go$4817", _0: go$apply$4817, _1: pred_i4289_i11071 };
                           {
                             const $t302_i4291_i11073 = { $: "Nil" };
-                            return go$apply$4817(go_i4290_i11072, $t32025, $t302_i4291_i11073);
+                            return go$apply$4817(go_i4290_i11072, $t32027, $t302_i4291_i11073);
                           }
                         }
                       }
                     })();
                     {
                       const go_i4287_i11075 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                      return go$apply$4901(go_i4287_i11075, $t31980_i11074, 0);
+                      return go$apply$4901(go_i4287_i11075, $t31982_i11074, 0);
                     }
                   }
                 }
               })();
               {
-                const $t32028 = (() => {
+                const $t32030 = (() => {
                   {
-                    const $t32027 = game.player_shots;
+                    const $t32029 = game.player_shots;
                     {
-                      const $t31980_i11068 = (() => {
+                      const $t31982_i11068 = (() => {
                         {
                           const pred_i4289_i11065 = is_shot_orbiting$clo;
                           {
                             const go_i4290_i11066 = { $: "$Clo_go$4817", _0: go$apply$4817, _1: pred_i4289_i11065 };
                             {
                               const $t302_i4291_i11067 = { $: "Nil" };
-                              return go$apply$4817(go_i4290_i11066, $t32027, $t302_i4291_i11067);
+                              return go$apply$4817(go_i4290_i11066, $t32029, $t302_i4291_i11067);
                             }
                           }
                         }
                       })();
                       {
                         const go_i4287_i11069 = { $: "$Clo_go$4901", _0: go$apply$4901 };
-                        return go$apply$4901(go_i4287_i11069, $t31980_i11068, 0);
+                        return go$apply$4901(go_i4287_i11069, $t31982_i11068, 0);
                       }
                     }
                   }
                 })();
-                return ($t32026 > $t32028);
+                return ($t32028 > $t32030);
               }
             }
           })();
-          if ($t32029 === true) {
+          if ($t32031 === true) {
             return (() => {
               return Audio$sweep(actx, 900., 1400., 0.18, "square");
             })();
@@ -29888,12 +29911,12 @@ function play_sfx(actx, muted, game, g2) {
         }
       })();
       {
-        const $t32032 = (() => {
+        const $t32034 = (() => {
           {
-            const $t32030 = (() => {
+            const $t32032 = (() => {
               {
-                const $t31939_i4295 = game.phase;
-                switch ($t31939_i4295.$) {
+                const $t31941_i4295 = game.phase;
+                switch ($t31941_i4295.$) {
                   case "Playing": {
                     return true;
                     break;
@@ -29905,10 +29928,10 @@ function play_sfx(actx, muted, game, g2) {
               }
             })();
             {
-              const $t32031 = (() => {
+              const $t32033 = (() => {
                 {
-                  const $t31940_i4293 = g2.phase;
-                  switch ($t31940_i4293.$) {
+                  const $t31942_i4293 = g2.phase;
+                  switch ($t31942_i4293.$) {
                     case "Over": {
                       return true;
                       break;
@@ -29919,11 +29942,11 @@ function play_sfx(actx, muted, game, g2) {
                   }
                 }
               })();
-              return ($t32030 && $t32031);
+              return ($t32032 && $t32033);
             }
           }
         })();
-        if ($t32032 === true) {
+        if ($t32034 === true) {
           return Audio$sweep(actx, 300., 60., 0.5, "sawtooth");
         } else {
           return (() => {
@@ -29943,11 +29966,11 @@ function milestone_tap_choice(taps, view_w, _view_h) {
       break;
     }
     case "Cons": {
-      const $f32038 = taps._0;
-      const $f32039 = taps._1;
+      const $f32040 = taps._0;
+      const $f32041 = taps._1;
       {
         const tap = (() => {
-          return $f32038;
+          return $f32040;
         })();
         {
           const tx = tap._0;
@@ -29956,27 +29979,27 @@ function milestone_tap_choice(taps, view_w, _view_h) {
             {
               const idx = (() => {
                 {
-                  const $t32034 = (() => {
+                  const $t32036 = (() => {
                     {
-                      const $t32033 = tx;
-                      return ($t32033 / col_w);
+                      const $t32035 = tx;
+                      return ($t32035 / col_w);
                     }
                   })();
-                  return Math.trunc($t32034);
+                  return Math.trunc($t32036);
                 }
               })();
               {
-                const $t32036 = (() => {
+                const $t32038 = (() => {
                   {
-                    const $t32035 = (idx > 2);
-                    if ($t32035 === true) {
+                    const $t32037 = (idx > 2);
+                    if ($t32037 === true) {
                       return 2;
                     } else {
                       return idx;
                     }
                   }
                 })();
-                return { $: "Some", _0: $t32036 };
+                return { $: "Some", _0: $t32038 };
               }
             }
           }
@@ -30003,48 +30026,48 @@ function is_pause_button_tap(t, view_w, view_h) {
           {
             const bx = (() => {
               {
-                const $t32045_i11079 = (view_w - 14.);
-                return ($t32045_i11079 - 40.);
+                const $t32047_i11079 = (view_w - 14.);
+                return ($t32047_i11079 - 40.);
               }
             })();
             {
               const btn_y = (() => {
                 {
-                  const $t32048_i11077 = (view_h - 14.);
-                  return ($t32048_i11077 - 40.);
+                  const $t32050_i11077 = (view_h - 14.);
+                  return ($t32050_i11077 - 40.);
                 }
               })();
               {
-                const $t32056 = (() => {
+                const $t32058 = (() => {
                   {
-                    const $t32054 = (() => {
+                    const $t32056 = (() => {
                       {
-                        const $t32050 = (fx2 >= bx);
+                        const $t32052 = (fx2 >= bx);
                         {
-                          const $t32053 = (() => {
+                          const $t32055 = (() => {
                             {
-                              const $t32052 = (bx + 40.);
-                              return (fx2 <= $t32052);
+                              const $t32054 = (bx + 40.);
+                              return (fx2 <= $t32054);
                             }
                           })();
-                          return ($t32050 && $t32053);
+                          return ($t32052 && $t32055);
                         }
                       }
                     })();
                     {
-                      const $t32055 = (fy >= btn_y);
-                      return ($t32054 && $t32055);
+                      const $t32057 = (fy >= btn_y);
+                      return ($t32056 && $t32057);
                     }
                   }
                 })();
                 {
-                  const $t32059 = (() => {
+                  const $t32061 = (() => {
                     {
-                      const $t32058 = (btn_y + 40.);
-                      return (fy <= $t32058);
+                      const $t32060 = (btn_y + 40.);
+                      return (fy <= $t32060);
                     }
                   })();
-                  return ($t32056 && $t32059);
+                  return ($t32058 && $t32061);
                 }
               }
             }
@@ -30060,15 +30083,15 @@ function draw_pause_button(ctx, game, view_w, view_h) {
   {
     const bx = (() => {
       {
-        const $t32045_i11083 = (view_w - 14.);
-        return ($t32045_i11083 - 40.);
+        const $t32047_i11083 = (view_w - 14.);
+        return ($t32047_i11083 - 40.);
       }
     })();
     {
       const btn_y = (() => {
         {
-          const $t32048_i11081 = (view_h - 14.);
-          return ($t32048_i11081 - 40.);
+          const $t32050_i11081 = (view_h - 14.);
+          return ($t32050_i11081 - 40.);
         }
       })();
       (() => {
@@ -30088,66 +30111,66 @@ function draw_pause_button(ctx, game, view_w, view_h) {
       })();
       (() => {
         {
-          const $t32063 = game.paused;
-          if ($t32063 === true) {
+          const $t32065 = game.paused;
+          if ($t32065 === true) {
             return (() => {
               (() => {
                 return Canvas$begin_path(ctx);
               })();
               (() => {
                 {
-                  const $t32065 = (() => {
+                  const $t32067 = (() => {
                     {
-                      const $t32064 = (40. * 0.36);
-                      return (bx + $t32064);
+                      const $t32066 = (40. * 0.36);
+                      return (bx + $t32066);
                     }
                   })();
                   {
-                    const $t32067 = (() => {
+                    const $t32069 = (() => {
                       {
-                        const $t32066 = (40. * 0.28);
-                        return (btn_y + $t32066);
+                        const $t32068 = (40. * 0.28);
+                        return (btn_y + $t32068);
                       }
                     })();
-                    return Canvas$move_to(ctx, $t32065, $t32067);
+                    return Canvas$move_to(ctx, $t32067, $t32069);
                   }
                 }
               })();
               (() => {
                 {
-                  const $t32069 = (() => {
+                  const $t32071 = (() => {
                     {
-                      const $t32068 = (40. * 0.36);
-                      return (bx + $t32068);
+                      const $t32070 = (40. * 0.36);
+                      return (bx + $t32070);
                     }
                   })();
                   {
-                    const $t32071 = (() => {
+                    const $t32073 = (() => {
                       {
-                        const $t32070 = (40. * 0.72);
-                        return (btn_y + $t32070);
+                        const $t32072 = (40. * 0.72);
+                        return (btn_y + $t32072);
                       }
                     })();
-                    return Canvas$line_to(ctx, $t32069, $t32071);
+                    return Canvas$line_to(ctx, $t32071, $t32073);
                   }
                 }
               })();
               (() => {
                 {
-                  const $t32073 = (() => {
+                  const $t32075 = (() => {
                     {
-                      const $t32072 = (40. * 0.74);
-                      return (bx + $t32072);
+                      const $t32074 = (40. * 0.74);
+                      return (bx + $t32074);
                     }
                   })();
                   {
-                    const $t32075 = (() => {
+                    const $t32077 = (() => {
                       {
-                        const $t32074 = (40. * 0.5);
-                        return (btn_y + $t32074);
+                        const $t32076 = (40. * 0.5);
+                        return (btn_y + $t32076);
                       }
                     })();
-                    return Canvas$line_to(ctx, $t32073, $t32075);
+                    return Canvas$line_to(ctx, $t32075, $t32077);
                   }
                 }
               })();
@@ -30157,48 +30180,48 @@ function draw_pause_button(ctx, game, view_w, view_h) {
             return (() => {
               (() => {
                 {
-                  const $t32077 = (() => {
+                  const $t32079 = (() => {
                     {
-                      const $t32076 = (40. * 0.32);
-                      return (bx + $t32076);
+                      const $t32078 = (40. * 0.32);
+                      return (bx + $t32078);
                     }
                   })();
                   {
-                    const $t32079 = (() => {
+                    const $t32081 = (() => {
                       {
-                        const $t32078 = (40. * 0.26);
-                        return (btn_y + $t32078);
+                        const $t32080 = (40. * 0.26);
+                        return (btn_y + $t32080);
                       }
                     })();
                     {
-                      const $t32080 = (40. * 0.14);
+                      const $t32082 = (40. * 0.14);
                       {
-                        const $t32081 = (40. * 0.48);
-                        return Canvas$fill_rect(ctx, $t32077, $t32079, $t32080, $t32081);
+                        const $t32083 = (40. * 0.48);
+                        return Canvas$fill_rect(ctx, $t32079, $t32081, $t32082, $t32083);
                       }
                     }
                   }
                 }
               })();
               {
-                const $t32083 = (() => {
+                const $t32085 = (() => {
                   {
-                    const $t32082 = (40. * 0.54);
-                    return (bx + $t32082);
+                    const $t32084 = (40. * 0.54);
+                    return (bx + $t32084);
                   }
                 })();
                 {
-                  const $t32085 = (() => {
+                  const $t32087 = (() => {
                     {
-                      const $t32084 = (40. * 0.26);
-                      return (btn_y + $t32084);
+                      const $t32086 = (40. * 0.26);
+                      return (btn_y + $t32086);
                     }
                   })();
                   {
-                    const $t32086 = (40. * 0.14);
+                    const $t32088 = (40. * 0.14);
                     {
-                      const $t32087 = (40. * 0.48);
-                      return Canvas$fill_rect(ctx, $t32083, $t32085, $t32086, $t32087);
+                      const $t32089 = (40. * 0.48);
+                      return Canvas$fill_rect(ctx, $t32085, $t32087, $t32088, $t32089);
                     }
                   }
                 }
@@ -30225,11 +30248,11 @@ function tick(ctx, el, game, fx) {
           return Dom$pointer_pos(el);
         })();
         {
-          const $p32112 = dom_window_size();
+          const $p32114 = dom_window_size();
           {
-            const win_w = $p32112._0;
+            const win_w = $p32114._0;
             {
-              const win_h = $p32112._1;
+              const win_h = $p32114._1;
               {
                 const view_w = win_w;
                 {
@@ -30239,15 +30262,15 @@ function tick(ctx, el, game, fx) {
                   })();
                   (() => {
                     {
-                      const $t32088 = fx.gl;
-                      return resize_gl($t32088, view_w, view_h);
+                      const $t32090 = fx.gl;
+                      return resize_gl($t32090, view_w, view_h);
                     }
                   })();
                   {
                     const is_playing_phase = (() => {
                       {
-                        const $t32089 = game.phase;
-                        switch ($t32089.$) {
+                        const $t32091 = game.phase;
+                        switch ($t32091.$) {
                           case "Playing": {
                             return true;
                             break;
@@ -30261,13 +30284,13 @@ function tick(ctx, el, game, fx) {
                     {
                       const button_tapped = (() => {
                         {
-                          const $t32090 = (() => {
+                          const $t32092 = (() => {
                             {
-                              const $t32062_i4340 = { $: "$Clo_$lam32061$3875", _0: $lam32061$apply$3875, _1: view_h, _2: view_w };
-                              return List$any$List_T_Int_Int$Fn_T_Int_Int_Bool(raw_taps, $t32062_i4340);
+                              const $t32064_i4340 = { $: "$Clo_$lam32063$3875", _0: $lam32063$apply$3875, _1: view_h, _2: view_w };
+                              return List$any$List_T_Int_Int$Fn_T_Int_Int_Bool(raw_taps, $t32064_i4340);
                             }
                           })();
-                          return (is_playing_phase && $t32090);
+                          return (is_playing_phase && $t32092);
                         }
                       })();
                       {
@@ -30275,9 +30298,9 @@ function tick(ctx, el, game, fx) {
                         if (button_tapped === true) {
                           taps = (() => {
                             {
-                              const $t32093 = { $: "$Clo_$lam32091$3876", _0: $lam32091$apply$3876, _1: view_h, _2: view_w };
+                              const $t32095 = { $: "$Clo_$lam32093$3876", _0: $lam32093$apply$3876, _1: view_h, _2: view_w };
                               {
-                                const pred_i4334 = $t32093;
+                                const pred_i4334 = $t32095;
                                 {
                                   const go_i4335 = { $: "$Clo_go$4904", _0: go$apply$4904, _1: pred_i4334 };
                                   {
@@ -30301,21 +30324,21 @@ function tick(ctx, el, game, fx) {
                           {
                             const g2 = (() => {
                               {
-                                const $t32094 = game.phase;
-                                switch ($t32094.$) {
+                                const $t32096 = game.phase;
+                                switch ($t32096.$) {
                                   case "Milestone": {
                                     {
-                                      const $jp_clo32100 = (() => {
-                                        return { $: "$Clo_$jp32099$3877", _0: $jp32099$apply$3877, _1: cursor, _2: game, _3: keys, _4: taps, _5: view_h, _6: view_w };
+                                      const $jp_clo32102 = (() => {
+                                        return { $: "$Clo_$jp32101$3877", _0: $jp32101$apply$3877, _1: cursor, _2: game, _3: keys, _4: taps, _5: view_h, _6: view_w };
                                       })();
                                       {
-                                        const $t32095 = (() => {
+                                        const $t32097 = (() => {
                                           {
                                             const $t28618_i4332 = { $: "$Clo_$lam28615$3748", _0: $lam28615$apply$3748 };
                                             return List$any$List_String$Fn_String_Bool(keys, $t28618_i4332);
                                           }
                                         })();
-                                        if ($t32095 === true) {
+                                        if ($t32097 === true) {
                                           return (() => {
                                             {
                                               const $rc_892 = (() => {
@@ -30327,13 +30350,13 @@ function tick(ctx, el, game, fx) {
                                         } else {
                                           return (() => {
                                             {
-                                              const $t32097 = (() => {
+                                              const $t32099 = (() => {
                                                 {
                                                   const $rc_893 = milestone_tap_choice(taps, view_w, view_h);
                                                   return $rc_893;
                                                 }
                                               })();
-                                              return Perihelion$Core$pick_milestone(game, $t32097);
+                                              return Perihelion$Core$pick_milestone(game, $t32099);
                                             }
                                           })();
                                         }
@@ -30355,18 +30378,18 @@ function tick(ctx, el, game, fx) {
                             {
                               const muted2 = (() => {
                                 {
-                                  const $t32101 = fx.muted;
+                                  const $t32103 = fx.muted;
                                   {
-                                    const $t31960_i4330 = (() => {
+                                    const $t31962_i4330 = (() => {
                                       {
-                                        const $t31959_i4329 = { $: "$Clo_$lam31956$3869", _0: $lam31956$apply$3869 };
-                                        return List$any$List_String$Fn_String_Bool(keys, $t31959_i4329);
+                                        const $t31961_i4329 = { $: "$Clo_$lam31958$3869", _0: $lam31958$apply$3869 };
+                                        return List$any$List_String$Fn_String_Bool(keys, $t31961_i4329);
                                       }
                                     })();
-                                    if ($t31960_i4330 === true) {
-                                      return (!$t32101);
+                                    if ($t31962_i4330 === true) {
+                                      return (!$t32103);
                                     } else {
-                                      return $t32101;
+                                      return $t32103;
                                     }
                                   }
                                 }
@@ -30374,19 +30397,19 @@ function tick(ctx, el, game, fx) {
                               {
                                 const zoom_target2 = (() => {
                                   {
-                                    const $t32102 = fx.zoom_target;
+                                    const $t32104 = fx.zoom_target;
                                     {
-                                      const $t31965_i11087 = (() => {
+                                      const $t31967_i11087 = (() => {
                                         {
-                                          const $t31964_i11086 = { $: "$Clo_$lam31961$3870", _0: $lam31961$apply$3870 };
-                                          return List$any$List_String$Fn_String_Bool(keys, $t31964_i11086);
+                                          const $t31966_i11086 = { $: "$Clo_$lam31963$3870", _0: $lam31963$apply$3870 };
+                                          return List$any$List_String$Fn_String_Bool(keys, $t31966_i11086);
                                         }
                                       })();
-                                      if ($t31965_i11087 === true) {
+                                      if ($t31967_i11087 === true) {
                                         return (() => {
                                           {
-                                            const $t31967_i11088 = ($t32102 === 2.);
-                                            if ($t31967_i11088 === true) {
+                                            const $t31969_i11088 = ($t32104 === 2.);
+                                            if ($t31969_i11088 === true) {
                                               return 1.;
                                             } else {
                                               return 2.;
@@ -30394,7 +30417,7 @@ function tick(ctx, el, game, fx) {
                                           }
                                         })();
                                       } else {
-                                        return $t32102;
+                                        return $t32104;
                                       }
                                     }
                                   }
@@ -30402,10 +30425,10 @@ function tick(ctx, el, game, fx) {
                                 {
                                   const just_died = (() => {
                                     {
-                                      const $t32103 = (() => {
+                                      const $t32105 = (() => {
                                         {
-                                          const $t31939_i4326 = game.phase;
-                                          switch ($t31939_i4326.$) {
+                                          const $t31941_i4326 = game.phase;
+                                          switch ($t31941_i4326.$) {
                                             case "Playing": {
                                               return true;
                                               break;
@@ -30417,10 +30440,10 @@ function tick(ctx, el, game, fx) {
                                         }
                                       })();
                                       {
-                                        const $t32104 = (() => {
+                                        const $t32106 = (() => {
                                           {
-                                            const $t31940_i4324 = g2.phase;
-                                            switch ($t31940_i4324.$) {
+                                            const $t31942_i4324 = g2.phase;
+                                            switch ($t31942_i4324.$) {
                                               case "Over": {
                                                 return true;
                                                 break;
@@ -30431,14 +30454,14 @@ function tick(ctx, el, game, fx) {
                                             }
                                           }
                                         })();
-                                        return ($t32103 && $t32104);
+                                        return ($t32105 && $t32106);
                                       }
                                     }
                                   })();
                                   (() => {
                                     {
-                                      const $t32105 = fx.actx;
-                                      return play_sfx($t32105, muted2, game, g2);
+                                      const $t32107 = fx.actx;
+                                      return play_sfx($t32107, muted2, game, g2);
                                     }
                                   })();
                                   {
@@ -30449,16 +30472,16 @@ function tick(ctx, el, game, fx) {
                                         if (just_died === true) {
                                           return (() => {
                                             {
-                                              const $t32109 = (() => {
+                                              const $t32111 = (() => {
                                                 {
-                                                  const $t32107 = g2.best;
+                                                  const $t32109 = g2.best;
                                                   {
-                                                    const $t32108 = g2.runs;
-                                                    return Perihelion$Core$encode_save($t32107, $t32108);
+                                                    const $t32110 = g2.runs;
+                                                    return Perihelion$Core$encode_save($t32109, $t32110);
                                                   }
                                                 }
                                               })();
-                                              return Dom$store_set("perihelion.v1", $t32109);
+                                              return Dom$store_set("perihelion.v1", $t32111);
                                             }
                                           })();
                                         } else {
@@ -30469,8 +30492,8 @@ function tick(ctx, el, game, fx) {
                                         return draw(ctx, el, g2, fx2);
                                       })();
                                       {
-                                        const $t32111 = { $: "$Clo_$lam32110$3878", _0: $lam32110$apply$3878, _1: ctx, _2: el, _3: fx2, _4: g2 };
-                                        return Dom$on_frame($t32111);
+                                        const $t32113 = { $: "$Clo_$lam32112$3878", _0: $lam32112$apply$3878, _1: ctx, _2: el, _3: fx2, _4: g2 };
+                                        return Dom$on_frame($t32113);
                                       }
                                     }
                                   }
@@ -30495,37 +30518,37 @@ const tick$clo = { _0: ($_, ctx, el, game, fx) => tick(ctx, el, game, fx) };
 
 async function boot(ctx, node, best, runs) {
   {
-    const $p32118 = dom_window_size();
+    const $p32120 = dom_window_size();
     {
-      const win_w = $p32118._0;
+      const win_w = $p32120._0;
       {
-        const win_h = $p32118._1;
+        const win_h = $p32120._1;
         {
           const view_w = win_w;
           {
             const view_h = win_h;
             (() => {
               {
-                const $t32113 = String(win_w);
-                return Dom$set_attr(node, "width", $t32113);
+                const $t32115 = String(win_w);
+                return Dom$set_attr(node, "width", $t32115);
               }
             })();
             (() => {
               {
-                const $t32114 = String(win_h);
-                return Dom$set_attr(node, "height", $t32114);
+                const $t32116 = String(win_h);
+                return Dom$set_attr(node, "height", $t32116);
               }
             })();
             {
-              const $t32116 = (() => {
+              const $t32118 = (() => {
                 {
-                  const $t32115 = boot_seed();
-                  return Perihelion$Core$fresh_run($t32115, best, runs, view_w, view_h);
+                  const $t32117 = boot_seed();
+                  return Perihelion$Core$fresh_run($t32117, best, runs, view_w, view_h);
                 }
               })();
               {
-                const $t32117 = (await fx_init());
-                return tick(ctx, node, $t32116, $t32117);
+                const $t32119 = (await fx_init());
+                return tick(ctx, node, $t32118, $t32119);
               }
             }
           }
@@ -30538,42 +30561,42 @@ const boot$clo = { _0: async ($_, ctx, node, best, runs) => boot(ctx, node, best
 
 async function main() {
   {
-    const $t32119 = Dom$find("game-canvas");
-    switch ($t32119.$) {
+    const $t32121 = Dom$find("game-canvas");
+    switch ($t32121.$) {
       case "None": {
         return println$String("no #game-canvas found");
         break;
       }
       case "Some": {
-        const $f32127 = $t32119._0;
+        const $f32129 = $t32121._0;
         {
-          const node = $f32127;
+          const node = $f32129;
           {
-            const $t32120 = (() => {
+            const $t32122 = (() => {
               return Canvas$get_context(node);
             })();
-            switch ($t32120.$) {
+            switch ($t32122.$) {
               case "None": {
                 return println$String("2d context unavailable");
                 break;
               }
               case "Some": {
-                const $f32126 = $t32120._0;
+                const $f32128 = $t32122._0;
                 {
-                  const ctx = $f32126;
+                  const ctx = $f32128;
                   {
                     const saved = (() => {
                       {
-                        const $t32121 = Dom$store_get("perihelion.v1");
-                        switch ($t32121.$) {
+                        const $t32123 = Dom$store_get("perihelion.v1");
+                        switch ($t32123.$) {
                           case "None": {
                             return "";
                             break;
                           }
                           case "Some": {
-                            const $f32122 = $t32121._0;
+                            const $f32124 = $t32123._0;
                             {
-                              const sv = $f32122;
+                              const sv = $f32124;
                               return sv;
                             }
                             break;
@@ -30585,21 +30608,21 @@ async function main() {
                       }
                     })();
                     {
-                      const $p32125 = (() => {
+                      const $p32127 = (() => {
                         {
                           const $rc_895 = Perihelion$Core$decode_save(saved);
                           return $rc_895;
                         }
                       })();
                       {
-                        const best = $p32125._0;
+                        const best = $p32127._0;
                         {
-                          const runs = $p32125._1;
+                          const runs = $p32127._1;
                           {
-                            const $t32124 = (await (async () => {
-                              return { $: "$Clo_$lam32123$3879", _0: $lam32123$apply$3879, _1: best, _2: ctx, _3: node, _4: runs };
+                            const $t32126 = (await (async () => {
+                              return { $: "$Clo_$lam32125$3879", _0: $lam32125$apply$3879, _1: best, _2: ctx, _3: node, _4: runs };
                             })());
-                            return Dom$on_frame($t32124);
+                            return Dom$on_frame($t32126);
                           }
                         }
                       }
@@ -32785,9 +32808,9 @@ function $jp31434$apply$3835($clo) {
 }
 const $jp31434$apply$3835$clo = { _0: ($_, $clo) => $jp31434$apply$3835($clo) };
 
-function $lam31803$apply$3855($clo, c) {
+function $lam31805$apply$3855($clo, c) {
   {
-    const $t31804 = (() => {
+    const $t31806 = (() => {
       {
         const $t31371_i11458 = (() => {
           {
@@ -32830,12 +32853,12 @@ function $lam31803$apply$3855($clo, c) {
         return ($t31371_i11458 < 0.25);
       }
     })();
-    return (!$t31804);
+    return (!$t31806);
   }
 }
-const $lam31803$apply$3855$clo = { _0: ($_, $clo, c) => $lam31803$apply$3855($clo, c) };
+const $lam31805$apply$3855$clo = { _0: ($_, $clo, c) => $lam31805$apply$3855($clo, c) };
 
-function $lam31806$apply$3856($clo, c) {
+function $lam31808$apply$3856($clo, c) {
   {
     const $t31371_i11469 = (() => {
       {
@@ -32878,35 +32901,35 @@ function $lam31806$apply$3856($clo, c) {
     return ($t31371_i11469 < 0.25);
   }
 }
-const $lam31806$apply$3856$clo = { _0: ($_, $clo, c) => $lam31806$apply$3856($clo, c) };
+const $lam31808$apply$3856$clo = { _0: ($_, $clo, c) => $lam31808$apply$3856($clo, c) };
 
-function $lam31956$apply$3869($clo, k) {
+function $lam31958$apply$3869($clo, k) {
   {
-    const $t31957 = (() => {
+    const $t31959 = (() => {
       return (k === "m");
     })();
     {
-      const $t31958 = (k === "M");
-      return ($t31957 || $t31958);
+      const $t31960 = (k === "M");
+      return ($t31959 || $t31960);
     }
   }
 }
-const $lam31956$apply$3869$clo = { _0: ($_, $clo, k) => $lam31956$apply$3869($clo, k) };
+const $lam31958$apply$3869$clo = { _0: ($_, $clo, k) => $lam31958$apply$3869($clo, k) };
 
-function $lam31961$apply$3870($clo, k) {
+function $lam31963$apply$3870($clo, k) {
   {
-    const $t31962 = (() => {
+    const $t31964 = (() => {
       return (k === "z");
     })();
     {
-      const $t31963 = (k === "Z");
-      return ($t31962 || $t31963);
+      const $t31965 = (k === "Z");
+      return ($t31964 || $t31965);
     }
   }
 }
-const $lam31961$apply$3870$clo = { _0: ($_, $clo, k) => $lam31961$apply$3870($clo, k) };
+const $lam31963$apply$3870$clo = { _0: ($_, $clo, k) => $lam31963$apply$3870($clo, k) };
 
-function $lam32061$apply$3875($clo, t) {
+function $lam32063$apply$3875($clo, t) {
   {
     const view_h = (() => {
       return $clo._1;
@@ -32919,9 +32942,9 @@ function $lam32061$apply$3875($clo, t) {
     }
   }
 }
-const $lam32061$apply$3875$clo = { _0: ($_, $clo, t) => $lam32061$apply$3875($clo, t) };
+const $lam32063$apply$3875$clo = { _0: ($_, $clo, t) => $lam32063$apply$3875($clo, t) };
 
-function $lam32091$apply$3876($clo, t) {
+function $lam32093$apply$3876($clo, t) {
   {
     const view_h = (() => {
       return $clo._1;
@@ -32931,15 +32954,15 @@ function $lam32091$apply$3876($clo, t) {
         return $clo._2;
       })();
       {
-        const $t32092 = is_pause_button_tap(t, view_w, view_h);
-        return (!$t32092);
+        const $t32094 = is_pause_button_tap(t, view_w, view_h);
+        return (!$t32094);
       }
     }
   }
 }
-const $lam32091$apply$3876$clo = { _0: ($_, $clo, t) => $lam32091$apply$3876($clo, t) };
+const $lam32093$apply$3876$clo = { _0: ($_, $clo, t) => $lam32093$apply$3876($clo, t) };
 
-function $jp32099$apply$3877($clo) {
+function $jp32101$apply$3877($clo) {
   {
     const cursor = (() => {
       return $clo._1;
@@ -32972,9 +32995,9 @@ function $jp32099$apply$3877($clo) {
     }
   }
 }
-const $jp32099$apply$3877$clo = { _0: ($_, $clo) => $jp32099$apply$3877($clo) };
+const $jp32101$apply$3877$clo = { _0: ($_, $clo) => $jp32101$apply$3877($clo) };
 
-function $lam32110$apply$3878($clo, _) {
+function $lam32112$apply$3878($clo, _) {
   {
     const ctx = (() => {
       return $clo._1;
@@ -32997,9 +33020,9 @@ function $lam32110$apply$3878($clo, _) {
     }
   }
 }
-const $lam32110$apply$3878$clo = { _0: ($_, $clo, _) => $lam32110$apply$3878($clo, _) };
+const $lam32112$apply$3878$clo = { _0: ($_, $clo, _) => $lam32112$apply$3878($clo, _) };
 
-async function $lam32123$apply$3879($clo, _) {
+async function $lam32125$apply$3879($clo, _) {
   {
     const best = (() => {
       return $clo._1;
@@ -33022,7 +33045,7 @@ async function $lam32123$apply$3879($clo, _) {
     }
   }
 }
-const $lam32123$apply$3879$clo = { _0: async ($_, $clo, _) => $lam32123$apply$3879($clo, _) };
+const $lam32125$apply$3879$clo = { _0: async ($_, $clo, _) => $lam32125$apply$3879($clo, _) };
 
 function go$apply$4140($clo, lst, acc) {
   {

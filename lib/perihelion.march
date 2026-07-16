@@ -1416,17 +1416,23 @@ mod Perihelion do
         Canvas.fill_text(ctx, "tap to start",
                          game.view_w / 2.0, game.view_h / 2.0)
       Over ->
-        draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
-        Canvas.set_font(ctx, "22px sans-serif")
-        Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
-                         game.view_w / 2.0, game.view_h / 2.0)
-        match death_cause_text(game.death_cause) do
-          None -> ()
-          Some(text) ->
-            Canvas.set_font(ctx, "13px sans-serif")
-            Canvas.fill_text(ctx, text, game.view_w / 2.0, game.view_h / 2.0 + 20.0)
+        if fx.explosion_time_left > 0.0 do
+          ()
+        else
+          draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
+          Canvas.set_fill_style(ctx, "#ffffff")
+          Canvas.set_font(ctx, "22px sans-serif")
+          Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
+                           game.view_w / 2.0, game.view_h / 2.0)
+          Canvas.set_fill_style(ctx, "#cfcfcf")
+          match death_cause_text(game.death_cause) do
+            None -> ()
+            Some(text) ->
+              Canvas.set_font(ctx, "13px sans-serif")
+              Canvas.fill_text(ctx, text, game.view_w / 2.0, game.view_h / 2.0 + 20.0)
+          end
+          draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 40.0, 0)
         end
-        draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 40.0, 0)
       Playing ->
         draw_pause_button(ctx, game, game.view_w, game.view_h)
         if game.paused do
@@ -1440,6 +1446,7 @@ mod Perihelion do
         end
       Milestone ->
         draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
+        Canvas.set_fill_style(ctx, "#eeeeee")
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
         draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, fx, 0)
