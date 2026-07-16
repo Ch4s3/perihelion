@@ -301,7 +301,7 @@ float filament(vec2 rel, float dist, float radius, float baseAngle, float curlSi
   if (dist > outer || baseFade <= 0.0) return 0.0;
 
   float ext = clamp((dist - radius) / max(reach, 0.001), 0.0, 1.0);
-  float curl = curlSign * 0.9 * ext * ext;
+  float curl = curlSign * 2.0 * ext * ext;
   float targetAngle = baseAngle + curl;
 
   float angle = atan(rel.y, rel.x);
