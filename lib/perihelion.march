@@ -1534,8 +1534,20 @@ mod Perihelion do
     -- translate -- shake_time_left is already clamped to exactly 0.0 when
     -- inactive, so the ratio (and therefore the jitter) is a clean 0 with
     -- no separate on/off branch needed.
-    let focus_x = game.camera_x + game.view_w / 2.0
-    let focus_y = game.camera_y + game.view_h / 2.0
+    -- The un-zoomed focus point is the camera's own view center, not the
+    -- ball directly -- camera_x has a deliberate dead zone (see
+    -- Core.cam_dead_zone) so the ball isn't pinned dead-center during
+    -- normal flight. But zooming in is the player asking for a close look
+    -- at themselves, so as zoom eases from 1x toward the target, blend the
+    -- focus point toward the ball's exact position -- at full zoom the ball
+    -- sits exactly center-screen; at 1x the camera's normal framing (dead
+    -- zone included) is unchanged.
+    let cam_focus_x = game.camera_x + game.view_w / 2.0
+    let cam_focus_y = game.camera_y + game.view_h / 2.0
+    let zoom_blend = Math.max_float(0.0, Math.min_float(1.0,
+      (fx.zoom - zoom_target_low()) / (zoom_target_high() - zoom_target_low())))
+    let focus_x = cam_focus_x + (game.ball_x - cam_focus_x) * zoom_blend
+    let focus_y = cam_focus_y + (game.ball_y - cam_focus_y) * zoom_blend
     let shake_amount = shake_magnitude() * (fx.shake_time_left / shake_duration())
     let shake_dx = (hashf(fx.t, 91.0) - 0.5) * 2.0 * shake_amount
     let shake_dy = (hashf(fx.t, 92.0) - 0.5) * 2.0 * shake_amount
