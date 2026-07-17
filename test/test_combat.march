@@ -1010,6 +1010,17 @@ mod TestPerihelionCombat do
       assert (g2.starkiller_cooldown > 0.0)
     end
 
+    test "fire_rate_stacks (OffenseFireRate) also shortens StarKiller's cooldown" do
+      let g0 = { base_game(0.0) with
+                   owned_weapons: Cons(Perihelion.Upgrades.Base, Cons(Perihelion.Upgrades.StarKiller, Nil)),
+                   active_weapon_idx: 1 }
+      let g_stacked = { g0 with fire_rate_stacks: 5 }
+      let g2 = Perihelion.Combat.fire(g0, space(), cursor_east(), dt())
+      let g2_stacked = Perihelion.Combat.fire(g_stacked, space(), cursor_east(), dt())
+      assert (g2.starkiller_cooldown > g2_stacked.starkiller_cooldown)
+      assert (approx(g2.starkiller_cooldown, Perihelion.Combat.starkiller_cooldown_seconds()))
+    end
+
     test "holding space with StarKiller on cooldown does not reapply recoil every tick" do
       -- Flying mode makes apply_recoil's effect observable (it's a no-op
       -- while Orbiting) -- same setup as the "firing while flying" test above,

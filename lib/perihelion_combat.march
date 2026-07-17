@@ -161,6 +161,11 @@ mod Perihelion.Combat do
   fn pickup_radius() : Float do 12.0 end
   fn ball_radius() : Float do 6.0 end
   fn starkiller_cooldown_seconds() : Float do 12.0 end
+
+  doc "StarKiller's own (much longer) cooldown, scaled by the same fire_rate_stacks reduction the other weapons already get -- OffenseFireRate previously only sped up Base/Homing/Spread via effective_fire_cooldown, leaving StarKiller's cooldown a flat constant. Applies the same proportional cut effective_fire_cooldown got (its ratio to the unstacked base cooldown) rather than a separate stack constant, so one upgrade speeds up every weapon by a matching amount."
+  fn effective_starkiller_cooldown(game : Game) : Float do
+    starkiller_cooldown_seconds() * (effective_fire_cooldown(game) / player_fire_cooldown())
+  end
   fn star_kill_radius() : Float do 20.0 end
 
   doc "Which ladder index the star-killer reticle currently sits on: current+1..current+3, clamped to the ladder's real length."
@@ -948,7 +953,7 @@ mod Perihelion.Combat do
                 _ -> effective_fire_cooldown(game)
               end
               let starkiller_cd2 = match Perihelion.Core.active_weapon(game) do
-                StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else starkiller_cooldown_seconds() end
+                StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else effective_starkiller_cooldown(game) end
                 _ -> game.starkiller_cooldown
               end
               { g2 with
