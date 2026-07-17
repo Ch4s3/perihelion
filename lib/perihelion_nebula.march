@@ -37,6 +37,11 @@ mod Perihelion.Nebula do
   -- past the normal radius_max() ceiling for real scale variety.
   fn giant_chance() : Float do 0.12 end
   fn giant_radius_mult() : Float do 1.8 end
+  -- Giants already dominate the screen by sheer size -- knocking their
+  -- lobe/arm strength down a bit keeps them from also being the most
+  -- opaque clouds, so they read as sweeping and atmospheric rather than
+  -- blotting out the starfield/asteroids behind them.
+  fn giant_strength_mult() : Float do 0.7 end
 
   type Cloud = { x : Float, y : Float, radius : Float, strength : Float }
 
@@ -66,21 +71,21 @@ mod Perihelion.Nebula do
   -- Later lobes (1, 2) jitter further (up to half the base radius) so the
   -- cluster reads as one bulging, irregular shape rather than a neat circle,
   -- and may drift far enough that they don't individually overlap the star.
-  pfn make_lobe(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int) : Cloud do
+  pfn make_lobe(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, strength_mult : Float) : Cloud do
     let fi = int_to_float(i)
     let spread = if i == 0 do anchor_jitter() else base_r * 0.5 end
     let jx = (hash3(sx + 10.0 + fi, sy, seed) - 0.5) * 2.0 * spread
     let jy = (hash3(sx, sy + 10.0 + fi, seed) - 0.5) * 2.0 * spread
     let rf = 0.5 + 0.35 * hash3(sx + 20.0 + fi, sy, seed)
-    let strength = 0.35 + 0.65 * hash3(sx, sy + 20.0 + fi, seed)
+    let strength = (0.35 + 0.65 * hash3(sx, sy + 20.0 + fi, seed)) * strength_mult
     { x: sx + jx, y: sy + jy, radius: base_r * rf, strength: strength }
   end
 
-  pfn make_lobes(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, acc : List(Cloud)) : List(Cloud) do
+  pfn make_lobes(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, strength_mult : Float, acc : List(Cloud)) : List(Cloud) do
     if i >= n do
       acc
     else
-      make_lobes(sx, sy, seed, base_r, i + 1, n, Cons(make_lobe(sx, sy, seed, base_r, i), acc))
+      make_lobes(sx, sy, seed, base_r, i + 1, n, strength_mult, Cons(make_lobe(sx, sy, seed, base_r, i, strength_mult), acc))
     end
   end
 
@@ -98,21 +103,21 @@ mod Perihelion.Nebula do
   -- lobe's 0.5-0.85x) -- reads as a tendril reaching beyond the cloud's
   -- core rather than another rounded blob. Own offset space (+40/+50) so
   -- it never rolls the same values as make_lobe's lobes.
-  pfn make_arm(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int) : Cloud do
+  pfn make_arm(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, strength_mult : Float) : Cloud do
     let fi = int_to_float(i)
     let spread = base_r * 1.3
     let jx = (hash3(sx + 40.0 + fi, sy, seed) - 0.5) * 2.0 * spread
     let jy = (hash3(sx, sy + 40.0 + fi, seed) - 0.5) * 2.0 * spread
     let rf = 0.25 + 0.15 * hash3(sx + 50.0 + fi, sy, seed)
-    let strength = 0.3 + 0.5 * hash3(sx, sy + 50.0 + fi, seed)
+    let strength = (0.3 + 0.5 * hash3(sx, sy + 50.0 + fi, seed)) * strength_mult
     { x: sx + jx, y: sy + jy, radius: base_r * rf, strength: strength }
   end
 
-  pfn make_arms(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, acc : List(Cloud)) : List(Cloud) do
+  pfn make_arms(sx : Float, sy : Float, seed : Float, base_r : Float, i : Int, n : Int, strength_mult : Float, acc : List(Cloud)) : List(Cloud) do
     if i >= n do
       acc
     else
-      make_arms(sx, sy, seed, base_r, i + 1, n, Cons(make_arm(sx, sy, seed, base_r, i), acc))
+      make_arms(sx, sy, seed, base_r, i + 1, n, strength_mult, Cons(make_arm(sx, sy, seed, base_r, i, strength_mult), acc))
     end
   end
 
@@ -138,8 +143,9 @@ mod Perihelion.Nebula do
           -- flat uniform spread -- most non-giant clouds modest.
           lerp(radius_min(), radius_max(), rt * rt)
         end
-      let lobes = make_lobes(sx, sy, seed, base_r, 0, lobe_count(sx, sy, seed), Nil)
-      let arms = make_arms(sx, sy, seed, base_r, 0, arm_count(sx, sy, seed), Nil)
+      let strength_mult = if is_giant do giant_strength_mult() else 1.0 end
+      let lobes = make_lobes(sx, sy, seed, base_r, 0, lobe_count(sx, sy, seed), strength_mult, Nil)
+      let arms = make_arms(sx, sy, seed, base_r, 0, arm_count(sx, sy, seed), strength_mult, Nil)
       List.append(arms, lobes)
     end
   end

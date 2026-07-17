@@ -57,7 +57,7 @@ mod Perihelion do
     icon_trajectory_preview : Option(Canvas.Image),
     -- Purely cosmetic view zoom, toggled by Z (see toggle_zoom_target):
     -- `zoom` is the current rendered scale, eased each frame toward
-    -- `zoom_target` (1.0 or 3.0) the same way the camera eases its pan.
+    -- `zoom_target` (1.0 or 2.0) the same way the camera eases its pan.
     zoom : Float,
     zoom_target : Float,
     -- asteroid_01..05.png, indexed by a per-asteroid roll of shape_seed (see
@@ -69,7 +69,32 @@ mod Perihelion do
     -- spawn_chunk_debris) -- None entries fall back to a plain dot, same
     -- graceful-degradation shape as asteroid_sprites.
     chunk_sprites : List(Option(Canvas.Image)),
-    debris : List(Debris)
+    debris : List(Debris),
+    -- Death explosion + screen shake, both triggered together the frame
+    -- Playing -> Over (see step_fx's `just_died` param -- step_fx can't
+    -- detect that transition itself, since it only ever sees the
+    -- post-update Game, so tick() computes it and passes it in explicitly).
+    -- *_time_left counts down to 0 (inactive); world-space explosion_x/y is
+    -- captured once at the moment of death and held steady while it plays.
+    explosion_x : Float,
+    explosion_y : Float,
+    explosion_time_left : Float,
+    shake_time_left : Float,
+    -- StarJump wormholes: A plays at the departure point (world-space
+    -- position captured from Core.JumpTransit.start_x/y the frame the jump
+    -- activates), B at the arrival point (the ball's new position the frame
+    -- the transit resolves) -- see step_fx's `just_jumped`/`jump_landed`
+    -- params, same "tick() detects the transition, step_fx can't" shape as
+    -- just_died/explosion above. Each *_time_left counts down independently
+    -- of Core's own JumpTransit.time_left (this is a purely cosmetic
+    -- duration, same relationship explosion_duration() has to
+    -- shake_duration()).
+    wormhole_a_x : Float,
+    wormhole_a_y : Float,
+    wormhole_a_time_left : Float,
+    wormhole_b_x : Float,
+    wormhole_b_y : Float,
+    wormhole_b_time_left : Float
   }
 
   pfn player_sprite_grid() : List(String) do
@@ -240,17 +265,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "15")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "20")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 11.0, 15.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 14.0, 20.0)
       end
       build_enemy_top_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy top-tile idx 0..7 into offscreen canvases (11x15 each), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
+  doc "Pre-renders enemy top-tile idx 0..7 into offscreen canvases (14x20 each, ~1.3x the base tile size), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
   pfn build_enemy_top_sprites(idx : Int) : List(Node) do
     build_enemy_top_sprites_go(idx, Nil)
   end
@@ -260,17 +285,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "19")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "25")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 11.0, 19.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 14.0, 25.0)
       end
       build_enemy_mid_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (11x19 each) -- see build_enemy_top_sprites."
+  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (14x25 each) -- see build_enemy_top_sprites."
   pfn build_enemy_mid_sprites(idx : Int) : List(Node) do
     build_enemy_mid_sprites_go(idx, Nil)
   end
@@ -280,17 +305,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "12")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "16")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 11.0, 12.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 14.0, 16.0)
       end
       build_enemy_bot_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (11x12 each) -- see build_enemy_top_sprites."
+  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (14x16 each) -- see build_enemy_top_sprites."
   pfn build_enemy_bot_sprites(idx : Int) : List(Node) do
     build_enemy_bot_sprites_go(idx, Nil)
   end
@@ -346,7 +371,13 @@ mod Perihelion do
       zoom_target: 1.0,
       asteroid_sprites: load_numbered_sprites("asteroid_sprites/asteroids", "asteroid_", ".png", 5, 1, Nil),
       chunk_sprites: load_numbered_sprites("asteroid_sprites/chunks", "chunk_", ".png", 9, 1, Nil),
-      debris: Nil }
+      debris: Nil,
+      explosion_x: 0.0,
+      explosion_y: 0.0,
+      explosion_time_left: 0.0,
+      shake_time_left: 0.0,
+      wormhole_a_x: 0.0, wormhole_a_y: 0.0, wormhole_a_time_left: 0.0,
+      wormhole_b_x: 0.0, wormhole_b_y: 0.0, wormhole_b_time_left: 0.0 }
   end
 
   pfn flash_duration() : Float do 0.45 end
@@ -520,7 +551,18 @@ mod Perihelion do
 
   fn zoom_ease() : Float do 6.0 end
 
-  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float) : Fx do
+  fn explosion_duration() : Float do 0.7 end
+  fn shake_duration() : Float do 0.4 end
+  fn shake_magnitude() : Float do 10.0 end
+  fn explosion_radius() : Float do 90.0 end
+  -- Purely cosmetic per-wormhole-instance duration -- independent of
+  -- Core.jump_transit_duration() (the actual travel-pause length), same
+  -- relationship explosion_duration() has to Core's own death handling.
+  fn wormhole_duration() : Float do 0.45 end
+  fn wormhole_radius() : Float do 70.0 end
+
+  doc "`just_died`/`just_jumped`/`jump_landed` are computed by tick() (comparing the pre/post-update Game pair) since step_fx only ever sees the post-update Game and so can't detect any of these transitions itself."
+  pfn step_fx(fx : Fx, game : Game, dt_s : Float, zoom_target : Float, just_died : Bool, just_jumped : Bool, jump_landed : Bool) : Fx do
     -- Freeze everything cosmetic while paused -- no time advance (stars
     -- stop twinkling), no particle spawn/step (thrust particles would
     -- otherwise re-spawn with an unchanged seed every frame, since t
@@ -540,7 +582,38 @@ mod Perihelion do
         Some((x, y, flash_duration()))
     end
     let zoom2 = fx.zoom + (zoom_target - fx.zoom) * zoom_ease() * dt_s
-    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target }
+    let explosion_time_left2 =
+      if just_died do explosion_duration()
+      else if fx.explosion_time_left > 0.0 do fx.explosion_time_left - dt_s else 0.0 end end
+    let shake_time_left2 =
+      if just_died do shake_duration()
+      else if fx.shake_time_left > 0.0 do fx.shake_time_left - dt_s else 0.0 end end
+    let explosion_x2 = if just_died do game.ball_x else fx.explosion_x end
+    let explosion_y2 = if just_died do game.ball_y else fx.explosion_y end
+    -- Wormhole A's position comes from the JumpTransit itself (the ball's
+    -- own ball_x/ball_y is meaningless as a departure point once landing
+    -- resolves -- it's already the ARRIVAL position by then). Falls back to
+    -- fx's own held value if just_jumped is somehow true without a live
+    -- jump (shouldn't happen, but avoids an unreachable-match panic).
+    let (jump_start_x, jump_start_y) = match game.jump do
+      Some(jt) -> (jt.start_x, jt.start_y)
+      None -> (fx.wormhole_a_x, fx.wormhole_a_y)
+    end
+    let wormhole_a_time_left2 =
+      if just_jumped do wormhole_duration()
+      else if fx.wormhole_a_time_left > 0.0 do fx.wormhole_a_time_left - dt_s else 0.0 end end
+    let wormhole_a_x2 = if just_jumped do jump_start_x else fx.wormhole_a_x end
+    let wormhole_a_y2 = if just_jumped do jump_start_y else fx.wormhole_a_y end
+    let wormhole_b_time_left2 =
+      if jump_landed do wormhole_duration()
+      else if fx.wormhole_b_time_left > 0.0 do fx.wormhole_b_time_left - dt_s else 0.0 end end
+    let wormhole_b_x2 = if jump_landed do game.ball_x else fx.wormhole_b_x end
+    let wormhole_b_y2 = if jump_landed do game.ball_y else fx.wormhole_b_y end
+    { fx with t: t2, particles: particles2, debris: debris2, flash: flash2, zoom: zoom2, zoom_target: zoom_target,
+              explosion_x: explosion_x2, explosion_y: explosion_y2,
+              explosion_time_left: explosion_time_left2, shake_time_left: shake_time_left2,
+              wormhole_a_x: wormhole_a_x2, wormhole_a_y: wormhole_a_y2, wormhole_a_time_left: wormhole_a_time_left2,
+              wormhole_b_x: wormhole_b_x2, wormhole_b_y: wormhole_b_y2, wormhole_b_time_left: wormhole_b_time_left2 }
     end
   end
 
@@ -663,19 +736,24 @@ mod Perihelion do
   -- the capture boundary -- a gameplay-critical read, so it stays the most
   -- legible; inner rings (multi-orbit stars only) are fainter guides the
   -- player can drop to with S.
+  -- Outer (capture) ring vs. inner guide rings get more contrast than they
+  -- used to -- brighter/thicker outer, dimmer inner -- so a multi-ring star
+  -- reads as distinct concentric circles instead of a smoky blur once
+  -- zoomed in (the old 0.28/0.16 alphas sat close enough together that
+  -- overlapping strokes blended into an even haze at 3x).
   pfn draw_orbit_rings(ctx, s : Star, orbits : List(Orbit)) : Unit do
     match orbits do
       Nil -> ()
       Cons(o, Nil) ->
-        Canvas.set_global_alpha(ctx, 0.28)
-        Canvas.set_stroke_style(ctx, "#9a9a9a")
-        Canvas.set_line_width(ctx, 1.0)
+        Canvas.set_global_alpha(ctx, 0.34)
+        Canvas.set_stroke_style(ctx, "#aaaaaa")
+        Canvas.set_line_width(ctx, 1.2)
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, s.x, s.y, o.radius, 0.0, two_pi())
         Canvas.stroke(ctx)
       Cons(o, rest) ->
-        Canvas.set_global_alpha(ctx, 0.16)
-        Canvas.set_stroke_style(ctx, "#8a8a8a")
+        Canvas.set_global_alpha(ctx, 0.11)
+        Canvas.set_stroke_style(ctx, "#787878")
         Canvas.set_line_width(ctx, 1.0)
         Canvas.begin_path(ctx)
         Canvas.arc(ctx, s.x, s.y, o.radius, 0.0, two_pi())
@@ -727,12 +805,8 @@ mod Perihelion do
     end
     -- gameplay cue: highlight a star the ball is approaching
     if star_targeted(s, aim) do draw_target_pulse(ctx, s, t) else () end
-    -- star core
-    Canvas.set_global_alpha(ctx, 1.0)
-    Canvas.set_fill_style(ctx, "#f2f2f2")
-    Canvas.begin_path(ctx)
-    Canvas.arc(ctx, s.x, s.y, s.radius, 0.0, two_pi())
-    Canvas.fill(ctx)
+    -- star core itself is rendered by the batched WebGL pass (draw_star_orbs_gl)
+    -- after every star's rings/pulses have been drawn -- see draw().
   end
 
   -- Single-pass "sin of a dot product" hash, same GLSL-style trick as
@@ -884,6 +958,97 @@ mod Perihelion do
     end
   end
 
+  -- Stars at/above this world-space radius additionally get periodic
+  -- coronal-ejection flares (see WebGL.StarGl.ejections) -- radii range
+  -- 6.0..26.0 (see Level.radius_min/radius_max), so this is the top ~30%,
+  -- a minority of stars.
+  pfn star_ejection_min_radius() : Float do 20.0 end
+
+  pfn to_screen_stars(stars : List(Star), focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.StarGl) do
+    match stars do
+      Nil -> Nil
+      Cons(s, rest) ->
+        Cons({ x: (s.x - focus_x) * zoom + view_w / 2.0, y: (s.y - focus_y) * zoom + view_h / 2.0,
+               radius: s.radius * zoom, seed: hashf(s.x, s.y), ejections: s.radius >= star_ejection_min_radius() },
+             to_screen_stars(rest, focus_x, focus_y, zoom, view_w, view_h))
+    end
+  end
+
+  pfn star_visible(s : Star, cam : Float, view_h : Float) : Bool do
+    s.y < cam + view_h + 100.0 && s.y > cam - 100.0
+  end
+
+  doc "Renders every visible star's swirling orb (+ coronal ejections on the biggest stars) via WebGL and composites it onto ctx -- called after draw_stars' Canvas-2D pass has drawn every star's orbit rings/pulses, so the batched orb composite lands on top of all of them (see docs/superpowers/specs/2026-07-16-swirling-star-shader-design.md). Filters to the same on-screen window draw_stars uses (game.stars is the whole ladder, not just what's visible, and the shader's per-star uniform arrays are capped). Callers must wrap this in `Canvas.save`/`Canvas.reset_transform`/`Canvas.restore` if called while the camera translate/scale is active -- like draw_nebula_gl/draw_explosion_gl, this composites via Canvas.draw_node (drawImage under the hood), which would get double-transformed by an active camera transform since the coordinates below are already mapped to screen space manually. `focus_x`/`focus_y` should already include any death-shake offset (see draw()'s shake_dx/shake_dy) so the orb shakes along with everything else the camera transform affects."
+  pfn draw_star_orbs_gl(ctx, gl_opt : Option(WebGL.Context), stars : List(Star), cam : Float, view_h : Float, focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, t : Float) : Unit do
+    match gl_opt do
+      None -> ()
+      Some(gl) ->
+        let visible = List.filter(stars, fn s -> star_visible(s, cam, view_h))
+        let screen_stars = to_screen_stars(visible, focus_x, focus_y, zoom, view_w, view_h)
+        WebGL.draw_stars(gl, screen_stars, view_w, view_h, t)
+        -- draw_stars' 2D pass (orbit rings/pulses) can leave ctx.globalAlpha
+        -- at whatever a low-alpha stroke last set it to -- reset it so the
+        -- composite blit isn't unintentionally dimmed by leftover state.
+        Canvas.set_global_alpha(ctx, 1.0)
+        Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+    end
+  end
+
+  doc "Composites the death-explosion shockwave (see WebGL.draw_explosion) at its captured world position -- reuses the same offscreen GL canvas draw_nebula_gl does, so this OVERWRITES whatever draw_nebula_gl last rendered into it; safe here since it's always called after both nebula passes have already been blitted onto ctx for this frame."
+  pfn draw_explosion_gl(ctx, gl_opt : Option(WebGL.Context), fx : Fx, cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float) : Unit do
+    if fx.explosion_time_left <= 0.0 do
+      ()
+    else
+      match gl_opt do
+        None -> ()
+        Some(gl) ->
+          let focus_x = cam_x + view_w / 2.0
+          let focus_y = cam_y + view_h / 2.0
+          let sx = (fx.explosion_x - focus_x) * zoom + view_w / 2.0
+          let sy = (fx.explosion_y - focus_y) * zoom + view_h / 2.0
+          let progress = 1.0 - fx.explosion_time_left / explosion_duration()
+          let seed = hashf(fx.explosion_x, fx.explosion_y)
+          WebGL.draw_explosion(gl, sx, sy, explosion_radius() * zoom, progress, seed, view_w, view_h)
+          Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+      end
+    end
+  end
+
+  pfn to_screen_wormholes(fx : Fx, focus_x : Float, focus_y : Float, zoom : Float, view_w : Float, view_h : Float) : List(WebGL.WormholeGl) do
+    let a = if fx.wormhole_a_time_left <= 0.0 do Nil else
+        Cons({ x: (fx.wormhole_a_x - focus_x) * zoom + view_w / 2.0,
+               y: (fx.wormhole_a_y - focus_y) * zoom + view_h / 2.0,
+               radius: wormhole_radius() * zoom,
+               progress: 1.0 - fx.wormhole_a_time_left / wormhole_duration(),
+               seed: hashf(fx.wormhole_a_x, fx.wormhole_a_y) }, Nil)
+      end
+    let b = if fx.wormhole_b_time_left <= 0.0 do Nil else
+        Cons({ x: (fx.wormhole_b_x - focus_x) * zoom + view_w / 2.0,
+               y: (fx.wormhole_b_y - focus_y) * zoom + view_h / 2.0,
+               radius: wormhole_radius() * zoom,
+               progress: 1.0 - fx.wormhole_b_time_left / wormhole_duration(),
+               seed: hashf(fx.wormhole_b_x, fx.wormhole_b_y) + 41.0 }, Nil)
+      end
+    List.append(a, b)
+  end
+
+  doc "Composites the StarJump departure (A) / arrival (B) wormhole instances -- reuses the same offscreen GL canvas draw_nebula_gl/draw_explosion_gl do, so this OVERWRITES whatever was last rendered into it; safe here since it's always called after both nebula passes and the explosion have already been blitted onto ctx for this frame. Both instances batch into one WebGL.draw_wormholes call (see docs/superpowers/specs/2026-07-16-star-jump-wormhole-design.md)."
+  pfn draw_wormholes_gl(ctx, gl_opt : Option(WebGL.Context), fx : Fx, cam_x : Float, cam_y : Float, view_w : Float, view_h : Float, zoom : Float) : Unit do
+    if fx.wormhole_a_time_left <= 0.0 && fx.wormhole_b_time_left <= 0.0 do
+      ()
+    else
+      match gl_opt do
+        None -> ()
+        Some(gl) ->
+          let focus_x = cam_x + view_w / 2.0
+          let focus_y = cam_y + view_h / 2.0
+          let wormholes = to_screen_wormholes(fx, focus_x, focus_y, zoom, view_w, view_h)
+          WebGL.draw_wormholes(gl, wormholes, view_w, view_h, fx.t)
+          Canvas.draw_node(ctx, WebGL.canvas_node(gl), 0.0, 0.0)
+      end
+    end
+  end
+
   pfn draw_stars(ctx, stars : List(Star), cam : Float, view_h : Float, t : Float, aim : Option((Float, Float, Float, Float))) : Unit do
     match stars do
       Nil -> ()
@@ -961,20 +1126,6 @@ mod Perihelion do
     Canvas.rotate(ctx, angle)
     Canvas.draw_image_scaled(ctx, img, 0.0 - size / 2.0, 0.0 - size / 2.0, size, size)
     Canvas.restore(ctx)
-    -- The sprite art itself doesn't distinguish drifting vs. permanently
-    -- orbiting (unlike the procedural fallback's color swap), so a thin
-    -- bright ring keeps that gameplay-relevant read alive.
-    match a.mode do
-      AsteroidDrifting -> ()
-      AsteroidOrbiting(_, _) ->
-        Canvas.set_global_alpha(ctx, 0.6)
-        Canvas.set_stroke_style(ctx, "#e8e8e8")
-        Canvas.set_line_width(ctx, 1.5)
-        Canvas.begin_path(ctx)
-        Canvas.arc(ctx, a.x, a.y, a.radius * 1.3, 0.0, two_pi())
-        Canvas.stroke(ctx)
-        Canvas.set_global_alpha(ctx, 1.0)
-    end
   end
 
   pfn draw_asteroids(ctx, fx : Fx, asteroids : List(Asteroid)) : Unit do
@@ -1032,9 +1183,9 @@ mod Perihelion do
         let top_node = List.nth(fx.enemy_tops, sh.top_idx)
         let mid_node = List.nth(fx.enemy_mids, sh.mid_idx)
         let bot_node = List.nth(fx.enemy_bots, sh.bot_idx)
-        Canvas.draw_node(ctx, top_node, 0.0 - 5.5, 0.0 - 23.0)
-        Canvas.draw_node(ctx, mid_node, 0.0 - 5.5, 0.0 - 8.0)
-        Canvas.draw_node(ctx, bot_node, 0.0 - 5.5, 11.0)
+        Canvas.draw_node(ctx, top_node, 0.0 - 7.0, 0.0 - 30.5)
+        Canvas.draw_node(ctx, mid_node, 0.0 - 7.0, 0.0 - 10.5)
+        Canvas.draw_node(ctx, bot_node, 0.0 - 7.0, 14.5)
         Canvas.restore(ctx)
         draw_ships(ctx, fx, rest)
     end
@@ -1057,6 +1208,10 @@ mod Perihelion do
     end
   end
 
+  pfn star_word(n : Int) : String do
+    if n == 1 do "star" else "stars" end
+  end
+
   pfn draw_runs(ctx, runs : List(RunRecord), view_w : Float, y : Float, i : Int) : Unit do
     if i >= 5 do
       ()
@@ -1067,7 +1222,7 @@ mod Perihelion do
           Canvas.set_font(ctx, "14px sans-serif")
           Canvas.fill_text(ctx,
             int_to_string(r.score) ++ " x" ++ int_to_string(r.max_mult)
-              ++ " · " ++ int_to_string(r.stars) ++ " stars",
+              ++ " · " ++ int_to_string(r.stars) ++ " " ++ star_word(r.stars),
             view_w / 2.0, y)
           draw_runs(ctx, rest, view_w, y + 20.0, i + 1)
       end
@@ -1309,7 +1464,61 @@ mod Perihelion do
     end
   end
 
-  pfn draw_hud(ctx, game : Game, fx : Fx) : Unit do
+  doc "Blurs everything drawn to `ctx` so far by redrawing the canvas onto itself with a CSS blur filter active, then lays a dark translucent rect on top -- used behind the Milestone/Over overlays so their text stays readable over a busy scene instead of sitting directly on top of it. `el` is the game canvas's own Dom.Node (Canvas.draw_node accepts any canvas-like source, including the canvas ctx itself belongs to)."
+  pfn draw_dim_blur_backdrop(ctx, el, view_w : Float, view_h : Float) : Unit do
+    Canvas.set_filter(ctx, "blur(10px)")
+    Canvas.draw_node(ctx, el, 0.0, 0.0)
+    Canvas.set_filter(ctx, "none")
+    Canvas.set_global_alpha(ctx, 0.55)
+    Canvas.set_fill_style(ctx, "#000000")
+    Canvas.fill_rect(ctx, 0.0, 0.0, view_w, view_h)
+    Canvas.set_global_alpha(ctx, 1.0)
+  end
+
+  pfn death_cause_messages(c : DeathCause) : List(String) do
+    match c do
+      DeathNone -> Nil
+      DeathMissed ->
+        Cons("escape velocity: unlocked",
+        Cons("achievement unlocked: deep space",
+        Cons("that maneuver just cost you a few billion years", Nil)))
+      DeathAsteroid ->
+        Cons("they might name this asteroid after you",
+        Cons("congratulations on becoming two dimensional", Nil))
+      DeathEnemyShip ->
+        Cons("space is big. you still found it.", Nil)
+      DeathEnemyShot ->
+        Cons("shot down in your prime",
+        Cons("rail guns aren't toys", Nil))
+    end
+  end
+
+  pfn nth_message(msgs : List(String), i : Int) : String do
+    match msgs do
+      Nil -> ""
+      Cons(m, rest) -> if i <= 0 do m else nth_message(rest, i - 1) end
+    end
+  end
+
+  pfn message_count(msgs : List(String)) : Int do
+    match msgs do
+      Nil -> 0
+      Cons(_, rest) -> 1 + message_count(rest)
+    end
+  end
+
+  doc "A short, randomly-picked 'what killed you' line for the Over screen -- None for DeathNone (shouldn't happen once a run has actually ended, but a missing cause just omits the line rather than showing something wrong). `seed` varies which line from the pool shows; callers pass the death position so it's stable for a given death but varies run to run."
+  pfn death_cause_text(c : DeathCause, seed : Float) : Option(String) do
+    let msgs = death_cause_messages(c)
+    match msgs do
+      Nil -> None
+      Cons(_, _) ->
+        let idx = float_to_int(hashf(seed, 37.0) * int_to_float(message_count(msgs)))
+        Some(nth_message(msgs, idx))
+    end
+  end
+
+  pfn draw_hud(ctx, el, game : Game, fx : Fx) : Unit do
     Canvas.set_fill_style(ctx, "#eeeeee")
     Canvas.set_font(ctx, "18px sans-serif")
     Canvas.set_text_align(ctx, "left")
@@ -1349,10 +1558,23 @@ mod Perihelion do
         Canvas.fill_text(ctx, "tap to start",
                          game.view_w / 2.0, game.view_h / 2.0)
       Over ->
-        Canvas.set_font(ctx, "22px sans-serif")
-        Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
-                         game.view_w / 2.0, game.view_h / 2.0)
-        draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 36.0, 0)
+        if fx.explosion_time_left > 0.0 do
+          ()
+        else
+          draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
+          Canvas.set_fill_style(ctx, "#ffffff")
+          Canvas.set_font(ctx, "22px sans-serif")
+          Canvas.fill_text(ctx, "score " ++ int_to_string(game.score) ++ " — tap to retry",
+                           game.view_w / 2.0, game.view_h / 2.0)
+          Canvas.set_fill_style(ctx, "#cfcfcf")
+          match death_cause_text(game.death_cause, hashf(game.ball_x, game.ball_y)) do
+            None -> ()
+            Some(text) ->
+              Canvas.set_font(ctx, "13px sans-serif")
+              Canvas.fill_text(ctx, text, game.view_w / 2.0, game.view_h / 2.0 + 20.0)
+          end
+          draw_runs(ctx, game.runs, game.view_w, game.view_h / 2.0 + 40.0, 0)
+        end
       Playing ->
         draw_pause_button(ctx, game, game.view_w, game.view_h)
         if game.paused do
@@ -1365,13 +1587,15 @@ mod Perihelion do
           ()
         end
       Milestone ->
+        draw_dim_blur_backdrop(ctx, el, game.view_w, game.view_h)
+        Canvas.set_fill_style(ctx, "#eeeeee")
         Canvas.set_font(ctx, "20px sans-serif")
         Canvas.fill_text(ctx, "Choose an upgrade", game.view_w / 2.0, game.view_h / 2.0 - 90.0)
         draw_milestone_cards(ctx, game.milestone_choices, game.view_w, game.view_h, fx, 0)
     end
   end
 
-  pfn draw(ctx, game : Game, fx : Fx) : Unit do
+  pfn draw(ctx, el, game : Game, fx : Fx) : Unit do
     Canvas.set_global_alpha(ctx, 1.0)
     Canvas.set_fill_style(ctx, "#0a0a0a")
     Canvas.fill_rect(ctx, 0.0, 0.0, game.view_w, game.view_h)
@@ -1384,11 +1608,30 @@ mod Perihelion do
     -- Focus-preserving zoom: translate to viewport center, scale, then
     -- translate back by the pre-zoom view center -- at zoom 1.0 this is
     -- exactly equivalent to the old flat `translate(-camera_x, -camera_y)`.
-    let focus_x = game.camera_x + game.view_w / 2.0
-    let focus_y = game.camera_y + game.view_h / 2.0
+    -- A death shake rides along as an extra jitter on that final
+    -- translate -- shake_time_left is already clamped to exactly 0.0 when
+    -- inactive, so the ratio (and therefore the jitter) is a clean 0 with
+    -- no separate on/off branch needed.
+    -- The un-zoomed focus point is the camera's own view center, not the
+    -- ball directly -- camera_x has a deliberate dead zone (see
+    -- Core.cam_dead_zone) so the ball isn't pinned dead-center during
+    -- normal flight. But zooming in is the player asking for a close look
+    -- at themselves, so as zoom eases from 1x toward the target, blend the
+    -- focus point toward the ball's exact position -- at full zoom the ball
+    -- sits exactly center-screen; at 1x the camera's normal framing (dead
+    -- zone included) is unchanged.
+    let cam_focus_x = game.camera_x + game.view_w / 2.0
+    let cam_focus_y = game.camera_y + game.view_h / 2.0
+    let zoom_blend = Math.max_float(0.0, Math.min_float(1.0,
+      (fx.zoom - zoom_target_low()) / (zoom_target_high() - zoom_target_low())))
+    let focus_x = cam_focus_x + (game.ball_x - cam_focus_x) * zoom_blend
+    let focus_y = cam_focus_y + (game.ball_y - cam_focus_y) * zoom_blend
+    let shake_amount = shake_magnitude() * (fx.shake_time_left / shake_duration())
+    let shake_dx = (hashf(fx.t, 91.0) - 0.5) * 2.0 * shake_amount
+    let shake_dy = (hashf(fx.t, 92.0) - 0.5) * 2.0 * shake_amount
     Canvas.translate(ctx, game.view_w / 2.0, game.view_h / 2.0)
     Canvas.scale(ctx, fx.zoom, fx.zoom)
-    Canvas.translate(ctx, 0.0 - focus_x, 0.0 - focus_y)
+    Canvas.translate(ctx, 0.0 - focus_x + shake_dx, 0.0 - focus_y + shake_dy)
     draw_starfield(ctx, game.camera_x, game.camera_y, game.view_w, game.view_h, seedf, fx.t, clouds)
     -- while flying, mark the stars the ball is heading toward (see star_targeted)
     let aim = match game.mode do
@@ -1396,6 +1639,19 @@ mod Perihelion do
       Orbiting(_, _, _)  -> None
     end
     draw_stars(ctx, game.stars, game.camera_y, game.view_h, fx.t, aim)
+    Canvas.save(ctx)
+    Canvas.reset_transform(ctx)
+    draw_star_orbs_gl(ctx, fx.gl, game.stars, game.camera_y, game.view_h, focus_x - shake_dx, focus_y - shake_dy, fx.zoom, game.view_w, fx.t)
+    Canvas.restore(ctx)
+    -- draw_stars' 2D pass (orbit rings/pulses) can leave ctx.globalAlpha at
+    -- a low value from the last pulse stroke, and Canvas.restore above only
+    -- undoes state from the nested save -- it doesn't touch that. The old
+    -- per-star flat circle fill used to reset this incidentally (it always
+    -- set alpha to 1.0 before filling); replacing it with the batched GL
+    -- orb pass dropped that reset, so everything drawn below (asteroids,
+    -- shots, ...) inherited whatever dim alpha was left over. Reset
+    -- explicitly instead of relying on a side effect.
+    Canvas.set_global_alpha(ctx, 1.0)
     match Perihelion.Core.active_weapon(game) do
       StarKiller -> draw_starkiller_reticle(ctx, game)
       _ -> ()
@@ -1422,10 +1678,20 @@ mod Perihelion do
     draw_particles(ctx, fx.particles)
     draw_debris(ctx, fx, fx.debris)
     Canvas.set_global_alpha(ctx, 1.0)
-    draw_ball(ctx, game, fx)
+    -- The ball isn't drawn at all while a StarJump transit is in progress
+    -- (Core freezes its position/mode but doesn't hide it -- that's a draw
+    -- concern) -- it reappears the instant `jump` resolves back to None,
+    -- which is also exactly when wormhole B blooms in around it (see
+    -- draw_wormholes_gl / step_fx's jump_landed).
+    match game.jump do
+      Some(_) -> ()
+      None -> draw_ball(ctx, game, fx)
+    end
     Canvas.restore(ctx)
     draw_nebula_gl(ctx, fx.gl, fg_clouds, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom, seedf)
-    draw_hud(ctx, game, fx)
+    draw_explosion_gl(ctx, fx.gl, fx, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom)
+    draw_wormholes_gl(ctx, fx.gl, fx, game.camera_x, game.camera_y, game.view_w, game.view_h, fx.zoom)
+    draw_hud(ctx, el, game, fx)
   end
 
   pfn draw_starkiller_reticle(ctx, game : Game) : Unit do
@@ -1526,7 +1792,7 @@ mod Perihelion do
   end
 
   fn zoom_target_low() : Float do 1.0 end
-  fn zoom_target_high() : Float do 3.0 end
+  fn zoom_target_high() : Float do 2.0 end
 
   pfn toggle_zoom_target(target : Float, keys : List(String)) : Float do
     if List.any(keys, fn k -> k == "z" || k == "Z") do
@@ -1539,6 +1805,17 @@ mod Perihelion do
   -- Every trigger here reuses an event the Combat/Core layer already reports
   -- for the visual-effects system (fx_bursts, capture_flash, phase/mode
   -- transitions) -- no game logic exists solely to drive sound.
+  pfn is_shot_orbiting(s : Shot) : Bool do
+    match s.mode do
+      ShotOrbiting(_, _, _) -> true
+      ShotFlying -> false
+    end
+  end
+
+  pfn count_orbiting_shots(shots : List(Shot)) : Int do
+    List.length(List.filter(shots, is_shot_orbiting))
+  end
+
   pfn play_sfx(actx, muted : Bool, game : Game, g2 : Game) : Unit do
     if muted do
       ()
@@ -1552,9 +1829,17 @@ mod Perihelion do
       else
         ()
       end
+      -- Forward progress vs. a backward "rescue" capture get distinct
+      -- tones -- both still flash the same ring, but a rescue is a save,
+      -- not advancement, and reads better as a different sound.
       match g2.capture_flash do
         None -> ()
-        Some(_) -> Audio.sweep(actx, 400.0, 900.0, 0.12, "sine")
+        Some(_) ->
+          if g2.current > game.current do
+            Audio.sweep(actx, 400.0, 900.0, 0.12, "sine")
+          else
+            Audio.sweep(actx, 500.0, 350.0, 0.15, "sine")
+          end
       end
       if List.length(g2.player_shots) > List.length(game.player_shots) do
         Audio.beep(actx, 900.0, 0.05, "square")
@@ -1578,6 +1863,21 @@ mod Perihelion do
       end
       if game.shield == 0 && g2.shield > 0 do
         Audio.beep(actx, 700.0, 0.06, "sine")
+      else
+        ()
+      end
+      if g2.pickup_collected do
+        Audio.beep(actx, 1100.0, 0.05, "sine")
+      else
+        ()
+      end
+      if is_milestone_phase(g2.phase) && !is_milestone_phase(game.phase) do
+        Audio.sweep(actx, 600.0, 1200.0, 0.25, "sine")
+      else
+        ()
+      end
+      if count_orbiting_shots(g2.player_shots) > count_orbiting_shots(game.player_shots) do
+        Audio.sweep(actx, 900.0, 1400.0, 0.18, "square")
       else
         ()
       end
@@ -1691,15 +1991,36 @@ mod Perihelion do
     end
     let muted2 = toggle_mute(fx.muted, keys)
     let zoom_target2 = toggle_zoom_target(fx.zoom_target, keys)
+    let just_died = was_playing(game) && is_over_phase(g2)
+    let died_by_impact = match g2.death_cause do
+      DeathMissed -> false
+      DeathNone -> false
+      _ -> true
+    end
+    let just_exploded = just_died && died_by_impact
+    let just_jumped = match game.jump do
+      None -> match g2.jump do
+        Some(_) -> true
+        None -> false
+      end
+      Some(_) -> false
+    end
+    let jump_landed = match game.jump do
+      Some(_) -> match g2.jump do
+        None -> true
+        Some(_) -> false
+      end
+      None -> false
+    end
     play_sfx(fx.actx, muted2, game, g2)
-    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2)
+    let fx1 = step_fx(fx, g2, Perihelion.Core.dt(), zoom_target2, just_exploded, just_jumped, jump_landed)
     let fx2 = { fx1 with muted: muted2 }
-    if was_playing(game) && is_over_phase(g2) do
+    if just_died do
       Dom.store_set("perihelion.v1", Perihelion.Core.encode_save(g2.best, g2.runs))
     else
       ()
     end
-    draw(ctx, g2, fx2)
+    draw(ctx, el, g2, fx2)
     Dom.on_frame(fn _ -> tick(ctx, el, g2, fx2))
   end
 

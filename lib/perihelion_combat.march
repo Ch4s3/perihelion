@@ -70,10 +70,35 @@ mod Perihelion.Combat do
   type Pickup = { x : Float, y : Float, ttl : Float, kind : Perihelion.Upgrades.UpgradeKind }
 
   -- ── Tuning constants ─────────────────────────────────────────────────
+  -- Base asteroid spawn interval -- the opening-seconds ease-in this used to
+  -- do via a score-based ramp is now the Director's job (Relax phase's
+  -- relax_asteroid_mult(), adaptive to streaks/damage rather than a flat
+  -- score curve): see Perihelion.Director.asteroid_interval_mult, applied
+  -- to this base value in step_asteroid_spawn.
   fn asteroid_interval() : Float do 4.0 end
   fn asteroid_jitter() : Float do 1.0 end
   fn asteroid_speed() : Float do 90.0 end
   fn asteroid_radius() : Float do 10.0 end
+  -- Splitting means a shot kill nets +1 live asteroid (1 dies, 2 spawn), so
+  -- population would climb unbounded over a run without a cap.
+  fn asteroid_max_count() : Int do 10 end
+  -- A shot-killed asteroid at/above asteroid_radius() (i.e. hasn't already
+  -- split) breaks into asteroid_split_count() smaller live asteroids instead
+  -- of just dying into cosmetic debris -- fragments spawn below that radius,
+  -- so they don't split again when killed (see collide_shots_asteroids).
+  fn asteroid_split_count() : Int do 2 end
+  -- Only this fraction of full-size kills split; the rest just die into
+  -- cosmetic debris like before.
+  fn asteroid_split_chance() : Float do 0.25 end
+  fn asteroid_fragment_radius() : Float do asteroid_radius() * 0.6 end
+  fn asteroid_fragment_speed_mult() : Float do 1.3 end
+  -- Each fragment's heading is the parent's own heading rotated by a random
+  -- offset in [-spread, spread] radians -- ~69 degrees each side at 1.2.
+  fn asteroid_fragment_spread() : Float do 1.2 end
+  -- How much of the killing shot's own velocity gets added to the parent's
+  -- velocity before fragments are spawned -- a fast/glancing shot visibly
+  -- knocks fragments off in its own direction, not just the parent's.
+  fn asteroid_shot_momentum_mult() : Float do 0.5 end
   -- Gravity-like arc toward the nearest star within range (matches the
   -- player's own assisted_velocity shape: bend, then renormalize so bending
   -- never changes speed).
@@ -130,6 +155,11 @@ mod Perihelion.Combat do
   fn pickup_radius() : Float do 12.0 end
   fn ball_radius() : Float do 6.0 end
   fn starkiller_cooldown_seconds() : Float do 12.0 end
+
+  doc "StarKiller's own (much longer) cooldown, scaled by the same fire_rate_stacks reduction the other weapons already get -- OffenseFireRate previously only sped up Base/Homing/Spread via effective_fire_cooldown, leaving StarKiller's cooldown a flat constant. Applies the same proportional cut effective_fire_cooldown got (its ratio to the unstacked base cooldown) rather than a separate stack constant, so one upgrade speeds up every weapon by a matching amount."
+  fn effective_starkiller_cooldown(game : Game) : Float do
+    starkiller_cooldown_seconds() * (effective_fire_cooldown(game) / player_fire_cooldown())
+  end
   fn star_kill_radius() : Float do 20.0 end
 
   doc "Which ladder index the star-killer reticle currently sits on: current+1..current+3, clamped to the ladder's real length."
@@ -191,6 +221,8 @@ mod Perihelion.Combat do
     let t = d.asteroid_spawn_timer - dt_s
     if t > 0.0 do
       { game with director: { d with asteroid_spawn_timer: t } }
+    else if List.length(game.asteroids) >= asteroid_max_count() do
+      { game with director: { d with asteroid_spawn_timer: 0.0 } }
     else
       let (r1, side_f) = draw(game.rng)
       let (r2, y_f) = draw(r1)
@@ -198,7 +230,12 @@ mod Perihelion.Combat do
       let (r4, next_f) = draw(r3)
       let (r5, shape_f) = draw(r4)
       let from_left = side_f < 0.5
-      let x = if from_left do 0.0 - 20.0 else game.view_w + 20.0 end
+      -- camera_x pans horizontally (dead-zone follow), so the visible
+      -- viewport is [camera_x, camera_x + view_w] in world space, not
+      -- [0, view_w] -- spawning at a literal 0/view_w offset would land
+      -- inside the viewport (or the wrong side of it) as soon as the
+      -- camera has panned any distance.
+      let x = if from_left do game.camera_x - 20.0 else game.camera_x + game.view_w + 20.0 end
       let y = game.camera_y + y_f * game.view_h
       -- aim across the screen with +/-30 degree vertical jitter
       let jitter = (ang_f - 0.5) * 1.0472
@@ -211,6 +248,7 @@ mod Perihelion.Combat do
           asteroids: Cons(a, game.asteroids),
           rng: r5,
           director: { d with asteroid_spawn_timer: interval + (next_f - 0.5) * 2.0 * asteroid_jitter() } }
+    end
     end
   end
 
@@ -229,7 +267,7 @@ mod Perihelion.Combat do
 
   pfn in_band(game : Game, x : Float, y : Float) : Bool do
     y > game.camera_y - 100.0 && y < game.camera_y + game.view_h + 100.0
-    && x > 0.0 - 100.0 && x < game.view_w + 100.0
+    && x > game.camera_x - 100.0 && x < game.camera_x + game.view_w + 100.0
   end
 
   fn homing_turn_rate() : Float do 4.5 end
@@ -307,11 +345,17 @@ mod Perihelion.Combat do
   -- ── Homing missile orbit-capture ────────────────────────────────────
   -- A homing shot that grazes a star at a near-tangential angle has a
   -- chance to get pulled into a temporary orbit -- a bonus for a good-angle
-  -- shot, not something to rely on (see missile_orbit_chance). Stays fully
-  -- live in collision checks the whole time it orbits (a brief automated
-  -- turret circling the star), then breaks free tangentially with its
-  -- pre-capture speed once missile_orbit_duration() runs out.
-  fn missile_orbit_chance() : Float do 0.25 end
+  -- shot, not something to rely on (see missile_orbit_chance). While
+  -- orbiting it actively steers toward the nearest asteroid or ship also
+  -- orbiting that SAME star (see seek_orbit_angle) instead of just
+  -- circling blind -- a brief automated turret hunting its own ring --
+  -- then breaks free tangentially with its pre-capture speed once
+  -- missile_orbit_duration() runs out.
+  -- Firing while the player's own ball orbits a star naturally aims most
+  -- shots near-tangentially at that SAME star, so capture was rolled on
+  -- nearly every missile fired from orbit -- lowered so a missile isn't
+  -- captured quite so readily right out of the barrel.
+  fn missile_orbit_chance() : Float do 0.15 end
   fn missile_orbit_duration() : Float do 2.0 end
   fn missile_orbit_angular_speed() : Float do 2.2 end
   -- Settles a little inside the visible capture ring, same reasoning as
@@ -359,6 +403,83 @@ mod Perihelion.Combat do
     (0.0 - Math.sin(angle) * speed, Math.cos(angle) * speed)
   end
 
+  -- Signed shortest angular distance from `b` to `a`, wrapped to (-pi, pi] --
+  -- the atan2(sin, cos) trick avoids needing a floor/mod builtin.
+  pfn wrap_angle_diff(a : Float, b : Float) : Float do
+    let d = a - b
+    Math.atan2(Math.sin(d), Math.cos(d))
+  end
+
+  -- An asteroid's own orbit angle around star `idx`, if it's currently
+  -- orbiting that SAME star -- None otherwise (drifting, or orbiting a
+  -- different one).
+  pfn asteroid_orbit_angle_on(idx : Int, a : Asteroid) : Option(Float) do
+    match a.mode do
+      AsteroidDrifting -> None
+      AsteroidOrbiting(aidx, aangle) -> if aidx == idx do Some(aangle) else None end
+    end
+  end
+
+  pfn ship_orbit_angle_on(idx : Int, sh : Ship) : Option(Float) do
+    match sh.mode do
+      ShipFlying(_, _) -> None
+      ShipOrbiting(_, sangle) -> if sh.star_idx == idx do Some(sangle) else None end
+    end
+  end
+
+  -- Folds a list down to whichever candidate angle (if any) is angularly
+  -- closest to `current_angle`, keeping `best` if nothing beats it.
+  pfn closer_orbit_angle(current_angle : Float, candidate : Option(Float), best : Option(Float)) : Option(Float) do
+    match candidate do
+      None -> best
+      Some(c) ->
+        match best do
+          None -> Some(c)
+          Some(b) ->
+            if fabs(wrap_angle_diff(c, current_angle)) < fabs(wrap_angle_diff(b, current_angle)) do Some(c) else Some(b) end
+        end
+    end
+  end
+
+  pfn nearest_orbit_mate_angle_ast(idx : Int, current_angle : Float, asteroids : List(Asteroid), best : Option(Float)) : Option(Float) do
+    match asteroids do
+      Nil -> best
+      Cons(a, rest) ->
+        let best2 = closer_orbit_angle(current_angle, asteroid_orbit_angle_on(idx, a), best)
+        nearest_orbit_mate_angle_ast(idx, current_angle, rest, best2)
+    end
+  end
+
+  pfn nearest_orbit_mate_angle_ship(idx : Int, current_angle : Float, ships : List(Ship), best : Option(Float)) : Option(Float) do
+    match ships do
+      Nil -> best
+      Cons(sh, rest) ->
+        let best2 = closer_orbit_angle(current_angle, ship_orbit_angle_on(idx, sh), best)
+        nearest_orbit_mate_angle_ship(idx, current_angle, rest, best2)
+    end
+  end
+
+  doc "The orbit angle of the nearest asteroid or ship ALSO currently orbiting star `idx`, if any -- lets an orbiting missile steer toward prey sharing its own ring instead of just circling at a fixed rate."
+  pfn nearest_orbit_mate_angle(idx : Int, current_angle : Float, asteroids : List(Asteroid), ships : List(Ship)) : Option(Float) do
+    let best_a = nearest_orbit_mate_angle_ast(idx, current_angle, asteroids, None)
+    nearest_orbit_mate_angle_ship(idx, current_angle, ships, best_a)
+  end
+
+  -- The orbiting missile's next angle: steers toward the nearest orbit-mate
+  -- (see nearest_orbit_mate_angle) at up to missile_orbit_angular_speed()
+  -- radians/sec, snapping to the target once within one step so it doesn't
+  -- oscillate past it. Falls back to the old fixed CCW sweep when nothing
+  -- shares its ring.
+  pfn seek_orbit_angle(idx : Int, angle : Float, asteroids : List(Asteroid), ships : List(Ship), dt_s : Float) : Float do
+    match nearest_orbit_mate_angle(idx, angle, asteroids, ships) do
+      None -> angle + missile_orbit_angular_speed() * dt_s
+      Some(target) ->
+        let diff = wrap_angle_diff(target, angle)
+        let step = missile_orbit_angular_speed() * dt_s
+        if fabs(diff) < step do target else angle + (if diff > 0.0 do step else 0.0 - step end) end
+    end
+  end
+
   doc "Ages player shots one at a time, threading `game` as the fold accumulator for its `rng` (capture rolls) -- same shape as step_asteroids_go/step_ships_go. Handles both flight (move + home + roll for orbit-capture) and the temporary orbit itself."
   pfn age_player_shots_go(game : Game, shots : List(Shot), acc : List(Shot), dt_s : Float) : Game do
     match shots do
@@ -385,7 +506,7 @@ mod Perihelion.Combat do
                   let s2 = { s with vx: bvx, vy: bvy, ttl: ttl2, mode: ShotFlying }
                   age_player_shots_go(game, rest, Cons(s2, acc), dt_s)
                 else
-                  let angle2 = angle + missile_orbit_angular_speed() * dt_s
+                  let angle2 = seek_orbit_angle(idx, angle, game.asteroids, game.ships, dt_s)
                   let r = star.capture_radius * missile_orbit_radius_mult()
                   let s2 = { s with
                                x: star.x + Math.cos(angle2) * r,
@@ -749,11 +870,22 @@ mod Perihelion.Combat do
   -- trajectory enough to turn it into a capture. No recoil while orbiting
   -- (the ball's position there is locked to the orbit formula, not velocity).
   fn recoil_strength() : Float do 14.0 end
+  -- Spread fires spread_shot_count() (5) shots in one go -- it should feel
+  -- like a real kick between stars, not the same nudge a single Base shot
+  -- gives.
+  fn spread_recoil_mult() : Float do 1.5 end
 
-  pfn apply_recoil(game : Game, ax : Float, ay : Float) : Game do
+  pfn recoil_mult_for(weapon : Perihelion.Upgrades.WeaponKind) : Float do
+    match weapon do
+      Spread -> spread_recoil_mult()
+      _ -> 1.0
+    end
+  end
+
+  pfn apply_recoil(game : Game, ax : Float, ay : Float, mult : Float) : Game do
     match game.mode do
       Orbiting(_, _, _) -> game
-      Flying(vx, vy) -> { game with mode: Flying(vx - ax * recoil_strength(), vy - ay * recoil_strength()) }
+      Flying(vx, vy) -> { game with mode: Flying(vx - ax * recoil_strength() * mult, vy - ay * recoil_strength() * mult) }
     end
   end
 
@@ -793,65 +925,70 @@ mod Perihelion.Combat do
   end
 
   fn fire(game : Game, keys : List(String), cursor : (Int, Int), _dt_s : Float) : Game do
-    let pressed = List.any(keys, fn k -> k == " ")
-    if !pressed || game.fire_cooldown > 0.0 || starkiller_on_cooldown(game) do
-      game
-    else
-      let (cx, cy) = cursor
-      -- cursor is screen-space; camera_x/camera_y pan the world beneath it
-      -- (dead-zone horizontal pan + vertical follow), so both need the
-      -- offset to recover the cursor's world-space position.
-      let cursor_world_x = int_to_float(cx) + game.camera_x
-      let cursor_world_y = int_to_float(cy) + game.camera_y
-      let dx = cursor_world_x - game.ball_x
-      let dy = cursor_world_y - game.ball_y
-      let dist = Math.sqrt(dx * dx + dy * dy)
-      let aim = if dist > 0.0 do Some((dx / dist, dy / dist)) else fire_fallback_aim(game) end
-      match aim do
-        None -> game
-        Some(pair) ->
-          let (ax, ay) = pair
-          let g2 = apply_recoil(game, ax, ay)
-          let new_shots = match Perihelion.Core.active_weapon(game) do
-            Base -> Cons(make_shot(game.ball_x, game.ball_y, ax, ay), Nil)
-            Homing -> Cons(make_homing_shot(game.ball_x, game.ball_y, ax, ay), Nil)
-            Spread -> spread_shots(game.ball_x, game.ball_y, ax, ay)
-            StarKiller ->
-              -- The outer guard already excluded starkiller_cooldown > 0.0,
-              -- so this always attempts to fire when reached. Lock the
-              -- target star's position into the shot NOW (target_x/target_y)
-              -- so a later W/D retarget can't desync this shot from what it
-              -- actually flies toward (see collide_shots_stars).
-              match Perihelion.Core.star_at(game, starkiller_target_idx(game)) do
-                None -> Nil
-                Some(target) ->
-                  let tdx = target.x - game.ball_x
-                  let tdy = target.y - game.ball_y
-                  let tdist = Math.sqrt(tdx * tdx + tdy * tdy)
-                  if tdist <= 0.0 do Nil else
-                    Cons({ x: game.ball_x, y: game.ball_y,
-                           vx: (tdx / tdist) * player_shot_speed(),
-                           vy: (tdy / tdist) * player_shot_speed(),
-                           ttl: shot_ttl() * 3.0, homing: false, star_killer: true,
-                           target_x: target.x, target_y: target.y, mode: ShotFlying }, Nil)
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- no firing until it lands
+      None ->
+        let pressed = List.any(keys, fn k -> k == " ")
+        if !pressed || game.fire_cooldown > 0.0 || starkiller_on_cooldown(game) do
+          game
+        else
+          let (cx, cy) = cursor
+          -- cursor is screen-space; camera_x/camera_y pan the world beneath it
+          -- (dead-zone horizontal pan + vertical follow), so both need the
+          -- offset to recover the cursor's world-space position.
+          let cursor_world_x = int_to_float(cx) + game.camera_x
+          let cursor_world_y = int_to_float(cy) + game.camera_y
+          let dx = cursor_world_x - game.ball_x
+          let dy = cursor_world_y - game.ball_y
+          let dist = Math.sqrt(dx * dx + dy * dy)
+          let aim = if dist > 0.0 do Some((dx / dist, dy / dist)) else fire_fallback_aim(game) end
+          match aim do
+            None -> game
+            Some(pair) ->
+              let (ax, ay) = pair
+              let weapon = Perihelion.Core.active_weapon(game)
+              let g2 = apply_recoil(game, ax, ay, recoil_mult_for(weapon))
+              let new_shots = match weapon do
+                Base -> Cons(make_shot(game.ball_x, game.ball_y, ax, ay), Nil)
+                Homing -> Cons(make_homing_shot(game.ball_x, game.ball_y, ax, ay), Nil)
+                Spread -> spread_shots(game.ball_x, game.ball_y, ax, ay)
+                StarKiller ->
+                  -- The outer guard already excluded starkiller_cooldown > 0.0,
+                  -- so this always attempts to fire when reached. Lock the
+                  -- target star's position into the shot NOW (target_x/target_y)
+                  -- so a later W/D retarget can't desync this shot from what it
+                  -- actually flies toward (see collide_shots_stars).
+                  match Perihelion.Core.star_at(game, starkiller_target_idx(game)) do
+                    None -> Nil
+                    Some(target) ->
+                      let tdx = target.x - game.ball_x
+                      let tdy = target.y - game.ball_y
+                      let tdist = Math.sqrt(tdx * tdx + tdy * tdy)
+                      if tdist <= 0.0 do Nil else
+                        Cons({ x: game.ball_x, y: game.ball_y,
+                               vx: (tdx / tdist) * player_shot_speed(),
+                               vy: (tdy / tdist) * player_shot_speed(),
+                               ttl: shot_ttl() * 3.0, homing: false, star_killer: true,
+                               target_x: target.x, target_y: target.y, mode: ShotFlying }, Nil)
+                      end
                   end
               end
+              -- StarKiller shouldn't ALSO reset the normal fire_cooldown -- it
+              -- has its own, much longer cooldown that gates it instead.
+              let cooldown2 = match Perihelion.Core.active_weapon(game) do
+                StarKiller -> game.fire_cooldown -- unchanged; starkiller_cooldown gates it instead
+                _ -> effective_fire_cooldown(game)
+              end
+              let starkiller_cd2 = match Perihelion.Core.active_weapon(game) do
+                StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else effective_starkiller_cooldown(game) end
+                _ -> game.starkiller_cooldown
+              end
+              { g2 with
+                  player_shots: List.append(g2.player_shots, new_shots),
+                  fire_cooldown: cooldown2,
+                  starkiller_cooldown: starkiller_cd2 }
           end
-          -- StarKiller shouldn't ALSO reset the normal fire_cooldown -- it
-          -- has its own, much longer cooldown that gates it instead.
-          let cooldown2 = match Perihelion.Core.active_weapon(game) do
-            StarKiller -> game.fire_cooldown -- unchanged; starkiller_cooldown gates it instead
-            _ -> effective_fire_cooldown(game)
-          end
-          let starkiller_cd2 = match Perihelion.Core.active_weapon(game) do
-            StarKiller -> if List.is_empty(new_shots) do game.starkiller_cooldown else starkiller_cooldown_seconds() end
-            _ -> game.starkiller_cooldown
-          end
-          { g2 with
-              player_shots: List.append(g2.player_shots, new_shots),
-              fire_cooldown: cooldown2,
-              starkiller_cooldown: starkiller_cd2 }
-      end
+        end
     end
   end
 
@@ -947,28 +1084,91 @@ mod Perihelion.Combat do
     if raw > Perihelion.Core.mult_cap() do Perihelion.Core.mult_cap() else raw end
   end
 
-  doc "Kills of one type without an intervening kill of the OTHER type build a streak; crossing every ship_kill_streak_threshold()/asteroid_kill_streak_threshold() re-bumps the multiplier (capped, same field/decay as the star-capture combo -- a slow/backward capture resets it to 1)."
+  -- Rotates (vx, vy)'s heading by a random offset in [-spread, spread]
+  -- (drawn from rng) and scales it by asteroid_fragment_speed_mult(),
+  -- falling back to asteroid_speed() if the parent was somehow stationary.
+  pfn spawn_fragment(x : Float, y : Float, vx : Float, vy : Float, rng : Random.Rng) : (Random.Rng, Asteroid) do
+    let (r1, angle_f) = draw(rng)
+    let (r2, shape_f) = draw(r1)
+    let speed = Math.sqrt(vx * vx + vy * vy)
+    let s = if speed > 0.0 do speed else asteroid_speed() end
+    let base_angle = Math.atan2(vy, vx)
+    let offset = (angle_f - 0.5) * 2.0 * asteroid_fragment_spread()
+    let a2 = base_angle + offset
+    let fvx = Math.cos(a2) * s * asteroid_fragment_speed_mult()
+    let fvy = Math.sin(a2) * s * asteroid_fragment_speed_mult()
+    (r2, { x: x, y: y, vx: fvx, vy: fvy, radius: asteroid_fragment_radius(), shape_seed: shape_f, mode: AsteroidDrifting })
+  end
+
+  pfn spawn_fragments_n(x : Float, y : Float, vx : Float, vy : Float, rng : Random.Rng, n : Int, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
+    if n <= 0 do
+      (rng, acc)
+    else
+      let (rng2, frag) = spawn_fragment(x, y, vx, vy, rng)
+      spawn_fragments_n(x, y, vx, vy, rng2, n - 1, Cons(frag, acc))
+    end
+  end
+
+  -- The killing shot's own velocity, blended into the parent's before
+  -- fragments are spawned -- falls back to the parent's own velocity
+  -- untouched if no shot matched (shouldn't happen for a `dead` asteroid,
+  -- but keeps this total).
+  pfn momentum_velocity(a : Asteroid, killer_shots : List(Shot)) : (Float, Float) do
+    match List.find(killer_shots, fn s -> shot_hits_at(s, a.x, a.y, a.radius)) do
+      None -> (a.vx, a.vy)
+      Some(s) ->
+        (a.vx + s.vx * asteroid_shot_momentum_mult(), a.vy + s.vy * asteroid_shot_momentum_mult())
+    end
+  end
+
+  -- Only asteroids at/above asteroid_radius() are eligible to split
+  -- (fragments spawn smaller, so this naturally terminates the chain after
+  -- one level), and even then only asteroid_split_chance() of the time --
+  -- the rest just die into cosmetic debris like before.
+  pfn spawn_fragments_for_dead(dead : List(Asteroid), killer_shots : List(Shot), rng : Random.Rng, acc : List(Asteroid)) : (Random.Rng, List(Asteroid)) do
+    match dead do
+      Nil -> (rng, acc)
+      Cons(a, rest) ->
+        if a.radius >= asteroid_radius() do
+          let (r1, chance_f) = draw(rng)
+          if chance_f < asteroid_split_chance() do
+            let (mvx, mvy) = momentum_velocity(a, killer_shots)
+            let (rng2, acc2) = spawn_fragments_n(a.x, a.y, mvx, mvy, r1, asteroid_split_count(), acc)
+            spawn_fragments_for_dead(rest, killer_shots, rng2, acc2)
+          else
+            spawn_fragments_for_dead(rest, killer_shots, r1, acc)
+          end
+        else
+          spawn_fragments_for_dead(rest, killer_shots, rng, acc)
+        end
+    end
+  end
+
+  doc "Kills of one type without an intervening kill of the OTHER type build a streak; crossing every ship_kill_streak_threshold()/asteroid_kill_streak_threshold() re-bumps the multiplier (capped, same field/decay as the star-capture combo -- a slow/backward capture resets it to 1). Full-size kills also spawn live fragments (see spawn_fragments_for_dead) -- scoring is unchanged either way, since fragments are just new Asteroid entries added to `alive`, not scored on spawn."
   pfn collide_shots_asteroids(game : Game) : Game do
     let (dead, alive) = List.partition(game.asteroids, fn a ->
       List.any(game.player_shots, fn s -> shot_hits_at(s, a.x, a.y, a.radius)))
     let shots = List.filter(game.player_shots, fn s ->
       !List.any(game.asteroids, fn a -> shot_hits_at(s, a.x, a.y, a.radius)))
     let killed = List.length(dead)
+    let (rng2, fragments) = spawn_fragments_for_dead(dead, game.player_shots, game.rng, Nil)
+    let alive2 = List.append(alive, fragments)
     if killed == 0 do
-      { game with asteroids: alive, player_shots: shots, fx_bursts: burst_points(dead) }
+      { game with asteroids: alive2, player_shots: shots, fx_bursts: burst_points(dead), rng: rng2 }
     else
       let new_streak = game.asteroid_kill_streak + killed
       let bumps = streak_bumps(game.asteroid_kill_streak, new_streak, asteroid_kill_streak_threshold())
       let new_mult = bump_multiplier(game.multiplier, bumps)
       { game with
-          asteroids: alive,
+          asteroids: alive2,
           player_shots: shots,
           score: game.score + killed * new_mult,
           fx_bursts: burst_points(dead),
           asteroid_kill_streak: new_streak,
           ship_kill_streak: 0,
           multiplier: new_mult,
-          max_mult: if new_mult > game.max_mult do new_mult else game.max_mult end }
+          max_mult: if new_mult > game.max_mult do new_mult else game.max_mult end,
+          rng: rng2 }
     end
   end
 
@@ -1039,6 +1239,9 @@ mod Perihelion.Combat do
   end
 
   pfn collide_ball_pickups(game : Game) : Game do
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- not physically present to pick anything up
+      None ->
     match List.find(game.pickups, fn p -> ball_on_pickup(game, p)) do
       None -> game
       Some(p) ->
@@ -1048,8 +1251,8 @@ mod Perihelion.Combat do
         match p.kind do
           SpecialItem(_) ->
             match game.special do
-              None -> { (Perihelion.Core.apply_upgrade(game, p.kind)) with pickups: remaining }
-              Some(_) -> { game with pickups: remaining, phase: Perihelion.Core.Milestone, milestone_choices: Cons(p.kind, Nil) }
+              None -> { (Perihelion.Core.apply_upgrade(game, p.kind)) with pickups: remaining, pickup_collected: true }
+              Some(_) -> { game with pickups: remaining, phase: Perihelion.Core.Milestone, milestone_choices: Cons(p.kind, Nil), pickup_collected: true }
             end
           DefenseShield ->
             -- preserves the pre-Task-9 "reinforced shield grants 2 charges
@@ -1059,9 +1262,10 @@ mod Perihelion.Combat do
             -- reinforced flag, which is correct for a milestone *choice* but
             -- would silently drop the doubling for a physical *pickup*.
             let grant = if game.shield_reinforced do 2 else 1 end
-            { game with shield: game.shield + grant, pickups: remaining }
-          _ -> { (Perihelion.Core.apply_upgrade(game, p.kind)) with pickups: remaining }
+            { game with shield: game.shield + grant, pickups: remaining, pickup_collected: true }
+          _ -> { (Perihelion.Core.apply_upgrade(game, p.kind)) with pickups: remaining, pickup_collected: true }
         end
+    end
     end
   end
 
@@ -1085,27 +1289,43 @@ mod Perihelion.Combat do
   end
 
   pfn collide_ball_hazards(game : Game) : Game do
-    let shot_hit = List.any(game.enemy_shots, fn s -> ball_hits_shot(game, s))
-    if shot_hit && game.bullet_ward do
-      { game with
-          bullet_ward: false,
-          enemy_shots: List.filter(game.enemy_shots, fn s -> !ball_hits_shot(game, s)) }
-    else
-      let ast_hit = List.any(game.asteroids, fn a -> ball_hits_asteroid(game, a))
-      let ship_hit = List.any(game.ships, fn sh -> ball_hits_ship(game, sh))
-      if !(ast_hit || shot_hit || ship_hit) do
-        game
-      else
-        if ast_hit && !shot_hit && !ship_hit && game.deflector_plating do
-          let (rng2, deflected) = deflector_roll(game)
-          if deflected do
-            { game with rng: rng2 }
-          else
-            collide_ball_hazards_shield_or_die({ game with rng: rng2 })
-          end
+    match game.jump do
+      Some(_) -> game -- ball is mid-JumpTransit -- invulnerable until it lands
+      None ->
+        let shot_hit = List.any(game.enemy_shots, fn s -> ball_hits_shot(game, s))
+        if shot_hit && game.bullet_ward do
+          { game with
+              bullet_ward: false,
+              enemy_shots: List.filter(game.enemy_shots, fn s -> !ball_hits_shot(game, s)) }
         else
-          collide_ball_hazards_shield_or_die(game)
+          let ast_hit = List.any(game.asteroids, fn a -> ball_hits_asteroid(game, a))
+          let ship_hit = List.any(game.ships, fn sh -> ball_hits_ship(game, sh))
+          if !(ast_hit || shot_hit || ship_hit) do
+            game
+          else
+            if ast_hit && !shot_hit && !ship_hit && game.deflector_plating do
+              let (rng2, deflected) = deflector_roll(game)
+              if deflected do
+                { game with rng: rng2 }
+              else
+                collide_ball_hazards_shield_or_die({ game with rng: rng2 })
+              end
+            else
+              collide_ball_hazards_shield_or_die(game)
+            end
+          end
         end
+    end
+  end
+
+  pfn ball_death_cause(game : Game) : Perihelion.Core.DeathCause do
+    if List.any(game.asteroids, fn a -> ball_hits_asteroid(game, a)) do
+      Perihelion.Core.DeathAsteroid
+    else
+      if List.any(game.ships, fn sh -> ball_hits_ship(game, sh)) do
+        Perihelion.Core.DeathEnemyShip
+      else
+        Perihelion.Core.DeathEnemyShot
       end
     end
   end
@@ -1121,7 +1341,7 @@ mod Perihelion.Combat do
           ships: List.filter(game.ships, fn sh -> !ball_hits_ship(game, sh)),
           fx_bursts: List.append(game.fx_bursts, burst_points(dead_ast)) }
     else
-      Perihelion.Core.end_run(game)
+      Perihelion.Core.end_run(game, ball_death_cause(game))
     end
   end
 
@@ -1147,13 +1367,35 @@ mod Perihelion.Combat do
     end
   end
 
-  -- A hunter: spawns orbiting the star just BELOW the player's current star
-  -- (index current-1, i.e. behind), then jumps star-to-star toward the player.
+  -- Consecutive stars are much closer together than the screen is tall, so
+  -- the literal "one rung behind" star is usually still on screen -- search
+  -- backward from `from_idx` for the nearest star actually below the
+  -- visible bottom edge (a hunter should always pop in off camera, then
+  -- visibly jump toward the player, not appear already in view).
+  pfn find_offscreen_star(game : Game, idx : Int) : Option((Int, Star)) do
+    if idx < 0 do
+      None
+    else
+      match Perihelion.Core.star_at(game, idx) do
+        None -> None
+        Some(s) ->
+          if s.y > game.camera_y + game.view_h do
+            Some((idx, s))
+          else
+            find_offscreen_star(game, idx - 1)
+          end
+      end
+    end
+  end
+
+  -- A hunter: spawns orbiting the nearest off-camera star behind the player
+  -- (see find_offscreen_star), then jumps star-to-star toward the player.
   pfn spawn_hunter(game : Game, rng : Random.Rng) : Game do
-    let idx = if game.current > 0 do game.current - 1 else 0 end
-    match Perihelion.Core.star_at(game, idx) do
+    let start_idx = if game.current > 0 do game.current - 1 else 0 end
+    match find_offscreen_star(game, start_idx) do
       None -> { game with rng: rng }
-      Some(s) ->
+      Some(pair) ->
+        let (idx, s) = pair
         let (rng2, idle_f) = draw(rng)
         let (rng3, ring_idx) = pick_ring_idx(rng2, s)
         let (rng4, top_idx, mid_idx, bot_idx) = roll_ship_art(rng3)

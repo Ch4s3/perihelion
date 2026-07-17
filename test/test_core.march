@@ -60,7 +60,7 @@ mod TestPerihelionCore do
       stars_chained: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
-      fx_bursts: Nil, capture_flash: None, paused: false }
+      fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone, jump: None }
   end
 
   pfn is_playing(p : Phase) : Bool do
@@ -109,6 +109,18 @@ mod TestPerihelionCore do
   -- non-default fields like stars_chained already set) rather than a fresh mk_game(0.0).
   pfn mk_flying_from(base : Game, bx : Float, by_ : Float, vx : Float, vy : Float) : Game do
     { base with ball_x: bx, ball_y: by_, mode: Flying(vx, vy) }
+  end
+
+  -- n stars stacked vertically starting at (200, 520) going up by 160 each --
+  -- matches mk_game's own star0 (index 0) and star1 (index 1) positions/
+  -- spacing exactly, extended further so StarJump's 1..star_jump_max_stars()
+  -- roll always lands on a real star regardless of what it rolls.
+  pfn mk_star_ladder(n : Int, i : Int, acc : List(Star)) : List(Star) do
+    if i >= n do
+      List.reverse(acc)
+    else
+      mk_star_ladder(n, i + 1, Cons(mk_star(200.0, 520.0 - int_to_float(i) * 160.0), acc))
+    end
   end
 
 
@@ -192,6 +204,18 @@ mod TestPerihelionCore do
 
   pfn step_keys(g : Game, keys : List(String)) : Game do
     Perihelion.Core.update(g, no_taps(), keys, (999, 999), 400.0, 640.0, Perihelion.Core.dt())
+  end
+
+  -- Repeats step_keys n times with the same keys/no-taps every tick -- fine
+  -- to reuse an activating key like "x" across every call, since apply_special
+  -- is a no-op once a JumpTransit is already in progress.
+  pfn step_n_keys(g : Game, keys : List(String), n : Int) : Game do
+    if n <= 0 do g else step_n_keys(step_keys(g, keys), keys, n - 1) end
+  end
+
+  pfn jump_game() : Game do
+    { mk_game(0.0) with stars: mk_star_ladder(6, 0, Nil),
+        special: Some(Perihelion.Upgrades.StarJump), special_charges: 1 }
   end
 
   pfn one_tap() : List((Int, Int)) do
@@ -492,6 +516,18 @@ mod TestPerihelionCore do
       let g2 = Perihelion.Core.update(g, no_taps(), no_keys(), (999, 999), 400.0, 640.0, Perihelion.Core.dt())
       assert (is_over(g2.phase))
       assert (g2.best == 5)
+      match g2.death_cause do
+        DeathMissed -> assert true
+        _ -> assert false
+      end
+    end
+
+    test "a fresh game starts with no death cause" do
+      let g = mk_game(0.0)
+      match g.death_cause do
+        DeathNone -> assert true
+        _ -> assert false
+      end
     end
 
     test "exiting a side ends the run" do
@@ -931,6 +967,71 @@ mod TestPerihelionCore do
       let g0 = { mk_flying(200.0, 300.0, 0.0, 0.0 - Perihelion.Core.fly_speed()) with special: Some(Perihelion.Upgrades.StarThrust), special_charges: 0 }
       let g2 = step_keys(g0, Cons("x", Nil))
       assert (g2.special_charges == 0)
+    end
+
+    test "moving directly away from the nearest star: X corrects course to head toward it, at unchanged speed" do
+      -- ball at (200, 300) moving straight -y (away from star1 at (200, 360),
+      -- the nearer of mk_game's two stars) -- exactly the "off track" case
+      -- the old fixed-magnitude nudge couldn't reliably correct.
+      let g0 = { mk_flying(200.0, 300.0, 0.0, 0.0 - Perihelion.Core.fly_speed()) with special: Some(Perihelion.Upgrades.StarThrust), special_charges: 1 }
+      let g2 = step_keys(g0, Cons("x", Nil))
+      match g2.mode do
+        Flying(vx, vy) ->
+          assert (vy > 0.0) -- now heading toward star1 (+y), not away from it
+          assert (approx(Math.sqrt(vx * vx + vy * vy), Perihelion.Core.fly_speed()))
+        Orbiting(_, _, _) -> assert false
+      end
+    end
+  end
+
+  describe "special: star jump" do
+    test "X starts a JumpTransit; the ball is frozen from that point on (current/score unaffected)" do
+      let g0 = jump_game()
+      let g2 = step_keys(g0, Cons("x", Nil))
+      match g2.jump do
+        None -> assert false
+        Some(_) -> assert true
+      end
+      assert (g2.current == g0.current)
+      assert (g2.score == g0.score)
+      assert (g2.special_charges == 0)
+      -- the freeze applies to frames AFTER activation (mode-based movement
+      -- for the activation tick itself already ran before apply_special saw
+      -- the keypress, same ordering as every other special) -- so assert the
+      -- real invariant one tick later instead: no movement while jump is Some.
+      let g3 = step_keys(g2, no_keys())
+      assert (approx(g3.ball_x, g2.ball_x))
+      assert (approx(g3.ball_y, g2.ball_y))
+    end
+
+    test "W/S do not change the orbit ring while a JumpTransit is in progress" do
+      let g0 = { jump_game() with
+          jump: Some({ target_idx: 2, start_x: 200.0, start_y: 520.0, time_left: 0.4 }),
+          mode: Orbiting(0, 0, 0.0) }
+      let g2 = step_keys(g0, Cons("w", Nil))
+      match g2.mode do
+        Orbiting(_, ring, _) -> assert (ring == 0)
+        _ -> assert false
+      end
+    end
+
+    test "tap-to-release does nothing while a JumpTransit is in progress" do
+      let g0 = { jump_game() with
+          jump: Some({ target_idx: 2, start_x: 200.0, start_y: 520.0, time_left: 0.4 }),
+          mode: Orbiting(0, 0, 0.0) }
+      let g2 = Perihelion.Core.update(g0, one_tap(), no_keys(), (999, 999), 400.0, 640.0, Perihelion.Core.dt())
+      match g2.mode do
+        Orbiting(_, _, _) -> assert true
+        Flying(_, _) -> assert false
+      end
+    end
+
+    test "after the travel pause elapses, the ball lands at the target star" do
+      let g0 = jump_game()
+      let g_final = step_n_keys(g0, Cons("x", Nil), 40)
+      assert (g_final.jump == None)
+      assert (g_final.current > 0)
+      assert (g_final.score > g0.score)
     end
   end
 

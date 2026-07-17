@@ -20,6 +20,7 @@ export function march_canvas_restore(ctx) { ctx.restore(); }
 export function march_canvas_translate(ctx, x, y) { ctx.translate(x, y); }
 export function march_canvas_rotate(ctx, angle) { ctx.rotate(angle); }
 export function march_canvas_scale(ctx, sx, sy) { ctx.scale(sx, sy); }
+export function march_canvas_reset_transform(ctx) { ctx.setTransform(1, 0, 0, 1, 0, 0); }
 
 // ── Style ──────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ export function march_canvas_set_stroke_style(ctx, color) { ctx.strokeStyle = co
 export function march_canvas_set_line_width(ctx, w) { ctx.lineWidth = w; }
 export function march_canvas_set_global_alpha(ctx, a) { ctx.globalAlpha = a; }
 export function march_canvas_set_font(ctx, font) { ctx.font = font; }
+export function march_canvas_set_filter(ctx, filter) { ctx.filter = filter; }
 
 // ── Rects ──────────────────────────────────────────────────────────────────
 
