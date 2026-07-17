@@ -838,11 +838,22 @@ mod Perihelion.Combat do
   -- trajectory enough to turn it into a capture. No recoil while orbiting
   -- (the ball's position there is locked to the orbit formula, not velocity).
   fn recoil_strength() : Float do 14.0 end
+  -- Spread fires spread_shot_count() (5) shots in one go -- it should feel
+  -- like a real kick between stars, not the same nudge a single Base shot
+  -- gives.
+  fn spread_recoil_mult() : Float do 1.8 end
 
-  pfn apply_recoil(game : Game, ax : Float, ay : Float) : Game do
+  pfn recoil_mult_for(weapon : Perihelion.Upgrades.WeaponKind) : Float do
+    match weapon do
+      Spread -> spread_recoil_mult()
+      _ -> 1.0
+    end
+  end
+
+  pfn apply_recoil(game : Game, ax : Float, ay : Float, mult : Float) : Game do
     match game.mode do
       Orbiting(_, _, _) -> game
-      Flying(vx, vy) -> { game with mode: Flying(vx - ax * recoil_strength(), vy - ay * recoil_strength()) }
+      Flying(vx, vy) -> { game with mode: Flying(vx - ax * recoil_strength() * mult, vy - ay * recoil_strength() * mult) }
     end
   end
 
@@ -903,8 +914,9 @@ mod Perihelion.Combat do
             None -> game
             Some(pair) ->
               let (ax, ay) = pair
-              let g2 = apply_recoil(game, ax, ay)
-              let new_shots = match Perihelion.Core.active_weapon(game) do
+              let weapon = Perihelion.Core.active_weapon(game)
+              let g2 = apply_recoil(game, ax, ay, recoil_mult_for(weapon))
+              let new_shots = match weapon do
                 Base -> Cons(make_shot(game.ball_x, game.ball_y, ax, ay), Nil)
                 Homing -> Cons(make_homing_shot(game.ball_x, game.ball_y, ax, ay), Nil)
                 Spread -> spread_shots(game.ball_x, game.ball_y, ax, ay)
