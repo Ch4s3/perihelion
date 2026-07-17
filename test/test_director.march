@@ -113,6 +113,28 @@ mod TestPerihelionDirector do
     end
   end
 
+  describe "item drip chance" do
+    test "each phase returns its own named constant" do
+      assert (approx(Perihelion.Director.item_drip_chance(dir(Relax, 1.0, 0, false)), Perihelion.Director.relax_item_drip_chance()))
+      assert (approx(Perihelion.Director.item_drip_chance(dir(BuildUp, 1.0, 0, false)), Perihelion.Director.buildup_item_drip_chance()))
+      assert (approx(Perihelion.Director.item_drip_chance(dir(Peak, 5.0, 0, false)), Perihelion.Director.peak_item_drip_chance()))
+    end
+
+    test "Peak's drip chance is the rarest phase (already boosted by kill-drop softening + guaranteed hunter)" do
+      let peak = Perihelion.Director.peak_item_drip_chance()
+      let buildup = Perihelion.Director.buildup_item_drip_chance()
+      let relax = Perihelion.Director.relax_item_drip_chance()
+      assert (peak < buildup)
+      assert (buildup < relax)
+    end
+
+    test "Fade lerps drip chance from Peak toward Relax at the midpoint" do
+      let d = dir(Fade, Perihelion.Director.fade_duration() / 2.0, 0, false)
+      let expected = (Perihelion.Director.peak_item_drip_chance() + Perihelion.Director.relax_item_drip_chance()) / 2.0
+      assert (approx(Perihelion.Director.item_drip_chance(d), expected))
+    end
+  end
+
   describe "entered_peak" do
     test "true only on the BuildUp->Peak edge" do
       assert (Perihelion.Director.entered_peak(dir(BuildUp, 0.0, 0, false), dir(Peak, 10.0, 0, false)))

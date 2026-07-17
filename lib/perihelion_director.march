@@ -41,6 +41,19 @@ mod Perihelion.Director do
   fn peak_drop_mult() : Float do 1.5 end
   fn baseline_ship_cap() : Float do 0.45 end
 
+  -- Director-paced item drip: after the guaranteed first item (see
+  -- Perihelion.Core.first_item_star), star captures keep a trickle of
+  -- items flowing at a phase-dependent rate, gated by
+  -- item_drip_cooldown_stars() (a star-capture-counted cooldown tracked on
+  -- Game.stars_since_drip -- see on_capture). Peak is deliberately the
+  -- rarest: it already gets peak_drop_mult()'s 1.5x kill-drop boost (when
+  -- softened) and a guaranteed hunter spawn, so this drip is additive, not
+  -- a second reward layered equally onto an already-rewarded phase.
+  fn relax_item_drip_chance() : Float do 0.15 end
+  fn buildup_item_drip_chance() : Float do 0.05 end
+  fn peak_item_drip_chance() : Float do 0.02 end
+  fn item_drip_cooldown_stars() : Int do 2 end
+
   doc "A fresh director: calm (Relax), with spawn timers primed to today's initial values."
   fn initial() : Director do
     { phase: Relax, state_timer: 0.0,
@@ -166,6 +179,16 @@ mod Perihelion.Director do
     match d.phase do
       Peak -> if d.peak_softened do peak_drop_mult() else 1.0 end
       _ -> 1.0
+    end
+  end
+
+  doc "Chance a captured star triggers the drip-fed item spawn this phase (see item_drip_cooldown_stars() for the cooldown gate applied before this is even rolled, in Perihelion.Core.on_capture)."
+  fn item_drip_chance(d : Director) : Float do
+    match d.phase do
+      Relax -> relax_item_drip_chance()
+      BuildUp -> buildup_item_drip_chance()
+      Peak -> peak_item_drip_chance()
+      Fade -> fade_lerp(d, peak_item_drip_chance(), relax_item_drip_chance())
     end
   end
 
