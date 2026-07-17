@@ -212,7 +212,12 @@ mod Perihelion.Combat do
       let (r4, next_f) = draw(r3)
       let (r5, shape_f) = draw(r4)
       let from_left = side_f < 0.5
-      let x = if from_left do 0.0 - 20.0 else game.view_w + 20.0 end
+      -- camera_x pans horizontally (dead-zone follow), so the visible
+      -- viewport is [camera_x, camera_x + view_w] in world space, not
+      -- [0, view_w] -- spawning at a literal 0/view_w offset would land
+      -- inside the viewport (or the wrong side of it) as soon as the
+      -- camera has panned any distance.
+      let x = if from_left do game.camera_x - 20.0 else game.camera_x + game.view_w + 20.0 end
       let y = game.camera_y + y_f * game.view_h
       -- aim across the screen with +/-30 degree vertical jitter
       let jitter = (ang_f - 0.5) * 1.0472
@@ -230,7 +235,7 @@ mod Perihelion.Combat do
 
   pfn in_band(game : Game, x : Float, y : Float) : Bool do
     y > game.camera_y - 100.0 && y < game.camera_y + game.view_h + 100.0
-    && x > 0.0 - 100.0 && x < game.view_w + 100.0
+    && x > game.camera_x - 100.0 && x < game.camera_x + game.view_w + 100.0
   end
 
   fn homing_turn_rate() : Float do 4.5 end
@@ -1235,13 +1240,35 @@ mod Perihelion.Combat do
     end
   end
 
-  -- A hunter: spawns orbiting the star just BELOW the player's current star
-  -- (index current-1, i.e. behind), then jumps star-to-star toward the player.
+  -- Consecutive stars are much closer together than the screen is tall, so
+  -- the literal "one rung behind" star is usually still on screen -- search
+  -- backward from `from_idx` for the nearest star actually below the
+  -- visible bottom edge (a hunter should always pop in off camera, then
+  -- visibly jump toward the player, not appear already in view).
+  pfn find_offscreen_star(game : Game, idx : Int) : Option((Int, Star)) do
+    if idx < 0 do
+      None
+    else
+      match Perihelion.Core.star_at(game, idx) do
+        None -> None
+        Some(s) ->
+          if s.y > game.camera_y + game.view_h do
+            Some((idx, s))
+          else
+            find_offscreen_star(game, idx - 1)
+          end
+      end
+    end
+  end
+
+  -- A hunter: spawns orbiting the nearest off-camera star behind the player
+  -- (see find_offscreen_star), then jumps star-to-star toward the player.
   pfn spawn_hunter(game : Game, rng : Random.Rng) : Game do
-    let idx = if game.current > 0 do game.current - 1 else 0 end
-    match Perihelion.Core.star_at(game, idx) do
+    let start_idx = if game.current > 0 do game.current - 1 else 0 end
+    match find_offscreen_star(game, start_idx) do
       None -> { game with rng: rng }
-      Some(s) ->
+      Some(pair) ->
+        let (idx, s) = pair
         let (rng2, idle_f) = draw(rng)
         let (rng3, ring_idx) = pick_ring_idx(rng2, s)
         let (rng4, top_idx, mid_idx, bot_idx) = roll_ship_art(rng3)
