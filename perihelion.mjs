@@ -23183,10 +23183,10 @@ function build_enemy_top_sprites_go(idx, acc) {
         {
           const node = Dom$create("canvas");
           (() => {
-            return Dom$set_attr(node, "width", "11");
+            return Dom$set_attr(node, "width", "14");
           })();
           (() => {
-            return Dom$set_attr(node, "height", "15");
+            return Dom$set_attr(node, "height", "20");
           })();
           (() => {
             {
@@ -23205,7 +23205,7 @@ function build_enemy_top_sprites_go(idx, acc) {
                     {
                       const $t30962 = Perihelion$ShipArt$enemy_top_grid(idx);
                       {
-                        const $rc_852 = draw_sprite_rows(sctx, $t30962, 0, 32, 45, 11., 15.);
+                        const $rc_852 = draw_sprite_rows(sctx, $t30962, 0, 32, 45, 14., 20.);
                         return $rc_852;
                       }
                     }
@@ -23250,10 +23250,10 @@ function build_enemy_mid_sprites_go(idx, acc) {
         {
           const node = Dom$create("canvas");
           (() => {
-            return Dom$set_attr(node, "width", "11");
+            return Dom$set_attr(node, "width", "14");
           })();
           (() => {
-            return Dom$set_attr(node, "height", "19");
+            return Dom$set_attr(node, "height", "25");
           })();
           (() => {
             {
@@ -23272,7 +23272,7 @@ function build_enemy_mid_sprites_go(idx, acc) {
                     {
                       const $t30969 = Perihelion$ShipArt$enemy_mid_grid(idx);
                       {
-                        const $rc_853 = draw_sprite_rows(sctx, $t30969, 0, 32, 55, 11., 19.);
+                        const $rc_853 = draw_sprite_rows(sctx, $t30969, 0, 32, 55, 14., 25.);
                         return $rc_853;
                       }
                     }
@@ -23317,10 +23317,10 @@ function build_enemy_bot_sprites_go(idx, acc) {
         {
           const node = Dom$create("canvas");
           (() => {
-            return Dom$set_attr(node, "width", "11");
+            return Dom$set_attr(node, "width", "14");
           })();
           (() => {
-            return Dom$set_attr(node, "height", "12");
+            return Dom$set_attr(node, "height", "16");
           })();
           (() => {
             {
@@ -23339,7 +23339,7 @@ function build_enemy_bot_sprites_go(idx, acc) {
                     {
                       const $t30976 = Perihelion$ShipArt$enemy_bot_grid(idx);
                       {
-                        const $rc_854 = draw_sprite_rows(sctx, $t30976, 0, 32, 35, 11., 12.);
+                        const $rc_854 = draw_sprite_rows(sctx, $t30976, 0, 32, 35, 14., 16.);
                         return $rc_854;
                       }
                     }
@@ -28323,26 +28323,26 @@ function draw_ships(ctx, fx, ships) {
                         })();
                         (() => {
                           {
-                            const $t31756 = (0. - 5.5);
+                            const $t31756 = (0. - 7.);
                             {
-                              const $t31757 = (0. - 23.);
+                              const $t31757 = (0. - 30.5);
                               return Canvas$draw_node(ctx, top_node, $t31756, $t31757);
                             }
                           }
                         })();
                         (() => {
                           {
-                            const $t31758 = (0. - 5.5);
+                            const $t31758 = (0. - 7.);
                             {
-                              const $t31759 = (0. - 8.);
+                              const $t31759 = (0. - 10.5);
                               return Canvas$draw_node(ctx, mid_node, $t31758, $t31759);
                             }
                           }
                         })();
                         (() => {
                           {
-                            const $t31760 = (0. - 5.5);
-                            return Canvas$draw_node(ctx, bot_node, $t31760, 11.);
+                            const $t31760 = (0. - 7.);
+                            return Canvas$draw_node(ctx, bot_node, $t31760, 14.5);
                           }
                         })();
                         (() => {

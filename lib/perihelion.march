@@ -265,17 +265,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "15")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "20")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 11.0, 15.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_top_grid(idx), 0, 32, 45, 14.0, 20.0)
       end
       build_enemy_top_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy top-tile idx 0..7 into offscreen canvases (11x15 each), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
+  doc "Pre-renders enemy top-tile idx 0..7 into offscreen canvases (14x20 each, ~1.3x the base tile size), called once at boot -- mirrors draw_player_sprite_pixels' pre-render-once pattern, just repeated per tile."
   pfn build_enemy_top_sprites(idx : Int) : List(Node) do
     build_enemy_top_sprites_go(idx, Nil)
   end
@@ -285,17 +285,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "19")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "25")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 11.0, 19.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_mid_grid(idx), 0, 32, 55, 14.0, 25.0)
       end
       build_enemy_mid_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (11x19 each) -- see build_enemy_top_sprites."
+  doc "Pre-renders enemy middle-tile idx 0..7 into offscreen canvases (14x25 each) -- see build_enemy_top_sprites."
   pfn build_enemy_mid_sprites(idx : Int) : List(Node) do
     build_enemy_mid_sprites_go(idx, Nil)
   end
@@ -305,17 +305,17 @@ mod Perihelion do
       List.reverse(acc)
     else
       let node = Dom.create("canvas")
-      Dom.set_attr(node, "width", "11")
-      Dom.set_attr(node, "height", "12")
+      Dom.set_attr(node, "width", "14")
+      Dom.set_attr(node, "height", "16")
       match Canvas.get_context(node) do
         None -> ()
-        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 11.0, 12.0)
+        Some(sctx) -> draw_sprite_rows(sctx, Perihelion.ShipArt.enemy_bot_grid(idx), 0, 32, 35, 14.0, 16.0)
       end
       build_enemy_bot_sprites_go(idx + 1, Cons(node, acc))
     end
   end
 
-  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (11x12 each) -- see build_enemy_top_sprites."
+  doc "Pre-renders enemy bottom-tile idx 0..7 into offscreen canvases (14x16 each) -- see build_enemy_top_sprites."
   pfn build_enemy_bot_sprites(idx : Int) : List(Node) do
     build_enemy_bot_sprites_go(idx, Nil)
   end
@@ -1183,9 +1183,9 @@ mod Perihelion do
         let top_node = List.nth(fx.enemy_tops, sh.top_idx)
         let mid_node = List.nth(fx.enemy_mids, sh.mid_idx)
         let bot_node = List.nth(fx.enemy_bots, sh.bot_idx)
-        Canvas.draw_node(ctx, top_node, 0.0 - 5.5, 0.0 - 23.0)
-        Canvas.draw_node(ctx, mid_node, 0.0 - 5.5, 0.0 - 8.0)
-        Canvas.draw_node(ctx, bot_node, 0.0 - 5.5, 11.0)
+        Canvas.draw_node(ctx, top_node, 0.0 - 7.0, 0.0 - 30.5)
+        Canvas.draw_node(ctx, mid_node, 0.0 - 7.0, 0.0 - 10.5)
+        Canvas.draw_node(ctx, bot_node, 0.0 - 7.0, 14.5)
         Canvas.restore(ctx)
         draw_ships(ctx, fx, rest)
     end
