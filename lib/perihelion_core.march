@@ -160,6 +160,10 @@ mod Perihelion.Core do
     -- first item spawn -- see first_item_star_early/mid/late above and
     -- on_capture below. Rolled once in fresh_run.
     first_item_star : Int,
+    -- Forward captures since the last successful director-paced item drip
+    -- (or run start). Gates item_drip_chance rolls in on_capture --
+    -- see Perihelion.Director.item_drip_cooldown_stars().
+    stars_since_drip : Int,
     loop_angle : Float,
     fire_cooldown : Float,
     director : Perihelion.Director.Director,
@@ -683,12 +687,32 @@ mod Perihelion.Core do
         else
           captured_game
         end
-      let (rng_after_check, triggered) = Perihelion.Upgrades.milestone_check(item_game.rng, new_chained)
+      -- Director-paced item drip: independent of the first-item-star check
+      -- above (both can fire on the same capture -- see spec). Gated by a
+      -- star-counted cooldown so drips don't cluster back-to-back; the
+      -- phase-dependent chance itself is rolled only once eligible.
+      let drip_since = item_game.stars_since_drip + 1
+      let drip_game =
+        if drip_since < Perihelion.Director.item_drip_cooldown_stars() do
+          { item_game with stars_since_drip: drip_since }
+        else
+          let (rng_roll, roll) = Perihelion.Level.draw_pub(item_game.rng)
+          if roll < Perihelion.Director.item_drip_chance(item_game.director) do
+            let (rng_drip, upgrade) = Perihelion.Upgrades.roll_one(rng_roll, item_game.owned_weapons, item_game.special)
+            { item_game with
+                rng: rng_drip,
+                stars_since_drip: 0,
+                pickups: Cons({ x: captured.x, y: captured.y, ttl: Perihelion.Combat.pickup_ttl(), kind: upgrade }, item_game.pickups) }
+          else
+            { item_game with rng: rng_roll, stars_since_drip: drip_since }
+          end
+        end
+      let (rng_after_check, triggered) = Perihelion.Upgrades.milestone_check(drip_game.rng, new_chained)
       if triggered do
-        let (rng2, choices) = Perihelion.Upgrades.draw_choices(rng_after_check, item_game.owned_weapons, item_game.special)
-        top_up({ item_game with phase: Milestone, rng: rng2, milestone_choices: choices })
+        let (rng2, choices) = Perihelion.Upgrades.draw_choices(rng_after_check, drip_game.owned_weapons, drip_game.special)
+        top_up({ drip_game with phase: Milestone, rng: rng2, milestone_choices: choices })
       else
-        top_up({ item_game with rng: rng_after_check })
+        top_up({ drip_game with rng: rng_after_check })
       end
     else
       { snapped with current: idx, multiplier: 1, ship_kill_streak: 0, asteroid_kill_streak: 0 }
@@ -893,6 +917,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           first_item_star: first_item_star,
+          stars_since_drip: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
           director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,
@@ -923,6 +948,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           first_item_star: first_item_star,
+          stars_since_drip: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
           director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,

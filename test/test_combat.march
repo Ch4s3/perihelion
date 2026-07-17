@@ -59,6 +59,7 @@ mod TestPerihelionCombat do
       milestone_choices: Nil,
       stars_chained: 0,
       first_item_star: 0,
+      stars_since_drip: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
       fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone, jump: None }

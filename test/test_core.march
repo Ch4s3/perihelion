@@ -63,6 +63,7 @@ mod TestPerihelionCore do
       -- unaffected; tests that DO want the guaranteed spawn override this
       -- via `{ mk_game(0.0) with first_item_star: N }`.
       first_item_star: 0,
+      stars_since_drip: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
       fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone, jump: None }
@@ -1143,6 +1144,61 @@ mod TestPerihelionCore do
       let g2 = run_until_capture(mk_flying_from(g1, g1.ball_x, g1.ball_y, 0.0, Perihelion.Core.fly_speed()), 40)
       assert (g2.current == 0)
       assert (List.length(g2.pickups) == 1)
+    end
+  end
+
+  describe "director-paced item drip" do
+    test "a capture before the cooldown elapses never spawns a drip pickup" do
+      -- first_item_star: 0 (never matches) isolates this from the
+      -- guaranteed-first-item mechanism; stars_since_drip starts at 0, so
+      -- after one forward capture it's 1 -- below item_drip_cooldown_stars()
+      -- (2) -- not eligible to roll at all, regardless of phase/seed.
+      let g0 = { mk_game(0.0) with first_item_star: 0 }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (g2.stars_chained == 1)
+      assert (g2.stars_since_drip == 1)
+      assert (List.is_empty(g2.pickups))
+    end
+
+    test "once eligible, a capture that rolls under the phase chance spawns a drip pickup and resets the cooldown" do
+      -- stars_since_drip pre-set to 1: this capture increments it to 2,
+      -- meeting item_drip_cooldown_stars() (2), so it's eligible to roll.
+      -- Default director phase is Relax (relax_item_drip_chance() 0.15).
+      -- Seed chosen so the draw_pub roll at this point lands under 0.15
+      -- (same seed-pinning convention as the early-milestone tests above).
+      -- Empirically verified: seed 1 rolls under 0.15 here (seeds 0, 2, 3,
+      -- 5, 7, 8, 9 roll over; seeds 1, 4, 6, 10 roll under).
+      let g0 = { mk_game(0.0) with first_item_star: 0, stars_since_drip: 1, rng: Random.seed(1) }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (g2.stars_since_drip == 0)
+      assert (List.length(g2.pickups) == 1)
+    end
+
+    test "once eligible, a capture that rolls over the phase chance spawns nothing and keeps the counter" do
+      -- Same eligibility setup as above, but a seed whose roll lands over
+      -- 0.15 (Relax's chance) -- no spawn, counter stays at its
+      -- incremented (still-eligible) value rather than resetting.
+      let g0 = { mk_game(0.0) with first_item_star: 0, stars_since_drip: 1, rng: Random.seed(0) }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (g2.stars_since_drip == 2)
+      assert (List.is_empty(g2.pickups))
+    end
+
+    test "the drip and the guaranteed first item can both fire on the same capture" do
+      -- first_item_star: 1 makes this capture eligible for the guaranteed
+      -- spawn too; stars_since_drip: 1 makes it eligible for the drip roll.
+      -- Note: this scenario's rng sequence differs from the drip-only tests
+      -- above (the first-item roll_one consumes rng before the drip check
+      -- runs), so it needs its own empirically verified seed rather than
+      -- reusing seed 1. Empirically verified: seed 5 rolls under 0.15 here
+      -- (seeds 0-4, 7-9 roll over; seeds 5, 6, 10 roll under).
+      let g0 = { mk_game(0.0) with first_item_star: 1, stars_since_drip: 1, rng: Random.seed(5) }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (List.length(g2.pickups) == 2)
     end
   end
 
