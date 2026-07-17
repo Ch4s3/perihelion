@@ -313,11 +313,17 @@ mod Perihelion.Combat do
   -- ── Homing missile orbit-capture ────────────────────────────────────
   -- A homing shot that grazes a star at a near-tangential angle has a
   -- chance to get pulled into a temporary orbit -- a bonus for a good-angle
-  -- shot, not something to rely on (see missile_orbit_chance). Stays fully
-  -- live in collision checks the whole time it orbits (a brief automated
-  -- turret circling the star), then breaks free tangentially with its
-  -- pre-capture speed once missile_orbit_duration() runs out.
-  fn missile_orbit_chance() : Float do 0.25 end
+  -- shot, not something to rely on (see missile_orbit_chance). While
+  -- orbiting it actively steers toward the nearest asteroid or ship also
+  -- orbiting that SAME star (see seek_orbit_angle) instead of just
+  -- circling blind -- a brief automated turret hunting its own ring --
+  -- then breaks free tangentially with its pre-capture speed once
+  -- missile_orbit_duration() runs out.
+  -- Firing while the player's own ball orbits a star naturally aims most
+  -- shots near-tangentially at that SAME star, so capture was rolled on
+  -- nearly every missile fired from orbit -- lowered so a missile isn't
+  -- captured quite so readily right out of the barrel.
+  fn missile_orbit_chance() : Float do 0.15 end
   fn missile_orbit_duration() : Float do 2.0 end
   fn missile_orbit_angular_speed() : Float do 2.2 end
   -- Settles a little inside the visible capture ring, same reasoning as
@@ -365,6 +371,83 @@ mod Perihelion.Combat do
     (0.0 - Math.sin(angle) * speed, Math.cos(angle) * speed)
   end
 
+  -- Signed shortest angular distance from `b` to `a`, wrapped to (-pi, pi] --
+  -- the atan2(sin, cos) trick avoids needing a floor/mod builtin.
+  pfn wrap_angle_diff(a : Float, b : Float) : Float do
+    let d = a - b
+    Math.atan2(Math.sin(d), Math.cos(d))
+  end
+
+  -- An asteroid's own orbit angle around star `idx`, if it's currently
+  -- orbiting that SAME star -- None otherwise (drifting, or orbiting a
+  -- different one).
+  pfn asteroid_orbit_angle_on(idx : Int, a : Asteroid) : Option(Float) do
+    match a.mode do
+      AsteroidDrifting -> None
+      AsteroidOrbiting(aidx, aangle) -> if aidx == idx do Some(aangle) else None end
+    end
+  end
+
+  pfn ship_orbit_angle_on(idx : Int, sh : Ship) : Option(Float) do
+    match sh.mode do
+      ShipFlying(_, _) -> None
+      ShipOrbiting(_, sangle) -> if sh.star_idx == idx do Some(sangle) else None end
+    end
+  end
+
+  -- Folds a list down to whichever candidate angle (if any) is angularly
+  -- closest to `current_angle`, keeping `best` if nothing beats it.
+  pfn closer_orbit_angle(current_angle : Float, candidate : Option(Float), best : Option(Float)) : Option(Float) do
+    match candidate do
+      None -> best
+      Some(c) ->
+        match best do
+          None -> Some(c)
+          Some(b) ->
+            if fabs(wrap_angle_diff(c, current_angle)) < fabs(wrap_angle_diff(b, current_angle)) do Some(c) else Some(b) end
+        end
+    end
+  end
+
+  pfn nearest_orbit_mate_angle_ast(idx : Int, current_angle : Float, asteroids : List(Asteroid), best : Option(Float)) : Option(Float) do
+    match asteroids do
+      Nil -> best
+      Cons(a, rest) ->
+        let best2 = closer_orbit_angle(current_angle, asteroid_orbit_angle_on(idx, a), best)
+        nearest_orbit_mate_angle_ast(idx, current_angle, rest, best2)
+    end
+  end
+
+  pfn nearest_orbit_mate_angle_ship(idx : Int, current_angle : Float, ships : List(Ship), best : Option(Float)) : Option(Float) do
+    match ships do
+      Nil -> best
+      Cons(sh, rest) ->
+        let best2 = closer_orbit_angle(current_angle, ship_orbit_angle_on(idx, sh), best)
+        nearest_orbit_mate_angle_ship(idx, current_angle, rest, best2)
+    end
+  end
+
+  doc "The orbit angle of the nearest asteroid or ship ALSO currently orbiting star `idx`, if any -- lets an orbiting missile steer toward prey sharing its own ring instead of just circling at a fixed rate."
+  pfn nearest_orbit_mate_angle(idx : Int, current_angle : Float, asteroids : List(Asteroid), ships : List(Ship)) : Option(Float) do
+    let best_a = nearest_orbit_mate_angle_ast(idx, current_angle, asteroids, None)
+    nearest_orbit_mate_angle_ship(idx, current_angle, ships, best_a)
+  end
+
+  -- The orbiting missile's next angle: steers toward the nearest orbit-mate
+  -- (see nearest_orbit_mate_angle) at up to missile_orbit_angular_speed()
+  -- radians/sec, snapping to the target once within one step so it doesn't
+  -- oscillate past it. Falls back to the old fixed CCW sweep when nothing
+  -- shares its ring.
+  pfn seek_orbit_angle(idx : Int, angle : Float, asteroids : List(Asteroid), ships : List(Ship), dt_s : Float) : Float do
+    match nearest_orbit_mate_angle(idx, angle, asteroids, ships) do
+      None -> angle + missile_orbit_angular_speed() * dt_s
+      Some(target) ->
+        let diff = wrap_angle_diff(target, angle)
+        let step = missile_orbit_angular_speed() * dt_s
+        if fabs(diff) < step do target else angle + (if diff > 0.0 do step else 0.0 - step end) end
+    end
+  end
+
   doc "Ages player shots one at a time, threading `game` as the fold accumulator for its `rng` (capture rolls) -- same shape as step_asteroids_go/step_ships_go. Handles both flight (move + home + roll for orbit-capture) and the temporary orbit itself."
   pfn age_player_shots_go(game : Game, shots : List(Shot), acc : List(Shot), dt_s : Float) : Game do
     match shots do
@@ -391,7 +474,7 @@ mod Perihelion.Combat do
                   let s2 = { s with vx: bvx, vy: bvy, ttl: ttl2, mode: ShotFlying }
                   age_player_shots_go(game, rest, Cons(s2, acc), dt_s)
                 else
-                  let angle2 = angle + missile_orbit_angular_speed() * dt_s
+                  let angle2 = seek_orbit_angle(idx, angle, game.asteroids, game.ships, dt_s)
                   let r = star.capture_radius * missile_orbit_radius_mult()
                   let s2 = { s with
                                x: star.x + Math.cos(angle2) * r,

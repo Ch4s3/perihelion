@@ -486,6 +486,53 @@ mod TestPerihelionCombat do
       end
     end
 
+    test "an orbiting shot steers toward a same-star orbit-mate instead of a fixed sweep" do
+      let g0 = base_game(0.0)
+      let s1 = mk_star(200.0, 360.0)
+      let orbiting_shot = { x: s1.x + s1.capture_radius, y: s1.y, vx: 120.0, vy: 0.0, ttl: 3.0,
+                             homing: true, star_killer: false, target_x: 0.0, target_y: 0.0,
+                             mode: Perihelion.Combat.ShotOrbiting(1, 0.0, 2.0) }
+      -- an asteroid already orbiting the SAME star (idx 1) "behind" the shot
+      -- (angle -0.5) -- the old fixed sweep always moved the angle positive
+      -- (CCW); seeking should instead move it toward -0.5, the shorter way.
+      let mate = { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0,
+                   mode: Perihelion.Combat.AsteroidOrbiting(1, 0.0 - 0.5) }
+      let g = { g0 with asteroids: Cons(mate, Nil), player_shots: Cons(orbiting_shot, Nil) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotOrbiting(idx, angle, _) ->
+              assert (idx == 1)
+              assert (angle < 0.0)
+            ShotFlying -> assert false
+          end
+        _ -> assert false
+      end
+    end
+
+    test "an orbit-mate on a DIFFERENT star is ignored -- the shot keeps its fixed sweep" do
+      let g0 = base_game(0.0)
+      let orbiting_shot = { x: 254.0, y: 520.0, vx: 120.0, vy: 0.0, ttl: 3.0,
+                             homing: true, star_killer: false, target_x: 0.0, target_y: 0.0,
+                             mode: Perihelion.Combat.ShotOrbiting(0, 0.0, 2.0) }
+      -- orbiting star 1, not star 0 (the shot's own star) -- must not pull it.
+      let other_star_mate = { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0, radius: 10.0, shape_seed: 0.0,
+                              mode: Perihelion.Combat.AsteroidOrbiting(1, 0.0 - 0.5) }
+      let g = { g0 with asteroids: Cons(other_star_mate, Nil), player_shots: Cons(orbiting_shot, Nil) }
+      let g2 = Perihelion.Combat.step(g, dt())
+      match g2.player_shots do
+        Cons(s, Nil) ->
+          match s.mode do
+            ShotOrbiting(idx, angle, _) ->
+              assert (idx == 0)
+              assert (angle > 0.0)
+            ShotFlying -> assert false
+          end
+        _ -> assert false
+      end
+    end
+
     test "an orbiting shot breaks free (tangentially, same speed) once its orbit timer runs out" do
       let g0 = base_game(0.0)
       let s1 = mk_star(200.0, 360.0)
