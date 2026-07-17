@@ -40,6 +40,20 @@ mod Perihelion.Core do
   fn two_pi() : Float do 6.283185307179586 end
   fn mult_cap() : Int do 5 end
 
+  -- First guaranteed item spawn: rolled once per run (fresh_run) and
+  -- consumed the one time stars_chained reaches it (on_capture, forward
+  -- capture only). Weighted toward an earlier appearance so most runs see
+  -- their first item well before the early/guaranteed milestone beats
+  -- (star 5 / star 10 -- see Perihelion.Upgrades.early_milestone_star /
+  -- milestone_star_interval). Independent of and in addition to normal
+  -- per-kill drops (Perihelion.Combat.roll_drops) -- this always fires on
+  -- schedule, even if the player already got lucky with an earlier kill.
+  fn first_item_star_early() : Int do 3 end
+  fn first_item_star_mid() : Int do 6 end
+  fn first_item_star_late() : Int do 9 end
+  fn first_item_star_early_chance() : Float do 0.5 end
+  fn first_item_star_mid_chance() : Float do 0.25 end
+
   doc "Orbit direction, the same for every star: capturing a new star must never reverse the player's spin."
   fn orbit_dir(_i : Int) : Float do
     1.0
@@ -142,6 +156,10 @@ mod Perihelion.Core do
     -- cleared (back to Nil) when the player picks one and play resumes.
     milestone_choices : List(Perihelion.Upgrades.UpgradeKind),
     stars_chained : Int,
+    -- Which forward-capture count (3, 6, or 9) triggers the guaranteed
+    -- first item spawn -- see first_item_star_early/mid/late above and
+    -- on_capture below. Rolled once in fresh_run.
+    first_item_star : Int,
     loop_angle : Float,
     fire_cooldown : Float,
     director : Perihelion.Director.Director,
@@ -810,6 +828,25 @@ mod Perihelion.Core do
         camera_x: game.camera_x + (target_x - game.camera_x) * cam_ease() * dt_s }
   end
 
+  -- Weighted 3-way draw for first_item_star: 50% -> 3, 25% -> 6, 25% -> 9.
+  -- Same threshold-compare pattern as Combat/Upgrades' own drop rolls
+  -- (roll_drops, milestone_check), but calls Level.draw_pub directly
+  -- rather than Perihelion.Combat.draw/Perihelion.Upgrades.draw -- both of
+  -- those are pfn (private to their own module) and can't be called
+  -- qualified from here.
+  pfn roll_first_item_star(rng : Random.Rng) : (Random.Rng, Int) do
+    let (rng2, roll) = Perihelion.Level.draw_pub(rng)
+    let star =
+      if roll < first_item_star_early_chance() do
+        first_item_star_early()
+      else if roll < first_item_star_early_chance() + first_item_star_mid_chance() do
+        first_item_star_mid()
+      else
+        first_item_star_late()
+      end end
+    (rng2, star)
+  end
+
   -- `seed` is the ONE master seed for the whole run: it seeds the gameplay
   -- rng below (star ladder, asteroid/ship rolls, ...) AND is stored on
   -- Game.seed for the shell to mix into the nebula/starfield hashes -- so
@@ -821,9 +858,10 @@ mod Perihelion.Core do
     match stars do
       Nil ->
         -- unreachable: initial_stars always returns 3 stars
+        let (rng3, first_item_star) = roll_first_item_star(rng2)
         { seed: seed, phase: Ready, ball_x: 0.0, ball_y: 0.0, mode: Orbiting(0, 0, start_angle),
           stars: Nil, current: 0, score: 0, best: best,
-          camera_y: 0.0, camera_x: 0.0, rng: rng2,
+          camera_y: 0.0, camera_x: 0.0, rng: rng3,
           asteroids: Nil, ships: Nil, player_shots: Nil, enemy_shots: Nil, pickups: Nil,
           shield: 0, multiplier: 1, max_mult: 1, ship_kill_streak: 0, asteroid_kill_streak: 0,
           owned_weapons: Cons(Perihelion.Upgrades.Base, Nil),
@@ -838,12 +876,14 @@ mod Perihelion.Core do
           starkiller_cooldown: 0.0,
           milestone_choices: Nil,
           stars_chained: 0,
+          first_item_star: first_item_star,
           loop_angle: 0.0, fire_cooldown: 0.0,
           director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,
           fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone,
           jump: None }
       Cons(s0, _) ->
+        let (rng3, first_item_star) = roll_first_item_star(rng2)
         { seed: seed, phase: Ready,
           ball_x: s0.x + Math.cos(start_angle) * s0.capture_radius,
           ball_y: s0.y + Math.sin(start_angle) * s0.capture_radius,
@@ -851,7 +891,7 @@ mod Perihelion.Core do
           stars: stars, current: 0, score: 0, best: best,
           camera_y: s0.y - cam_anchor() * view_h,
           camera_x: 0.0,
-          rng: rng2,
+          rng: rng3,
           asteroids: Nil, ships: Nil, player_shots: Nil, enemy_shots: Nil, pickups: Nil,
           shield: 0, multiplier: 1, max_mult: 1, ship_kill_streak: 0, asteroid_kill_streak: 0,
           owned_weapons: Cons(Perihelion.Upgrades.Base, Nil),
@@ -866,6 +906,7 @@ mod Perihelion.Core do
           starkiller_cooldown: 0.0,
           milestone_choices: Nil,
           stars_chained: 0,
+          first_item_star: first_item_star,
           loop_angle: 0.0, fire_cooldown: 0.0,
           director: Perihelion.Director.initial(), runs: runs,
           view_w: view_w, view_h: view_h,

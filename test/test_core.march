@@ -58,6 +58,11 @@ mod TestPerihelionCore do
       starkiller_cooldown: 0.0,
       milestone_choices: Nil,
       stars_chained: 0,
+      -- Never coincides with a single-hop capture (new_chained starts at
+      -- 1) so existing tests that don't care about this feature are
+      -- unaffected; tests that DO want the guaranteed spawn override this
+      -- via `{ mk_game(0.0) with first_item_star: N }`.
+      first_item_star: 0,
       loop_angle: 0.0, fire_cooldown: 0.0, director: Perihelion.Director.initial(), runs: Nil,
       view_w: 400.0, view_h: 640.0,
       fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone, jump: None }
@@ -1048,6 +1053,45 @@ mod TestPerihelionCore do
       let g2 = Perihelion.Core.apply_upgrade(g0, Perihelion.Upgrades.SpecialItem(Perihelion.Upgrades.StarThrust))
       assert (g2.special == Some(Perihelion.Upgrades.StarThrust))
       assert (g2.special_charges == 3)
+    end
+  end
+
+  describe "first_item_star roll" do
+    test "first_item_star is always 3, 6, or 9" do
+      fn all_valid(seed : Int) : Bool do
+        if seed == 0 do
+          true
+        else
+          let g = Perihelion.Core.new_game(seed)
+          let s = g.first_item_star
+          if s == 3 || s == 6 || s == 9 do all_valid(seed - 1) else false end
+        end
+      end
+      assert (all_valid(200))
+    end
+
+    test "first_item_star is deterministic for a given seed" do
+      let a = Perihelion.Core.new_game(42)
+      let b = Perihelion.Core.new_game(42)
+      assert (a.first_item_star == b.first_item_star)
+    end
+
+    test "first_item_star distribution is roughly 50/25/25 over many seeds" do
+      fn count_early(seed : Int, acc : Int) : Int do
+        if seed == 0 do
+          acc
+        else
+          let g = Perihelion.Core.new_game(seed)
+          count_early(seed - 1, if g.first_item_star == 3 do acc + 1 else acc end)
+        end
+      end
+      -- 400 seeds, expect ~200 landing on the 50% (star 3) bucket. Wide
+      -- tolerance band since this samples real RNG output, not a fixed
+      -- sequence -- see check_seeds-style sampling used elsewhere in this
+      -- file (e.g. "dying with exactly one upgrade held" above).
+      let early = count_early(400, 0)
+      assert (early > 150)
+      assert (early < 250)
     end
   end
 
