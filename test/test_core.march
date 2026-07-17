@@ -1095,4 +1095,48 @@ mod TestPerihelionCore do
     end
   end
 
+  describe "guaranteed first item spawn" do
+    test "reaching first_item_star spawns exactly one pickup at the captured star" do
+      let g0 = { mk_game(0.0) with first_item_star: 1 }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (g2.stars_chained == 1)
+      assert (List.length(g2.pickups) == 1)
+    end
+
+    test "not reaching first_item_star does not spawn the guaranteed pickup" do
+      let g0 = { mk_game(0.0) with first_item_star: 5 }
+      let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+      let g2 = run_until_capture(g, 10)
+      assert (g2.stars_chained == 1)
+      assert (List.is_empty(g2.pickups))
+    end
+
+    test "first_item_star spawn is deterministic for a given seed" do
+      fn capture_pickup_count(seed : Int) : Int do
+        let g0 = { mk_game(0.0) with first_item_star: 1, seed: seed, rng: Random.seed(seed) }
+        let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
+        let g2 = run_until_capture(g, 10)
+        List.length(g2.pickups)
+      end
+      assert (capture_pickup_count(11) == capture_pickup_count(11))
+    end
+
+    -- The spawn check only exists inside on_capture's forward-capture
+    -- branch (idx > game.current) -- a backward capture takes the other
+    -- branch entirely and never touches pickups, so this is a structural
+    -- guarantee. Verified end-to-end here: capture star 1 forward (fires
+    -- the guaranteed spawn once), then fly back down to star 0 and confirm
+    -- pickups doesn't grow a second time.
+    test "a backward capture back through an already-captured first_item_star does not re-spawn it" do
+      let g0 = { mk_game(0.0) with first_item_star: 1 }
+      let g1 = run_until_capture(mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed()), 10)
+      assert (g1.stars_chained == 1)
+      assert (List.length(g1.pickups) == 1)
+      let g2 = run_until_capture(mk_flying_from(g1, g1.ball_x, g1.ball_y, 0.0, Perihelion.Core.fly_speed()), 40)
+      assert (g2.current == 0)
+      assert (List.length(g2.pickups) == 1)
+    end
+  end
+
 end

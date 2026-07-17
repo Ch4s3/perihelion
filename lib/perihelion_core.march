@@ -667,12 +667,28 @@ mod Perihelion.Core do
           ship_kill_streak: if streaks_live do game.ship_kill_streak else 0 end,
           asteroid_kill_streak: if streaks_live do game.asteroid_kill_streak else 0 end,
           capture_flash: Some((captured.x, captured.y)) }
-      let (rng_after_check, triggered) = Perihelion.Upgrades.milestone_check(captured_game.rng, new_chained)
+      -- Guaranteed first item: fires exactly once per run, the one time
+      -- new_chained reaches first_item_star (stars_chained only climbs on
+      -- forward captures -- see the backward branch below, which never
+      -- touches it -- so this equality can only ever be true once).
+      -- Independent draw from the milestone-choice roll below: both are
+      -- threaded off captured_game.rng in sequence, never reusing the same
+      -- rng value twice.
+      let item_game =
+        if new_chained == captured_game.first_item_star do
+          let (rng_item, upgrade) = Perihelion.Upgrades.roll_one(captured_game.rng, captured_game.owned_weapons, captured_game.special)
+          { captured_game with
+              rng: rng_item,
+              pickups: Cons({ x: captured.x, y: captured.y, ttl: Perihelion.Combat.pickup_ttl(), kind: upgrade }, captured_game.pickups) }
+        else
+          captured_game
+        end
+      let (rng_after_check, triggered) = Perihelion.Upgrades.milestone_check(item_game.rng, new_chained)
       if triggered do
-        let (rng2, choices) = Perihelion.Upgrades.draw_choices(rng_after_check, captured_game.owned_weapons, captured_game.special)
-        top_up({ captured_game with phase: Milestone, rng: rng2, milestone_choices: choices })
+        let (rng2, choices) = Perihelion.Upgrades.draw_choices(rng_after_check, item_game.owned_weapons, item_game.special)
+        top_up({ item_game with phase: Milestone, rng: rng2, milestone_choices: choices })
       else
-        top_up({ captured_game with rng: rng_after_check })
+        top_up({ item_game with rng: rng_after_check })
       end
     else
       { snapped with current: idx, multiplier: 1, ship_kill_streak: 0, asteroid_kill_streak: 0 }
