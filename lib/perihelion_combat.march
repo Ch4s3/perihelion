@@ -70,7 +70,18 @@ mod Perihelion.Combat do
   type Pickup = { x : Float, y : Float, ttl : Float, kind : Perihelion.Upgrades.UpgradeKind }
 
   -- ── Tuning constants ─────────────────────────────────────────────────
-  fn asteroid_interval() : Float do 4.0 end
+  -- Ramps the asteroid field in over the first few kills instead of
+  -- starting at full density -- spawns start sparse (asteroid_interval_start())
+  -- and tighten toward the steady-state asteroid_interval_floor() as score
+  -- rises, so the opening seconds of a run aren't as unforgivingly dense as
+  -- the rest of it. Mirrors the shape of Combat.maybe_spawn_ship's ramp.
+  fn asteroid_interval_start() : Float do 7.0 end
+  fn asteroid_interval_floor() : Float do 4.0 end
+  fn asteroid_interval_ramp_rate() : Float do 0.3 end
+  fn asteroid_interval(score : Int) : Float do
+    let raw = asteroid_interval_start() - asteroid_interval_ramp_rate() * int_to_float(score)
+    if raw < asteroid_interval_floor() do asteroid_interval_floor() else raw end
+  end
   fn asteroid_jitter() : Float do 1.0 end
   fn asteroid_speed() : Float do 90.0 end
   fn asteroid_radius() : Float do 10.0 end
@@ -212,7 +223,7 @@ mod Perihelion.Combat do
       { game with
           asteroids: Cons(a, game.asteroids),
           rng: r5,
-          spawn_timer: asteroid_interval() + (next_f - 0.5) * 2.0 * asteroid_jitter() }
+          spawn_timer: asteroid_interval(game.score) + (next_f - 0.5) * 2.0 * asteroid_jitter() }
     end
     end
   end

@@ -838,7 +838,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
-          spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
+          spawn_timer: Perihelion.Combat.asteroid_interval(0), runs: runs,
           view_w: view_w, view_h: view_h,
           fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone,
           jump: None }
@@ -866,7 +866,7 @@ mod Perihelion.Core do
           milestone_choices: Nil,
           stars_chained: 0,
           loop_angle: 0.0, fire_cooldown: 0.0,
-          spawn_timer: Perihelion.Combat.asteroid_interval(), runs: runs,
+          spawn_timer: Perihelion.Combat.asteroid_interval(0), runs: runs,
           view_w: view_w, view_h: view_h,
           fx_bursts: Nil, capture_flash: None, paused: false, pickup_collected: false, death_cause: DeathNone,
           jump: None }

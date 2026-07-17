@@ -291,6 +291,30 @@ mod TestPerihelionCombat do
       assert (g2.spawn_timer > 0.0)
     end
 
+    test "step_spawn's next timer reflects the current score's asteroid_interval, not a flat rate" do
+      let g0 = base_game(0.0)
+      -- interval_start() (7.0) and interval_floor() (4.0) are far enough
+      -- apart that +/- asteroid_jitter() (1.0) ranges can't overlap -- 5.5
+      -- cleanly separates a score-0 respawn from a very-high-score one.
+      let g_low = { g0 with spawn_timer: 0.01, score: 0 }
+      let g_low2 = Perihelion.Combat.step(g_low, dt())
+      assert (g_low2.spawn_timer > 5.5)
+      let g_high = { g0 with spawn_timer: 0.01, score: 1000 }
+      let g_high2 = Perihelion.Combat.step(g_high, dt())
+      assert (g_high2.spawn_timer < 5.5)
+    end
+
+    test "asteroid_interval ramps from a sparse opening down to its floor as score rises" do
+      assert (approx(Perihelion.Combat.asteroid_interval(0), Perihelion.Combat.asteroid_interval_start()))
+      -- floor is reached once the linear ramp would otherwise dip below it --
+      -- comfortably past that at a very high score.
+      assert (approx(Perihelion.Combat.asteroid_interval(1000), Perihelion.Combat.asteroid_interval_floor()))
+      -- monotonically non-increasing in between.
+      let mid = Perihelion.Combat.asteroid_interval(5)
+      assert (mid <= Perihelion.Combat.asteroid_interval(0))
+      assert (mid >= Perihelion.Combat.asteroid_interval(1000))
+    end
+
     test "asteroids drift, arc toward a nearby star, and shots age" do
       let g0 = base_game(0.0)
       let ast = { x: 100.0, y: 300.0, vx: 90.0, vy: 0.0, radius: 10.0, shape_seed: 0.0, mode: AsteroidDrifting }
