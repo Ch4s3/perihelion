@@ -1113,13 +1113,20 @@ mod TestPerihelionCore do
     end
 
     test "first_item_star spawn is deterministic for a given seed" do
-      fn capture_pickup_count(seed : Int) : Int do
+      fn capture_pickup_kind(seed : Int) : Perihelion.Upgrades.UpgradeKind do
         let g0 = { mk_game(0.0) with first_item_star: 1, seed: seed, rng: Random.seed(seed) }
         let g = mk_flying_from(g0, 200.0, 420.0, 0.0, 0.0 - Perihelion.Core.fly_speed())
         let g2 = run_until_capture(g, 10)
-        List.length(g2.pickups)
+        match g2.pickups do
+          Cons(p, Nil) -> p.kind
+          _ -> Perihelion.Upgrades.OffenseFireRate -- unreachable: the spawn always fires here
+        end
       end
-      assert (capture_pickup_count(11) == capture_pickup_count(11))
+      -- Same seed draws the same upgrade kind every time...
+      assert (capture_pickup_kind(11) == capture_pickup_kind(11))
+      -- ...and a different seed can draw a different one (empirically checked:
+      -- seeds 11 and 12 land on different upgrade kinds).
+      assert (capture_pickup_kind(11) != capture_pickup_kind(12))
     end
 
     -- The spawn check only exists inside on_capture's forward-capture
