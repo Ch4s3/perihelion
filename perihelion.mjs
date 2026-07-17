@@ -9739,7 +9739,7 @@ function Perihelion$Combat$spawn_fragments_for_dead(dead, killer_shots, rng, acc
                     {
                       const chance_f = $p28277._1;
                       {
-                        const $t28271 = (chance_f < 0.5);
+                        const $t28271 = (chance_f < 0.25);
                         if ($t28271 === true) {
                           return (() => {
                             {

@@ -95,7 +95,7 @@ mod Perihelion.Combat do
   fn asteroid_split_count() : Int do 2 end
   -- Only this fraction of full-size kills split; the rest just die into
   -- cosmetic debris like before.
-  fn asteroid_split_chance() : Float do 0.5 end
+  fn asteroid_split_chance() : Float do 0.25 end
   fn asteroid_fragment_radius() : Float do asteroid_radius() * 0.6 end
   fn asteroid_fragment_speed_mult() : Float do 1.3 end
   -- Each fragment's heading is the parent's own heading rotated by a random
