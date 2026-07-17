@@ -841,7 +841,7 @@ mod Perihelion.Combat do
   -- Spread fires spread_shot_count() (5) shots in one go -- it should feel
   -- like a real kick between stars, not the same nudge a single Base shot
   -- gives.
-  fn spread_recoil_mult() : Float do 1.8 end
+  fn spread_recoil_mult() : Float do 1.5 end
 
   pfn recoil_mult_for(weapon : Perihelion.Upgrades.WeaponKind) : Float do
     match weapon do

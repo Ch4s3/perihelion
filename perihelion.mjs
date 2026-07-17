@@ -9046,7 +9046,7 @@ function Perihelion$Combat$fire(game, keys, cursor, _dt_s) {
                                                   let $t28171;
                                                   switch (weapon.$) {
                                                     case "Spread": {
-                                                      $t28171 = 1.8;
+                                                      $t28171 = 1.5;
                                                       break;
                                                     }
                                                     default: {
