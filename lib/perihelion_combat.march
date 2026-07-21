@@ -114,6 +114,15 @@ mod Perihelion.Combat do
   -- parked on the boundary.
   fn asteroid_orbit_mult() : Float do 0.8 end
   fn ship_score_min() : Int do 4 end
+  -- Unlike asteroids (asteroid_max_count()), ships never had a population
+  -- cap: maybe_spawn_ship_now's chance climbs with score and is only
+  -- capped as a per-roll probability (Director.ship_chance_cap), not a
+  -- headcount, and ships despawn only on kill/shield-consume -- never by
+  -- distance or timeout. On a run where the player doesn't clear every
+  -- hunter/turret, the list grows unbounded, and per-frame ship cost
+  -- (collide_shots_ships is O(ships x player_shots), plus a full sprite
+  -- draw per ship) grows with it, tanking framerate the longer a run goes.
+  fn ship_max_count() : Int do 10 end
   -- Consecutive kills of one type (no intervening kill of the other type)
   -- needed to bump the multiplier again -- crossing every Nth kill re-bumps,
   -- same "every multiple" shape as Upgrades.is_milestone.
@@ -205,7 +214,7 @@ mod Perihelion.Combat do
     let d0 = game.director
     let d1 = Perihelion.Director.advance(d0, game.ship_kill_streak, game.asteroid_kill_streak, game.shield, dt_s)
     let g1 = { game with director: d1 }
-    let g2 = if Perihelion.Director.entered_peak(d0, d1) && game.score >= ship_score_min() do
+    let g2 = if Perihelion.Director.entered_peak(d0, d1) && game.score >= ship_score_min() && List.length(g1.ships) < ship_max_count() do
                spawn_hunter(g1, g1.rng)
              else
                g1
@@ -1415,6 +1424,8 @@ mod Perihelion.Combat do
   pfn maybe_spawn_ship_now(game : Game) : Game do
     if game.score < ship_score_min() do
       game
+    else if List.length(game.ships) >= ship_max_count() do
+      game
     else
       let d = game.director
       let (rng2, roll) = draw(game.rng)
@@ -1432,6 +1443,7 @@ mod Perihelion.Combat do
       else
         { game with rng: rng2 }
       end
+    end
     end
   end
 

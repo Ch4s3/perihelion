@@ -687,6 +687,15 @@ mod TestPerihelionCombat do
       let g2 = spawn_n(g, 40)
       assert (List.is_empty(g2.ships))
     end
+
+    test "the live ship count never exceeds ship_max_count, even at a high score with many rolls" do
+      let g0 = base_game(0.0)
+      -- High score pins the per-roll chance at its (state) cap, so nearly
+      -- every one of these 200 rolls would succeed without a population cap.
+      let g = { g0 with score: 500, rng: Random.seed(3) }
+      let g2 = spawn_n(g, 200)
+      assert (List.length(g2.ships) <= Perihelion.Combat.ship_max_count())
+    end
   end
 
   -- Multi-tick integration: drives the FULL Combat.step loop over simulated
